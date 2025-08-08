@@ -168,13 +168,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const signUp = async (email: string, password: string, fullName?: string) => {
     try {
       setLoading(true);
-      const redirectUrl = `${window.location.origin}/`;
       
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: redirectUrl,
           data: {
             full_name: fullName || email,
             username: email
@@ -193,7 +191,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       } else {
         toast({
           title: 'Cadastro realizado',
-          description: 'Verifique seu email para confirmar a conta.'
+          description: 'Conta criada com sucesso! Você já pode fazer login.'
         });
       }
 
