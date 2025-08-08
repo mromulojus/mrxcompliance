@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
 import { useToast } from "@/components/ui/use-toast";
 
 // Types from the database
@@ -97,7 +96,6 @@ export const useSupabaseData = () => {
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
   const [denuncias, setDenuncias] = useState<Denuncia[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user, can } = useSupabaseAuth();
   const { toast } = useToast();
 
   // Fetch data functions
@@ -140,7 +138,6 @@ export const useSupabaseData = () => {
   };
 
   const fetchDenuncias = async () => {
-    if (!can('view:denuncias')) return;
     
     try {
       const { data, error } = await supabase
@@ -165,7 +162,7 @@ export const useSupabaseData = () => {
     try {
       const { data, error } = await supabase
         .from('empresas')
-        .insert([{ ...empresa, created_by: user?.id }])
+        .insert([empresa])
         .select()
         .single();
 
@@ -248,7 +245,7 @@ export const useSupabaseData = () => {
     try {
       const { data, error } = await supabase
         .from('colaboradores')
-        .insert([{ ...colaborador, created_by: user?.id }])
+        .insert([colaborador])
         .select()
         .single();
 
@@ -328,18 +325,14 @@ export const useSupabaseData = () => {
 
   // Initialize data
   useEffect(() => {
-    if (user) {
-      Promise.all([
-        fetchEmpresas(),
-        fetchColaboradores(),
-        fetchDenuncias()
-      ]).finally(() => {
-        setLoading(false);
-      });
-    } else {
+    Promise.all([
+      fetchEmpresas(),
+      fetchColaboradores(),
+      fetchDenuncias()
+    ]).finally(() => {
       setLoading(false);
-    }
-  }, [user]);
+    });
+  }, []);
 
   return {
     empresas,

@@ -1,4 +1,3 @@
-import React, { useMemo } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { Activity, BookText, Building2, Home, ListTree, Settings2, Shield, Users } from "lucide-react";
 import {
@@ -12,28 +11,26 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const { profile, can } = useSupabaseAuth();
   const location = useLocation();
   const path = location.pathname;
 
   type Item = { title: string; url: string; icon: React.ComponentType<any>; show: boolean };
 
-  const items: Item[] = useMemo(() => [
-    { title: "Início", url: "/", icon: Home, show: true },
-    { title: "Denúncias", url: "/denuncias/dashboard", icon: Shield, show: can("view:denuncias") },
-    { title: "Consulta Denúncia", url: "/denuncias/consulta", icon: Activity, show: can("view:denuncias") },
-    { title: "Empresas", url: "/empresas", icon: Building2, show: can("view:system-data") },
-    { title: "Dados do Sistema", url: "/admin/system-data", icon: Building2, show: can("view:system-data") },
-    { title: "Estrutura Padrão", url: "/admin/structure", icon: Settings2, show: can("manage:structure") },
-    { title: "Usuários", url: "/admin/users", icon: Users, show: profile?.role === "superuser" || profile?.role === "administrador" },
-    { title: "Logs de Atividades", url: "/admin/activity-log", icon: ListTree, show: can("view:activity-log") },
-    { title: "Documentação / Webhooks", url: "/admin/docs", icon: BookText, show: can("use:docs") },
-  ], [profile?.role, path]);
+  const items: Item[] = [
+    { title: "Painel", url: "/", icon: Home, show: true },
+    { title: "Empresas", url: "/empresas", icon: Building2, show: true },
+    { title: "Dashboard Denúncias", url: "/denuncias/dashboard", icon: Shield, show: true },
+    { title: "Consultar Denúncia", url: "/denuncias/consulta", icon: Activity, show: true },
+    { title: "Log de Atividades", url: "/admin/activity-log", icon: Activity, show: true },
+    { title: "Dados do Sistema", url: "/admin/system-data", icon: Settings2, show: true },
+    { title: "Estrutura", url: "/admin/structure", icon: ListTree, show: true },
+    { title: "Usuários", url: "/admin/users", icon: Users, show: true },
+    { title: "Documentação", url: "/admin/docs", icon: BookText, show: true },
+  ];
 
   const getCls = ({ isActive }: { isActive: boolean }) =>
     isActive ? "bg-muted text-primary font-medium" : "hover:bg-muted/50";
