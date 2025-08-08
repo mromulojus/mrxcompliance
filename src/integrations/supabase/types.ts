@@ -473,6 +473,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      authenticate_by_username: {
+        Args: { username_input: string; password_input: string }
+        Returns: {
+          user_id: string
+          email: string
+        }[]
+      }
       generate_protocol: {
         Args: Record<PropertyKey, never>
         Returns: string

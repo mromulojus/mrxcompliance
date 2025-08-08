@@ -18,10 +18,11 @@ export default function Auth() {
   const [activeTab, setActiveTab] = useState('login');
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     password: '',
     confirmPassword: '',
-    fullName: ''
+    fullName: '',
+    email: ''
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -37,10 +38,10 @@ export default function Auth() {
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
 
-    if (!formData.email) {
-      newErrors.email = 'Email é obrigatório';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email inválido';
+    if (!formData.username) {
+      newErrors.username = 'Nome de usuário é obrigatório';
+    } else if (formData.username.length < 3) {
+      newErrors.username = 'Nome de usuário deve ter pelo menos 3 caracteres';
     }
 
     if (!formData.password) {
@@ -56,6 +57,10 @@ export default function Auth() {
 
       if (formData.password !== formData.confirmPassword) {
         newErrors.confirmPassword = 'Senhas não coincidem';
+      }
+
+      if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
+        newErrors.email = 'Email inválido';
       }
     }
 
@@ -73,12 +78,12 @@ export default function Auth() {
 
     try {
       if (activeTab === 'login') {
-        const { error } = await signIn(formData.email, formData.password);
+        const { error } = await signIn(formData.username, formData.password);
         if (error) {
           setErrors({ submit: 'Erro no login. Verifique suas credenciais.' });
         }
       } else {
-        const { error } = await signUp(formData.email, formData.password, formData.fullName);
+        const { error } = await signUp(formData.username, formData.password, formData.fullName, formData.email);
         if (error) {
           setErrors({ submit: 'Erro no cadastro. Tente novamente.' });
         }
@@ -147,22 +152,22 @@ export default function Auth() {
                 )}
 
                 <TabsContent value="login" className="space-y-4 mt-0">
-                  {/* Email */}
+                  {/* Username */}
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="username">Nome de Usuário</Label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
-                        id="email"
-                        type="email"
-                        placeholder="seu@email.com"
-                        value={formData.email}
-                        onChange={(e) => handleInputChange('email', e.target.value)}
-                        className={`pl-10 ${errors.email ? 'border-destructive' : ''}`}
+                        id="username"
+                        type="text"
+                        placeholder="seu_usuario"
+                        value={formData.username}
+                        onChange={(e) => handleInputChange('username', e.target.value)}
+                        className={`pl-10 ${errors.username ? 'border-destructive' : ''}`}
                       />
                     </div>
-                    {errors.email && (
-                      <p className="text-sm text-destructive">{errors.email}</p>
+                    {errors.username && (
+                      <p className="text-sm text-destructive">{errors.username}</p>
                     )}
                   </div>
 
@@ -196,6 +201,25 @@ export default function Auth() {
                 </TabsContent>
 
                 <TabsContent value="signup" className="space-y-4 mt-0">
+                  {/* Username */}
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-username">Nome de Usuário</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="signup-username"
+                        type="text"
+                        placeholder="seu_usuario"
+                        value={formData.username}
+                        onChange={(e) => handleInputChange('username', e.target.value)}
+                        className={`pl-10 ${errors.username ? 'border-destructive' : ''}`}
+                      />
+                    </div>
+                    {errors.username && (
+                      <p className="text-sm text-destructive">{errors.username}</p>
+                    )}
+                  </div>
+
                   {/* Full Name */}
                   <div className="space-y-2">
                     <Label htmlFor="fullName">Nome Completo</Label>
@@ -215,9 +239,9 @@ export default function Auth() {
                     )}
                   </div>
 
-                  {/* Email */}
+                  {/* Email (Optional) */}
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
+                    <Label htmlFor="signup-email">Email (opcional)</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input

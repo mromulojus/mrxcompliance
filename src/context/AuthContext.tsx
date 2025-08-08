@@ -26,8 +26,8 @@ interface AuthContextType {
   session: Session | null;
   profile: UserProfile | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
+  signIn: (username: string, password: string) => Promise<{ error: any }>;
+  signUp: (username: string, password: string, fullName?: string, email?: string) => Promise<{ error: any }>;
   signOut: () => Promise<{ error: any }>;
   hasRole: (requiredRole: UserRole) => boolean;
   hasAnyRole: (roles: UserRole[]) => boolean;
@@ -134,11 +134,30 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (username: string, password: string) => {
     try {
       setLoading(true);
+      
+      // Get email from username
+      const { data: authData, error: authError } = await supabase.rpc('authenticate_by_username', {
+        username_input: username,
+        password_input: password
+      });
+
+      if (authError || !authData || authData.length === 0) {
+        toast({
+          title: 'Erro no login',
+          description: 'Usuário ou senha incorretos',
+          variant: 'destructive'
+        });
+        return { error: authError || new Error('Usuário não encontrado') };
+      }
+
+      const userEmail = authData[0].email;
+      
+      // Now authenticate with Supabase using the email
       const { error } = await supabase.auth.signInWithPassword({
-        email,
+        email: userEmail,
         password,
       });
 
@@ -146,7 +165,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         toast({
           title: 'Erro no login',
           description: error.message === 'Invalid login credentials' 
-            ? 'Email ou senha incorretos' 
+            ? 'Usuário ou senha incorretos' 
             : error.message,
           variant: 'destructive'
         });
@@ -165,17 +184,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  const signUp = async (email: string, password: string, fullName?: string) => {
+  const signUp = async (username: string, password: string, fullName?: string, email?: string) => {
     try {
       setLoading(true);
+      
+      if (!email) {
+        email = `${username}@temp.local`;
+      }
       
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            full_name: fullName || email,
-            username: email
+            full_name: fullName || username,
+            username: username
           }
         }
       });
@@ -184,7 +207,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         toast({
           title: 'Erro no cadastro',
           description: error.message === 'User already registered' 
-            ? 'Este email já está cadastrado' 
+            ? 'Este usuário já está cadastrado' 
             : error.message,
           variant: 'destructive'
         });
