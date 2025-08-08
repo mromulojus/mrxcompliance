@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Colaborador } from '@/types/hr';
 import { useHR } from '@/context/HRContext';
+import { useSupabaseData } from '@/hooks/useSupabaseData';
 import { toast } from 'sonner';
 
 interface FormColaboradorProps {
@@ -16,7 +17,8 @@ interface FormColaboradorProps {
 }
 
 export function FormColaborador({ colaborador, onSalvar, onCancelar }: FormColaboradorProps) {
-  const { adicionarColaborador, editarColaborador, empresas } = useHR();
+  const { adicionarColaborador, editarColaborador } = useHR();
+  const { empresas } = useSupabaseData();
   
   const [formData, setFormData] = useState({
     nome: colaborador?.nome || '',

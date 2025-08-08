@@ -12,6 +12,7 @@ import { useHR } from '@/context/HRContext';
 import { toast } from 'sonner';
 import { Camera, Upload, FileText, Eye, Plus, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useSupabaseData } from '@/hooks/useSupabaseData';
 
 interface FormColaboradorCompletoProps {
   colaborador?: Colaborador;
@@ -20,7 +21,8 @@ interface FormColaboradorCompletoProps {
 }
 
 export function FormColaboradorCompleto({ colaborador, onSalvar, onCancelar }: FormColaboradorCompletoProps) {
-  const { adicionarColaborador, editarColaborador, empresas } = useHR();
+  const { adicionarColaborador, editarColaborador } = useHR();
+  const { empresas } = useSupabaseData();
   
   const [formData, setFormData] = useState({
     // Dados básicos
@@ -283,12 +285,23 @@ export function FormColaboradorCompleto({ colaborador, onSalvar, onCancelar }: F
                 
                 <div className="space-y-2">
                   <Label htmlFor="departamento">Departamento</Label>
-                  <Input
-                    id="departamento"
-                    value={formData.departamento}
-                    onChange={(e) => handleChange('departamento', e.target.value)}
-                    placeholder="Departamento"
-                  />
+                  <Select value={formData.departamento} onValueChange={(value) => handleChange('departamento', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecionar departamento" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="RECURSOS_HUMANOS">Recursos Humanos</SelectItem>
+                      <SelectItem value="TECNOLOGIA">Tecnologia</SelectItem>
+                      <SelectItem value="VENDAS">Vendas</SelectItem>
+                      <SelectItem value="MARKETING">Marketing</SelectItem>
+                      <SelectItem value="FINANCEIRO">Financeiro</SelectItem>
+                      <SelectItem value="OPERACIONAL">Operacional</SelectItem>
+                      <SelectItem value="JURIDICO">Jurídico</SelectItem>
+                      <SelectItem value="ADMINISTRATIVO">Administrativo</SelectItem>
+                      <SelectItem value="COMERCIAL">Comercial</SelectItem>
+                      <SelectItem value="CRIAR_NOVO">+ Criar Departamento</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

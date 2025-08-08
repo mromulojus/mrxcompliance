@@ -117,14 +117,14 @@ export default function DenunciaPublica() {
             
             <div className="space-y-2 text-sm text-muted-foreground">
               <p>• Guarde este protocolo para consultas futuras</p>
-              <p>• Você pode consultar o status em: <a href="/denuncias/consulta" className="text-primary hover:underline">/denuncias/consulta</a></p>
+              <p>• Você pode consultar o status em: <a href="/consulta-denuncia" className="text-primary hover:underline">/consulta-denuncia</a></p>
               <p>• Todas as denúncias são tratadas com confidencialidade</p>
             </div>
             
             <div className="flex gap-2">
               <Button 
                 variant="outline" 
-                onClick={() => window.location.href = '/denuncias/consulta'}
+                onClick={() => window.location.href = '/consulta-denuncia'}
                 className="flex-1"
               >
                 Consultar Status

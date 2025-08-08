@@ -93,7 +93,7 @@ export function DenunciasEmpresa({ empresaId }: DenunciasEmpresaProps) {
     });
   };
 
-  const linkDenuncia = `${window.location.origin}/denuncias/${empresaId}`;
+  const linkDenuncia = `${window.location.origin}/denuncia-publica/${empresaId}`;
 
   return (
     <div className="space-y-6">
