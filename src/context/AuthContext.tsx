@@ -145,9 +145,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       });
 
       if (authError || !authData || authData.length === 0) {
+        const errorMessage = authError?.message || 'Usuário não encontrado';
         toast({
           title: 'Erro no login',
-          description: 'Usuário ou senha incorretos',
+          description: errorMessage.includes('not found') ? 'Usuário não encontrado ou inativo' : 'Usuário ou senha incorretos',
           variant: 'destructive'
         });
         return { error: authError || new Error('Usuário não encontrado') };
@@ -188,8 +189,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       setLoading(true);
       
+      // Gerar email válido se não fornecido
       if (!email) {
-        email = `${username}@temp.local`;
+        // Verificar se o username já é um email válido
+        if (username.includes('@') && username.includes('.')) {
+          email = username;
+        } else {
+          email = `${username}@sistema.interno`;
+        }
       }
       
       const { error } = await supabase.auth.signUp({
