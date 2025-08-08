@@ -108,6 +108,14 @@ const UsersPage: React.FC = () => {
     }
   };
 
+  const handleChangePassword = (user: User) => {
+    // Trigger change password dialog in UserManagement component
+    const changePasswordButton = document.querySelector(`[data-user-id="${user.id}"][data-action="change-password"]`) as HTMLButtonElement;
+    if (changePasswordButton) {
+      changePasswordButton.click();
+    }
+  };
+
   return (
     <main>
       <header className="mb-4">
@@ -165,6 +173,15 @@ const UsersPage: React.FC = () => {
                         >
                           Editar
                         </Button>
+                        {profile?.role === 'superuser' && (
+                          <Button 
+                            variant="secondary" 
+                            size="sm"
+                            onClick={() => handleChangePassword(user)}
+                          >
+                            Alterar Senha
+                          </Button>
+                        )}
                         <Button 
                           variant="destructive" 
                           size="sm" 

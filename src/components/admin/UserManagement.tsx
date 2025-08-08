@@ -45,7 +45,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 }) => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [changingPasswordUser, setChangingPasswordUser] = useState<User | null>(null);
   const { toast } = useToast();
 
   const createForm = useForm<UserFormData>({
@@ -64,6 +66,13 @@ export const UserManagement: React.FC<UserManagementProps> = ({
       email: "",
       full_name: "",
       role: "operacional"
+    }
+  });
+
+  const changePasswordForm = useForm<{ newPassword: string; confirmPassword: string }>({
+    defaultValues: {
+      newPassword: "",
+      confirmPassword: ""
     }
   });
 
@@ -221,6 +230,71 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     setIsEditOpen(true);
   };
 
+  const openChangePasswordDialog = (user: User) => {
+    setChangingPasswordUser(user);
+    changePasswordForm.reset({
+      newPassword: "",
+      confirmPassword: ""
+    });
+    setIsChangePasswordOpen(true);
+  };
+
+  const handleChangePassword = async (data: { newPassword: string; confirmPassword: string }) => {
+    if (!changingPasswordUser) return;
+
+    if (data.newPassword !== data.confirmPassword) {
+      toast({
+        title: "Erro",
+        description: "As senhas não coincidem.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (data.newPassword.length < 6) {
+      toast({
+        title: "Erro",
+        description: "A senha deve ter pelo menos 6 caracteres.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const { data: result, error } = await supabase.functions.invoke('change-user-password', {
+        body: {
+          user_id: changingPasswordUser.id,
+          new_password: data.newPassword
+        }
+      });
+
+      if (error) {
+        toast({
+          title: "Erro ao alterar senha",
+          description: error.message,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      toast({
+        title: "Senha alterada",
+        description: `Senha do usuário ${changingPasswordUser.username} alterada com sucesso.`
+      });
+
+      changePasswordForm.reset();
+      setIsChangePasswordOpen(false);
+      setChangingPasswordUser(null);
+    } catch (error) {
+      console.error('Error changing password:', error);
+      toast({
+        title: "Erro",
+        description: "Erro interno ao alterar senha.",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <>
       {/* Create User Dialog */}
@@ -320,6 +394,54 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         </DialogContent>
       </Dialog>
 
+      {/* Change Password Dialog */}
+      <Dialog open={isChangePasswordOpen} onOpenChange={setIsChangePasswordOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Alterar Senha</DialogTitle>
+          </DialogHeader>
+          <Form {...changePasswordForm}>
+            <form onSubmit={changePasswordForm.handleSubmit(handleChangePassword)} className="space-y-4">
+              <div className="text-sm text-muted-foreground mb-4">
+                Alterando senha para: <strong>{changingPasswordUser?.username}</strong>
+              </div>
+              <FormField
+                control={changePasswordForm.control}
+                name="newPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nova Senha</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="Digite a nova senha" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={changePasswordForm.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirmar Senha</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="Confirme a nova senha" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setIsChangePasswordOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit">Alterar Senha</Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
       {/* Edit User Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="sm:max-w-md">
@@ -412,6 +534,17 @@ export const UserManagement: React.FC<UserManagementProps> = ({
             data-action="edit"
           >
             Editar
+          </Button>
+          
+          <Button 
+            variant="secondary" 
+            size="sm"
+            onClick={() => openChangePasswordDialog(user)}
+            data-user-id={user.id}
+            data-action="change-password"
+            className="hidden"
+          >
+            Alterar Senha
           </Button>
           
           <AlertDialog>
