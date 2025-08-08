@@ -13,14 +13,76 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { QRCodeComponent } from '@/components/ui/qr-code';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface DenunciasEmpresaProps {
   empresaId: string;
 }
 
 export function DenunciasEmpresa({ empresaId }: DenunciasEmpresaProps) {
-  const { denuncias, atualizarStatus, adicionarComentario } = useHR();
+  const { denuncias, atualizarStatus, adicionarComentario, empresas } = useHR();
   const { toast } = useToast();
+  
+  const empresa = empresas.find(e => e.id === empresaId);
+  const linkDenuncia = `${window.location.origin}/denuncia-publica/${empresaId}`;
+
+  const handleSendEmail = async () => {
+    const emailInput = document.getElementById('email-input') as HTMLInputElement;
+    const email = emailInput?.value.trim();
+    
+    if (!email) {
+      toast({
+        title: "Email obrigatório",
+        description: "Por favor, informe um email válido.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!email.includes('@')) {
+      toast({
+        title: "Email inválido",
+        description: "Por favor, informe um email válido.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('send-qr-code', {
+        body: {
+          toEmail: email,
+          companyName: empresa?.nome || 'Empresa',
+          qrCodeUrl: linkDenuncia,
+          linkUrl: linkDenuncia
+        }
+      });
+
+      if (error) {
+        console.error('Error sending email:', error);
+        toast({
+          title: "Erro ao enviar email",
+          description: "Não foi possível enviar o email. Tente novamente.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      toast({
+        title: "Email enviado!",
+        description: `QR Code e link enviados para ${email}`,
+      });
+      
+      emailInput.value = '';
+    } catch (error) {
+      console.error('Error sending email:', error);
+      toast({
+        title: "Erro ao enviar email",
+        description: "Erro interno. Tente novamente.",
+        variant: "destructive"
+      });
+    }
+  };
   const [selectedDenuncia, setSelectedDenuncia] = useState<Denuncia | null>(null);
   const [novoComentario, setNovoComentario] = useState('');
   const [novoStatus, setNovoStatus] = useState<DenunciaStatus>('RECEBIDO');
@@ -93,7 +155,6 @@ export function DenunciasEmpresa({ empresaId }: DenunciasEmpresaProps) {
     });
   };
 
-  const linkDenuncia = `${window.location.origin}/denuncia-publica/${empresaId}`;
 
   return (
     <div className="space-y-6">
@@ -143,6 +204,24 @@ export function DenunciasEmpresa({ empresaId }: DenunciasEmpresaProps) {
                         }}
                       >
                         Copiar
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Enviar por email:</label>
+                    <div className="flex gap-2">
+                      <input 
+                        type="email" 
+                        placeholder="email@exemplo.com"
+                        className="flex-1 p-2 border rounded text-sm"
+                        id="email-input"
+                      />
+                      <Button 
+                        size="sm" 
+                        onClick={handleSendEmail}
+                      >
+                        Enviar
                       </Button>
                     </div>
                   </div>
