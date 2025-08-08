@@ -11,7 +11,7 @@ import { Denuncia, DenunciaStatus } from '@/types/denuncia';
 import { AlertCircle, MessageSquare, Calendar, User, FileText, ExternalLink } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import QRCode from 'react-qr-code';
+import { QRCodeComponent } from '@/components/ui/qr-code';
 import { useToast } from '@/hooks/use-toast';
 
 interface DenunciasEmpresaProps {
@@ -117,13 +117,13 @@ export function DenunciasEmpresa({ empresaId }: DenunciasEmpresaProps) {
                   <DialogTitle>Página Pública de Denúncias</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
-                  <div className="text-center">
-                    <div className="bg-white p-4 rounded-lg border">
-                      <QRCode value={linkDenuncia} size={200} />
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      QR Code para acesso direto
-                    </p>
+                  <div className="flex justify-center">
+                    <QRCodeComponent 
+                      url={linkDenuncia}
+                      title="Canal de Denúncias"
+                      description="Escaneie para acessar"
+                      size={180}
+                    />
                   </div>
                   
                   <div className="space-y-2">
