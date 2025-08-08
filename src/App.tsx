@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SupabaseAuthProvider } from "@/context/SupabaseAuthContext";
+import { HRProvider } from "@/context/HRContext";
 import AppLayout from "@/layouts/AppLayout";
 import { SupabaseProtectedRoute } from "@/components/auth/SupabaseProtectedRoute";
 import Index from "./pages/Index";
@@ -25,7 +26,8 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <SupabaseAuthProvider>
-      <TooltipProvider>
+      <HRProvider>
+        <TooltipProvider>
           <Toaster />
           <Sonner />
           <BrowserRouter>
@@ -121,6 +123,7 @@ const App = () => (
             </Routes>
           </BrowserRouter>
         </TooltipProvider>
+      </HRProvider>
     </SupabaseAuthProvider>
   </QueryClientProvider>
 );
