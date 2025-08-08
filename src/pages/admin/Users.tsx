@@ -2,10 +2,10 @@ import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useAuth } from "@/context/AuthContext";
+import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
 
 const UsersPage: React.FC = () => {
-  const { user } = useAuth();
+  const { profile } = useSupabaseAuth();
 
   React.useEffect(() => {
     document.title = "Usuários - MRx Compliance";
@@ -13,8 +13,8 @@ const UsersPage: React.FC = () => {
     if (el) el.setAttribute("content", "Gestão de usuários e papéis no sistema.");
   }, []);
 
-  const canDeleteUsers = user?.role === "superuser"; // Admin não pode excluir
-  const canCreateUsers = user?.role === "superuser"; // Empresarial não pode criar
+  const canDeleteUsers = profile?.role === "superuser";
+  const canCreateUsers = profile?.role === "superuser";
 
   const sampleUsers = [
     { username: "mrxbr", role: "superuser" },
@@ -52,7 +52,7 @@ const UsersPage: React.FC = () => {
               <TableBody>
                 {sampleUsers.map((u) => (
                   <TableRow key={u.username}>
-                    <TableCell>{u.username}{user?.username === u.username ? " (você)" : ""}</TableCell>
+                    <TableCell>{u.username}{profile?.username === u.username ? " (você)" : ""}</TableCell>
                     <TableCell className="uppercase">{u.role}</TableCell>
                     <TableCell className="text-right space-x-2">
                       <Button variant="outline" size="sm">Editar</Button>

@@ -12,12 +12,12 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { useAuth } from "@/context/AuthContext";
+import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const { user, can } = useAuth();
+  const { profile, can } = useSupabaseAuth();
   const location = useLocation();
   const path = location.pathname;
 
@@ -30,10 +30,10 @@ export function AppSidebar() {
     { title: "Empresas", url: "/empresas", icon: Building2, show: can("view:system-data") },
     { title: "Dados do Sistema", url: "/admin/system-data", icon: Building2, show: can("view:system-data") },
     { title: "Estrutura Padrão", url: "/admin/structure", icon: Settings2, show: can("manage:structure") },
-    { title: "Usuários", url: "/admin/users", icon: Users, show: user?.role === "superuser" || user?.role === "administrador" },
+    { title: "Usuários", url: "/admin/users", icon: Users, show: profile?.role === "superuser" || profile?.role === "administrador" },
     { title: "Logs de Atividades", url: "/admin/activity-log", icon: ListTree, show: can("view:activity-log") },
     { title: "Documentação / Webhooks", url: "/admin/docs", icon: BookText, show: can("use:docs") },
-  ], [user?.role, path]);
+  ], [profile?.role, path]);
 
   const getCls = ({ isActive }: { isActive: boolean }) =>
     isActive ? "bg-muted text-primary font-medium" : "hover:bg-muted/50";
