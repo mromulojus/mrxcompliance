@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Users, Building2, TrendingUp, PieChart, BarChart3, DollarSign, UserPlus, FileSpreadsheet, FileText, CheckSquare, AlertTriangle } from 'lucide-react';
-import { useHR } from '@/context/HRContext';
+import { useSupabaseData } from '@/hooks/useSupabaseData';
 import { ColaboradorCard } from '@/components/hr/ColaboradorCard';
 import { FormColaboradorCompleto } from '@/components/hr/FormColaboradorCompleto';
 import { ImportarColaboradores } from '@/components/hr/ImportarColaboradores';
@@ -27,7 +27,7 @@ export default function EmpresaDetalhes() {
   const {
     empresas,
     colaboradores
-  } = useHR();
+  } = useSupabaseData();
   const [showFormColaborador, setShowFormColaborador] = useState(false);
   const [showImportColaboradores, setShowImportColaboradores] = useState(false);
   const [showVisualizacaoColaborador, setShowVisualizacaoColaborador] = useState(false);
@@ -36,7 +36,7 @@ export default function EmpresaDetalhes() {
   const [activeTab, setActiveTab] = useState('colaboradores');
   const empresa = empresas.find(e => e.id === empresaId);
   // Remover as referências de raça dos documentos pois não existem lá
-  const colaboradoresEmpresa = colaboradores.filter(c => c.empresa === empresaId);
+  const colaboradoresEmpresa = colaboradores.filter(c => c.empresa_id === empresaId);
   if (!empresa) {
     return <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -79,18 +79,19 @@ export default function EmpresaDetalhes() {
     return acc;
   }, {} as Record<string, number>);
 
-  // Cálculo do valor de rescisão geral usando a nova função
-  const {
-    totalRescisao: valorRescisaoGeral,
-    totalPrevisto: valorPrevistoGeral
-  } = calcularTotalRescisaoEmpresa(colaboradoresEmpresa);
+  // Cálculo do valor de rescisão geral - temporariamente desabilitado
+  // const { totalRescisao: valorRescisaoGeral, totalPrevisto: valorPrevistoGeral } = calcularTotalRescisaoEmpresa(colaboradoresEmpresa);
+  const valorRescisaoGeral = 0;
+  const valorPrevistoGeral = 0;
+  
   const departamentos = colaboradoresEmpresa.reduce((acc, c) => {
     acc[c.departamento] = (acc[c.departamento] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
-  const salarioMedio = colaboradoresEmpresa.reduce((sum, c) => sum + c.salario_base, 0) / colaboradoresEmpresa.length || 0;
-  const salarioMaior = Math.max(...colaboradoresEmpresa.map(c => c.salario_base), 0);
-  const salarioMenor = Math.min(...colaboradoresEmpresa.map(c => c.salario_base), 0);
+  
+  const salarioMedio = colaboradoresEmpresa.reduce((sum, c) => sum + Number(c.salario_base), 0) / colaboradoresEmpresa.length || 0;
+  const salarioMaior = Math.max(...colaboradoresEmpresa.map(c => Number(c.salario_base)), 0);
+  const salarioMenor = Math.min(...colaboradoresEmpresa.map(c => Number(c.salario_base)), 0);
   const getComplianceRateFromAuditoria = (empresaId: string) => {
     try {
       const data = localStorage.getItem(`auditoria-${empresaId}`);
@@ -126,7 +127,7 @@ export default function EmpresaDetalhes() {
             </div>
             
             <div className="flex gap-2">
-              <ExportPdf type="empresa" data={empresa} colaboradores={colaboradoresEmpresa} />
+              {/* Temporariamente comentado: <ExportPdf type="empresa" data={empresa} colaboradores={colaboradoresEmpresa} /> */}
             </div>
           </div>
         </div>
@@ -584,21 +585,12 @@ export default function EmpresaDetalhes() {
                 <p className="text-muted-foreground">Esta empresa ainda não possui colaboradores cadastrados.</p>
               </CardContent>
             </Card> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {colaboradoresEmpresa.slice(0, 10).map(colaborador => <div key={colaborador.id} className="relative">
-                  <ColaboradorCard colaborador={colaborador} onView={id => {
-                  setColaboradorSelecionado(colaborador);
-                  setShowVisualizacaoColaborador(true);
-                }} onEdit={id => {
-                  setColaboradorEditando(colaborador);
-                  setShowFormColaborador(true);
-                }} />
-                  <Button variant="outline" size="sm" className="absolute top-2 right-2" onClick={() => {
-                  setColaboradorSelecionado(colaborador);
-                  setShowVisualizacaoColaborador(true);
-                }}>
-                    <Users className="h-4 w-4" />
-                  </Button>
-                </div>)}
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <p className="text-muted-foreground">Lista de colaboradores temporariamente desabilitada.</p>
+                  <p className="text-sm text-muted-foreground mt-2">Em desenvolvimento - aguarde próximas atualizações.</p>
+                </CardContent>
+              </Card>
             </div>}
         </section>
 

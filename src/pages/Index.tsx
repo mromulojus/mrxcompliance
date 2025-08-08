@@ -12,10 +12,12 @@ import { FormEmpresa } from '@/components/hr/FormEmpresa';
 import { Logo } from '@/components/ui/logo';
 import { Footer } from '@/components/ui/footer';
 import { useHR } from '@/context/HRContext';
+import { useSupabaseData } from '@/hooks/useSupabaseData';
 import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
-  const { colaboradoresFiltrados, empresas, dashboardStats } = useHR();
+  const { colaboradoresFiltrados, dashboardStats } = useHR();
+  const { empresas: empresasSupabase, loading: loadingSupabase } = useSupabaseData();
   const navigate = useNavigate();
   const [modalAberto, setModalAberto] = useState(false);
   const [colaboradorEditando, setColaboradorEditando] = useState<string | null>(null);
@@ -96,7 +98,16 @@ const Index = () => {
               </Dialog>
             </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {empresas.map((empresa) => {
+            {loadingSupabase ? (
+              <div className="col-span-full text-center py-8">
+                <p className="text-muted-foreground">Carregando empresas...</p>
+              </div>
+            ) : empresasSupabase.length === 0 ? (
+              <div className="col-span-full text-center py-8">
+                <p className="text-muted-foreground">Nenhuma empresa cadastrada ainda.</p>
+              </div>
+            ) : (
+              empresasSupabase.map((empresa) => {
               const colaboradoresEmpresa = colaboradoresFiltrados.filter(c => c.empresa === empresa.id);
               const colaboradoresAtivos = colaboradoresEmpresa.filter(c => c.status === 'ATIVO').length;
               const getComplianceRateFromAuditoria = (empresaId: string) => {
@@ -168,8 +179,9 @@ const Index = () => {
                     </div>
                   </CardContent>
                 </Card>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </section>
 
@@ -209,7 +221,7 @@ const Index = () => {
                   <div>
                     <div className="font-semibold">Força de Trabalho</div>
                     <div className="text-sm text-muted-foreground">
-                      {dashboardStats.totalColaboradores} colaboradores distribuídos em {empresas.length} empresas
+                      {dashboardStats.totalColaboradores} colaboradores distribuídos em {empresasSupabase.length} empresas
                     </div>
                   </div>
                 </div>
@@ -238,7 +250,7 @@ const Index = () => {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Empresas</span>
-                    <span className="font-semibold">{empresas.length}</span>
+                    <span className="font-semibold">{empresasSupabase.length}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Compliance</span>
