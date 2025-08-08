@@ -422,27 +422,45 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           created_at: string
+          department: string | null
           empresa_ids: string[] | null
+          full_name: string | null
           id: string
+          is_active: boolean | null
+          last_login: string | null
+          phone: string | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string
           user_id: string
           username: string
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
+          department?: string | null
           empresa_ids?: string[] | null
+          full_name?: string | null
           id?: string
+          is_active?: boolean | null
+          last_login?: string | null
+          phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
           user_id: string
           username: string
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
+          department?: string | null
           empresa_ids?: string[] | null
+          full_name?: string | null
           id?: string
+          is_active?: boolean | null
+          last_login?: string | null
+          phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
           user_id?: string
@@ -469,6 +487,10 @@ export type Database = {
           required_role: Database["public"]["Enums"]["user_role"]
         }
         Returns: boolean
+      }
+      update_last_login: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
     }
     Enums: {

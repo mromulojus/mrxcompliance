@@ -1,110 +1,271 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
-export type Role = "superuser" | "administrador" | "empresarial" | "operacional" | "anon";
+export type UserRole = 'superuser' | 'administrador' | 'empresarial' | 'operacional';
 
-export type User = {
+export interface UserProfile {
+  id: string;
+  user_id: string;
   username: string;
-  role: Role;
-  empresaIds?: string[]; // empresas vinculadas
-};
+  full_name?: string;
+  role: UserRole;
+  avatar_url?: string;
+  phone?: string;
+  department?: string;
+  is_active: boolean;
+  empresa_ids?: string[];
+  last_login?: string;
+  created_at: string;
+  updated_at: string;
+}
 
-type AuthContextType = {
+interface AuthContextType {
   user: User | null;
-  login: (params: { username: string; password?: string; roleFallback?: Exclude<Role, "anon"> }) => void;
-  logout: () => void;
-  can: (permission: string) => boolean;
-};
+  session: Session | null;
+  profile: UserProfile | null;
+  loading: boolean;
+  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
+  signOut: () => Promise<{ error: any }>;
+  hasRole: (requiredRole: UserRole) => boolean;
+  hasAnyRole: (roles: UserRole[]) => boolean;
+  refreshProfile: () => Promise<void>;
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const STORAGE_KEY = "auth:user";
-const LOGS_KEY = "activityLogs";
-
-function pushLog(entry: { action: string; by: string; meta?: Record<string, unknown> }) {
-  try {
-    const logs: any[] = JSON.parse(localStorage.getItem(LOGS_KEY) || "[]");
-    logs.unshift({ id: crypto.randomUUID(), ts: new Date().toISOString(), ...entry });
-    localStorage.setItem(LOGS_KEY, JSON.stringify(logs.slice(0, 500)));
-  } catch {}
-}
-
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) setUser(JSON.parse(raw));
-  }, []);
-
-  useEffect(() => {
-    if (user) localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-    else localStorage.removeItem(STORAGE_KEY);
-  }, [user]);
-
-  const login: AuthContextType["login"] = ({ username, password, roleFallback }) => {
-    // Regra pedida: superuser com credenciais específicas
-    if (username === "mrxbr" && password === "1408") {
-      const u: User = { username, role: "superuser" };
-      setUser(u);
-      pushLog({ action: "login", by: username, meta: { role: u.role } });
-      return;
-    }
-    const role: Role = roleFallback ?? "operacional";
-    const u: User = { username, role };
-    setUser(u);
-    pushLog({ action: "login", by: username, meta: { role } });
-  };
-
-  const logout = () => {
-    if (user) pushLog({ action: "logout", by: user.username });
-    setUser(null);
-  };
-
-  // Tabela simples de permissões por role
-  const rolePerms: Record<Role, string[]> = {
-    superuser: [
-      "view:activity-log",
-      "view:system-data",
-      "manage:structure",
-      "manage:users",
-      "view:denuncias",
-      "view:rescisao",
-      "use:docs",
-    ],
-    administrador: [
-      // tudo exceto logs e estrutura
-      "view:system-data",
-      "manage:users", // mas sem excluir no UI (tratado na tela)
-      "view:denuncias",
-      "view:rescisao",
-      "use:docs",
-    ],
-    empresarial: [
-      "view:system-data",
-      "view:denuncias",
-      "use:docs",
-      // Sem manage:users
-    ],
-    operacional: [
-      "view:system-data",
-      // sem denuncias e sem rescisao
-      "use:docs",
-    ],
-    anon: [],
-  };
-
-  const can: AuthContextType["can"] = (permission) => {
-    if (!user) return false;
-    return rolePerms[user.role]?.includes(permission) ?? false;
-  };
-
-  const value = useMemo(() => ({ user, login, logout, can }), [user]);
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };
 
-export const useAuth = () => {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth deve ser usado dentro de AuthProvider");
-  return ctx;
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider = ({ children }: AuthProviderProps) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  const fetchProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      return null;
+    }
+  };
+
+  const updateLastLogin = async () => {
+    try {
+      await supabase.rpc('update_last_login');
+    } catch (error) {
+      console.error('Error updating last login:', error);
+    }
+  };
+
+  const refreshProfile = async () => {
+    if (user) {
+      const profileData = await fetchProfile(user.id);
+      setProfile(profileData);
+    }
+  };
+
+  useEffect(() => {
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          // Defer profile fetch to avoid recursive issues
+          setTimeout(async () => {
+            const profileData = await fetchProfile(session.user.id);
+            setProfile(profileData);
+            
+            if (event === 'SIGNED_IN') {
+              await updateLastLogin();
+              toast({
+                title: 'Login realizado com sucesso',
+                description: `Bem-vindo(a), ${profileData?.full_name || session.user.email}!`
+              });
+            }
+          }, 0);
+        } else {
+          setProfile(null);
+        }
+        
+        setLoading(false);
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        fetchProfile(session.user.id).then(setProfile);
+      }
+      
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signIn = async (email: string, password: string) => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        toast({
+          title: 'Erro no login',
+          description: error.message === 'Invalid login credentials' 
+            ? 'Email ou senha incorretos' 
+            : error.message,
+          variant: 'destructive'
+        });
+      }
+
+      return { error };
+    } catch (error: any) {
+      toast({
+        title: 'Erro no login',
+        description: 'Ocorreu um erro inesperado. Tente novamente.',
+        variant: 'destructive'
+      });
+      return { error };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signUp = async (email: string, password: string, fullName?: string) => {
+    try {
+      setLoading(true);
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            full_name: fullName || email,
+            username: email
+          }
+        }
+      });
+
+      if (error) {
+        toast({
+          title: 'Erro no cadastro',
+          description: error.message === 'User already registered' 
+            ? 'Este email já está cadastrado' 
+            : error.message,
+          variant: 'destructive'
+        });
+      } else {
+        toast({
+          title: 'Cadastro realizado',
+          description: 'Verifique seu email para confirmar a conta.'
+        });
+      }
+
+      return { error };
+    } catch (error: any) {
+      toast({
+        title: 'Erro no cadastro',
+        description: 'Ocorreu um erro inesperado. Tente novamente.',
+        variant: 'destructive'
+      });
+      return { error };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signOut();
+      
+      if (!error) {
+        toast({
+          title: 'Logout realizado',
+          description: 'Você foi desconectado com sucesso.'
+        });
+      }
+
+      return { error };
+    } catch (error: any) {
+      return { error };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const hasRole = (requiredRole: UserRole): boolean => {
+    if (!profile) return false;
+    
+    const roleHierarchy = {
+      'superuser': 4,
+      'administrador': 3,
+      'empresarial': 2,
+      'operacional': 1
+    };
+    
+    const userRoleLevel = roleHierarchy[profile.role] || 0;
+    const requiredRoleLevel = roleHierarchy[requiredRole] || 0;
+    
+    return userRoleLevel >= requiredRoleLevel;
+  };
+
+  const hasAnyRole = (roles: UserRole[]): boolean => {
+    return roles.some(role => hasRole(role));
+  };
+
+  const value = {
+    user,
+    session,
+    profile,
+    loading,
+    signIn,
+    signUp,
+    signOut,
+    hasRole,
+    hasAnyRole,
+    refreshProfile
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };

@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { Activity, BookText, Building2, Home, ListTree, Settings2, Shield, Users } from "lucide-react";
+import { Activity, BookText, Building2, Home, ListTree, Settings2, Shield, Users, LogOut } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 import {
   Sidebar,
   SidebarContent,
@@ -14,6 +15,7 @@ import {
 
 export function AppSidebar() {
   const { state } = useSidebar();
+  const { signOut, profile } = useAuth();
   const collapsed = state === "collapsed";
   const location = useLocation();
   const path = location.pathname;
@@ -52,9 +54,29 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              
+              {/* User Info & Logout */}
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={() => signOut()}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  {!collapsed && <span>Sair</span>}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        
+        {profile && !collapsed && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Usuário</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <div className="px-2 py-1 text-xs text-muted-foreground">
+                <div className="font-medium">{profile.full_name}</div>
+                <div className="capitalize">{profile.role}</div>
+              </div>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
     </Sidebar>
   );
