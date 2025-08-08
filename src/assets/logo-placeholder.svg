@@ -1,0 +1,8 @@
+<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M15 20C15 11.7157 21.7157 5 30 5H40C44.4183 5 48 8.58172 48 13V87C48 91.4183 44.4183 95 40 95H30C21.7157 95 15 88.2843 15 80V20Z" fill="currentColor"/>
+  <path d="M70 20C70 11.7157 76.7157 5 85 5H95C95 5 95 95 95 95H85C76.7157 95 70 88.2843 70 80V20Z" fill="currentColor"/>
+  <path d="M32 35C40 30 50 25 60 35C65 40 65 45 55 50C50 55 45 60 40 65C35 55 25 45 32 35Z" fill="currentColor"/>
+  <text x="50" y="10" font-family="Arial, sans-serif" font-size="6" text-anchor="middle" fill="currentColor">PLAN</text>
+  <text x="20" y="50" font-family="Arial, sans-serif" font-size="6" text-anchor="middle" fill="currentColor">CHECK</text>
+  <text x="80" y="50" font-family="Arial, sans-serif" font-size="6" text-anchor="middle" fill="currentColor">CONTROL</text>
+</svg>
