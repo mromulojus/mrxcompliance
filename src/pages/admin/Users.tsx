@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { supabase } from "@/integrations/supabase/client";
-import { useSupabaseAuth, Role } from "@/context/SupabaseAuthContext";
+import { useAuth, UserRole } from "@/context/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
-type DatabaseRole = "superuser" | "administrador" | "empresarial" | "operacional";
+type DatabaseRole = UserRole;
 
 type User = {
   id: string;
@@ -21,7 +21,7 @@ type User = {
 const UsersPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const { profile } = useSupabaseAuth();
+  const { profile } = useAuth();
   const { toast } = useToast();
 
   const canDeleteUsers = profile?.role === 'superuser';

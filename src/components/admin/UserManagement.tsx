@@ -7,9 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useForm } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { Role } from "@/context/SupabaseAuthContext";
+import { UserRole } from "@/context/AuthContext";
 
-type DatabaseRole = "superuser" | "administrador" | "empresarial" | "operacional";
+type DatabaseRole = UserRole;
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 type UserFormData = {
