@@ -4,8 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Building2 } from 'lucide-react';
-import { useHR } from '@/context/HRContext';
-import { Empresa } from '@/types/hr';
+import { useSupabaseData, Empresa } from '@/hooks/useSupabaseData';
 
 interface FormEmpresaProps {
   empresa?: Empresa;
@@ -14,7 +13,7 @@ interface FormEmpresaProps {
 }
 
 export function FormEmpresa({ empresa, onSalvar, onCancelar }: FormEmpresaProps) {
-  const { adicionarEmpresa, editarEmpresa } = useHR();
+  const { adicionarEmpresa, editarEmpresa } = useSupabaseData();
   
   const [form, setForm] = useState({
     nome: empresa?.nome || '',

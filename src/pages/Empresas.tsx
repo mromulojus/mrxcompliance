@@ -1,13 +1,13 @@
 import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useHR } from "@/context/HRContext";
+import { useSupabaseData } from "@/hooks/useSupabaseData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Building2, Eye, Search } from "lucide-react";
 
 const Empresas = () => {
-  const { empresas, colaboradores } = useHR();
+  const { empresas, colaboradores, loading } = useSupabaseData();
   const navigate = useNavigate();
   const [q, setQ] = useState("");
 
@@ -29,9 +29,9 @@ const Empresas = () => {
     const map: Record<string, { total: number; ativos: number }> = {};
     for (const e of empresas) map[e.id] = { total: 0, ativos: 0 };
     for (const c of colaboradores) {
-      if (!map[c.empresa]) map[c.empresa] = { total: 0, ativos: 0 };
-      map[c.empresa].total += 1;
-      if (c.status === "ATIVO") map[c.empresa].ativos += 1;
+      if (!map[c.empresa_id]) map[c.empresa_id] = { total: 0, ativos: 0 };
+      map[c.empresa_id].total += 1;
+      if (c.status === "ATIVO") map[c.empresa_id].ativos += 1;
     }
     return map;
   }, [empresas, colaboradores]);

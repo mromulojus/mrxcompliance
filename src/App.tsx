@@ -3,10 +3,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { HRProvider } from "@/context/HRContext";
-import { AuthProvider } from "@/context/AuthContext";
+import { SupabaseAuthProvider } from "@/context/SupabaseAuthContext";
 import AppLayout from "@/layouts/AppLayout";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { SupabaseProtectedRoute } from "@/components/auth/SupabaseProtectedRoute";
 import Index from "./pages/Index";
 import EmpresaDetalhes from "./pages/EmpresaDetalhes";
 import DenunciasDashboard from "./pages/DenunciasDashboard";
@@ -18,101 +17,100 @@ import SystemData from "@/pages/admin/SystemData";
 import Structure from "@/pages/admin/Structure";
 import UsersPage from "@/pages/admin/Users";
 import Docs from "@/pages/admin/Docs";
-import Login from "@/pages/Login";
+import Auth from "@/pages/Auth";
 import Empresas from "@/pages/Empresas";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <HRProvider>
-        <TooltipProvider>
+    <SupabaseAuthProvider>
+      <TooltipProvider>
           <Toaster />
           <Sonner />
           <BrowserRouter>
             <Routes>
-              <Route path="/login" element={<Login />} />
+              <Route path="/auth" element={<Auth />} />
 
               <Route element={<AppLayout />}>
                 <Route
                   path="/"
                   element={
-                    <ProtectedRoute>
+                    <SupabaseProtectedRoute>
                       <Index />
-                    </ProtectedRoute>
+                    </SupabaseProtectedRoute>
                   }
                 />
                 <Route
                   path="/empresas"
                   element={
-                    <ProtectedRoute requireAnyOf={[{ type: "perm", value: "view:system-data" }]}>
+                    <SupabaseProtectedRoute requireAnyOf={[{ type: "perm", value: "view:system-data" }]}>
                       <Empresas />
-                    </ProtectedRoute>
+                    </SupabaseProtectedRoute>
                   }
                 />
                 <Route
                   path="/empresa/:empresaId"
                   element={
-                    <ProtectedRoute requireAnyOf={[{ type: "perm", value: "view:system-data" }]}> 
+                    <SupabaseProtectedRoute requireAnyOf={[{ type: "perm", value: "view:system-data" }]}> 
                       <EmpresaDetalhes />
-                    </ProtectedRoute>
+                    </SupabaseProtectedRoute>
                   }
                 />
                 <Route
                   path="/denuncias/dashboard"
                   element={
-                    <ProtectedRoute requireAnyOf={[{ type: "perm", value: "view:denuncias" }]}> 
+                    <SupabaseProtectedRoute requireAnyOf={[{ type: "perm", value: "view:denuncias" }]}> 
                       <DenunciasDashboard />
-                    </ProtectedRoute>
+                    </SupabaseProtectedRoute>
                   }
                 />
                 <Route
                   path="/denuncias/consulta"
                   element={
-                    <ProtectedRoute requireAnyOf={[{ type: "perm", value: "view:denuncias" }]}> 
+                    <SupabaseProtectedRoute requireAnyOf={[{ type: "perm", value: "view:denuncias" }]}> 
                       <ConsultaDenuncia />
-                    </ProtectedRoute>
+                    </SupabaseProtectedRoute>
                   }
                 />
                 <Route
                   path="/admin/activity-log"
                   element={
-                    <ProtectedRoute requireAnyOf={[{ type: "perm", value: "view:activity-log" }]}> 
+                    <SupabaseProtectedRoute requireAnyOf={[{ type: "perm", value: "view:activity-log" }]}> 
                       <ActivityLog />
-                    </ProtectedRoute>
+                    </SupabaseProtectedRoute>
                   }
                 />
                 <Route
                   path="/admin/system-data"
                   element={
-                    <ProtectedRoute requireAnyOf={[{ type: "perm", value: "view:system-data" }]}> 
+                    <SupabaseProtectedRoute requireAnyOf={[{ type: "perm", value: "view:system-data" }]}> 
                       <SystemData />
-                    </ProtectedRoute>
+                    </SupabaseProtectedRoute>
                   }
                 />
                 <Route
                   path="/admin/structure"
                   element={
-                    <ProtectedRoute requireAnyOf={[{ type: "perm", value: "manage:structure" }]}> 
+                    <SupabaseProtectedRoute requireAnyOf={[{ type: "perm", value: "manage:structure" }]}> 
                       <Structure />
-                    </ProtectedRoute>
+                    </SupabaseProtectedRoute>
                   }
                 />
                 <Route
                   path="/admin/users"
                   element={
-                    <ProtectedRoute requireAnyOf={[{ type: "role", value: "superuser" }, { type: "role", value: "administrador" }]}> 
+                    <SupabaseProtectedRoute requireAnyOf={[{ type: "role", value: "superuser" }, { type: "role", value: "administrador" }]}> 
                       <UsersPage />
-                    </ProtectedRoute>
+                    </SupabaseProtectedRoute>
                   }
                 />
                 <Route
                   path="/admin/docs"
                   element={
-                    <ProtectedRoute requireAnyOf={[{ type: "perm", value: "use:docs" }]}> 
+                    <SupabaseProtectedRoute requireAnyOf={[{ type: "perm", value: "use:docs" }]}> 
                       <Docs />
-                    </ProtectedRoute>
+                    </SupabaseProtectedRoute>
                   }
                 />
               </Route>
@@ -123,8 +121,7 @@ const App = () => (
             </Routes>
           </BrowserRouter>
         </TooltipProvider>
-      </HRProvider>
-    </AuthProvider>
+    </SupabaseAuthProvider>
   </QueryClientProvider>
 );
 

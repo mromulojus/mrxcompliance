@@ -2,10 +2,10 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { useHR } from "@/context/HRContext";
+import { useSupabaseData } from "@/hooks/useSupabaseData";
 
 const SystemData: React.FC = () => {
-  const { empresas, colaboradores } = useHR();
+  const { empresas, colaboradores, loading } = useSupabaseData();
 
   React.useEffect(() => {
     document.title = "Dados do Sistema - MRx Compliance";
@@ -36,11 +36,22 @@ const SystemData: React.FC = () => {
       c.nome,
       c.email,
       c.cargo,
-      empresas.find((e) => e.id === c.empresa)?.nome || c.empresa,
+      empresas.find((e) => e.id === c.empresa_id)?.nome || c.empresa_id,
       c.status,
     ]);
     downloadCsv(`colaboradores.csv`, [header, ...rows]);
   };
+
+  if (loading) {
+    return (
+      <main>
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <span className="ml-2">Carregando dados...</span>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main>
@@ -107,7 +118,7 @@ const SystemData: React.FC = () => {
                       <TableCell>{c.nome}</TableCell>
                       <TableCell>{c.email}</TableCell>
                       <TableCell>{c.cargo}</TableCell>
-                      <TableCell>{empresas.find((e) => e.id === c.empresa)?.nome || c.empresa}</TableCell>
+                      <TableCell>{empresas.find((e) => e.id === c.empresa_id)?.nome || c.empresa_id}</TableCell>
                       <TableCell>{c.status}</TableCell>
                     </TableRow>
                   ))}

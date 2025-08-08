@@ -4,10 +4,10 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/s
 import { AppSidebar } from "@/components/app-sidebar";
 import { Logo } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/context/AuthContext";
+import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
 
 const AppLayout: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, profile, signOut } = useSupabaseAuth();
   const location = useLocation();
 
   React.useEffect(() => {
@@ -34,11 +34,11 @@ const AppLayout: React.FC = () => {
             <div className="flex items-center gap-3 text-sm">
               {user ? (
                 <>
-                  <span className="text-muted-foreground hidden sm:inline">{user.username} • {user.role}</span>
-                  <Button variant="outline" size="sm" onClick={logout}>Sair</Button>
+                  <span className="text-muted-foreground hidden sm:inline">{profile?.username || user?.email} • {profile?.role}</span>
+                  <Button variant="outline" size="sm" onClick={signOut}>Sair</Button>
                 </>
               ) : (
-                <a href="/login" className="underline">Entrar</a>
+                <a href="/auth" className="underline">Entrar</a>
               )}
             </div>
           </header>
