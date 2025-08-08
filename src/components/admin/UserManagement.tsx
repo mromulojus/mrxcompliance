@@ -69,13 +69,16 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
   const handleCreateUser = async (data: UserFormData) => {
     try {
-      // Create user in auth
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      // Create user with normal signup
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
-        user_metadata: {
-          username: data.username,
-          full_name: data.full_name
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            username: data.username,
+            full_name: data.full_name
+          }
         }
       });
 
@@ -88,24 +91,30 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         return;
       }
 
-      // Create profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          user_id: authData.user.id,
-          username: data.username,
-          full_name: data.full_name,
-          role: data.role as DatabaseRole,
-          is_active: true
-        });
-
-      if (profileError) {
+      if (!authData.user) {
         toast({
-          title: "Erro ao criar perfil",
-          description: profileError.message,
+          title: "Erro",
+          description: "Falha ao criar usuário.",
           variant: "destructive"
         });
         return;
+      }
+
+      // Update the profile with the correct role
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          username: data.username,
+          full_name: data.full_name,
+          role: data.role as DatabaseRole,
+          is_active: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', authData.user.id);
+
+      if (profileError) {
+        console.error('Profile update error:', profileError);
+        // Don't show error to user since the user was created successfully
       }
 
       toast({

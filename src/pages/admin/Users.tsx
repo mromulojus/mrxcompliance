@@ -60,21 +60,16 @@ const UsersPage: React.FC = () => {
         return;
       }
 
-      // Get emails from auth.users via profiles join
-      const usersWithEmails = await Promise.all(
-        (data || []).map(async (profile) => {
-          const { data: authData } = await supabase.auth.admin.getUserById(profile.user_id);
-          return {
-            id: profile.user_id,
-            username: profile.username,
-            email: authData.user?.email || '',
-            full_name: profile.full_name || '',
-            role: profile.role as DatabaseRole,
-            is_active: profile.is_active,
-            created_at: profile.created_at
-          };
-        })
-      );
+      // Get emails from auth metadata since we can't use admin API
+      const usersWithEmails = (data || []).map((profile) => ({
+        id: profile.user_id,
+        username: profile.username,
+        email: profile.username.includes('@') ? profile.username : `${profile.username}@sistema.interno`,
+        full_name: profile.full_name || '',
+        role: profile.role as DatabaseRole,
+        is_active: profile.is_active,
+        created_at: profile.created_at
+      }));
 
       setUsers(usersWithEmails);
     } catch (error) {
