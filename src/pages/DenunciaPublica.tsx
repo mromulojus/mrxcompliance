@@ -61,6 +61,21 @@ export default function DenunciaPublica() {
     return () => { isMounted = false; };
   }, [empresaId]);
 
+  if (loadingEmpresa) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="max-w-md w-full">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl">Carregando canal de denúncias…</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center text-muted-foreground">
+            Aguarde enquanto buscamos os dados da empresa.
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (!loadingEmpresa && !empresa) {
     return <Navigate to="/404" replace />;
   }
@@ -185,7 +200,7 @@ export default function DenunciaPublica() {
               <Shield className="h-6 w-6 text-primary" />
             </div>
             <CardTitle className="text-2xl">Canal de Denúncias</CardTitle>
-            <p className="text-muted-foreground">{empresa.nome}</p>
+            <p className="text-muted-foreground">{empresa?.nome ?? 'Empresa'}</p>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="bg-blue-50 p-4 rounded-lg">
