@@ -36,12 +36,38 @@ export default function ConsultaDenuncia() {
     OUTRO: 'Outro'
   };
 
-  const handlePesquisar = () => {
+  const handlePesquisar = async () => {
     if (!protocolo.trim()) return;
-    
-    const denuncia = denuncias.find(d => d.protocolo === protocolo.trim());
-    setDenunciaEncontrada(denuncia || null);
-    setPesquisado(true);
+
+    try {
+      const { data, error } = await supabase
+        .from('denuncias')
+        .select('id, protocolo, tipo, status, created_at, updated_at')
+        .eq('protocolo', protocolo.trim())
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (!data) {
+        setDenunciaEncontrada(null);
+      } else {
+        const mapped = {
+          id: (data as any).id,
+          protocolo: (data as any).protocolo,
+          tipo: (data as any).tipo,
+          status: (data as any).status,
+          createdAt: (data as any).created_at,
+          updatedAt: (data as any).updated_at,
+          comentarios: [] as any[],
+        };
+        setDenunciaEncontrada(mapped);
+      }
+    } catch (e) {
+      console.error('Erro ao buscar denúncia por protocolo:', e);
+      setDenunciaEncontrada(null);
+    } finally {
+      setPesquisado(true);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
