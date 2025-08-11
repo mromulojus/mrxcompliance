@@ -9,14 +9,45 @@ const AppLayout: React.FC = () => {
   const location = useLocation();
 
   React.useEffect(() => {
-    // SEO basic title by route
+    // SEO basic tags by route
+    const path = location.pathname;
     const titles: Record<string, string> = {
       "/": "MRx Compliance - Painel",
       "/denuncias/dashboard": "Denúncias - Dashboard",
       "/denuncias/consulta": "Consultar Denúncia",
+      "/auth": "Entrar - MRx Compliance",
     };
-    const title = titles[location.pathname] || "MRx Compliance";
-    document.title = title;
+    const descriptions: Record<string, string> = {
+      "/": "Painel de compliance e RH com visão geral e métricas.",
+      "/denuncias/dashboard": "Acompanhe denúncias: abertas, em andamento e concluídas.",
+      "/denuncias/consulta": "Consultar denúncia por protocolo de forma segura.",
+      "/auth": "Acesse sua conta no MRx Compliance com segurança.",
+    };
+
+    document.title = titles[path] || "MRx Compliance";
+
+    const ensureTag = (selector: string, create: () => HTMLElement) => {
+      let el = document.querySelector(selector) as HTMLElement | null;
+      if (!el) {
+        el = create();
+        document.head.appendChild(el);
+      }
+      return el;
+    };
+
+    const metaDesc = ensureTag('meta[name="description"]', () => {
+      const m = document.createElement('meta');
+      m.setAttribute('name', 'description');
+      return m;
+    }) as HTMLMetaElement;
+    metaDesc.setAttribute('content', descriptions[path] || 'Plataforma de compliance e canal de denúncias.');
+
+    const canonical = ensureTag('link[rel="canonical"]', () => {
+      const l = document.createElement('link');
+      l.setAttribute('rel', 'canonical');
+      return l;
+    }) as HTMLLinkElement;
+    canonical.setAttribute('href', `${window.location.origin}${path}`);
   }, [location.pathname]);
 
   return (
