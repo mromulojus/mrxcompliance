@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,13 +8,12 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
-import { useHR } from '@/context/HRContext';
 import { Shield, AlertTriangle, CheckCircle, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function DenunciaPublica() {
   const { empresaId } = useParams();
-  const { empresas, criarDenuncia } = useHR();
   const { toast } = useToast();
   
   const [formData, setFormData] = useState({
@@ -34,13 +33,39 @@ export default function DenunciaPublica() {
   const [submitted, setSubmitted] = useState(false);
   const [protocolo, setProtocolo] = useState('');
   
-  const empresa = empresas.find(e => e.id === empresaId);
-  
-  if (!empresa) {
+  const [empresa, setEmpresa] = useState<{ id: string; nome: string } | null>(null);
+  const [loadingEmpresa, setLoadingEmpresa] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadEmpresa = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('empresas')
+          .select('id, nome')
+          .eq('id', empresaId)
+          .limit(1);
+        if (error) throw error;
+        if (isMounted) setEmpresa(data && data.length ? (data[0] as any) : null);
+      } catch (e) {
+        if (isMounted) setEmpresa(null);
+      } finally {
+        if (isMounted) setLoadingEmpresa(false);
+      }
+    };
+    if (empresaId) loadEmpresa();
+    else {
+      setEmpresa(null);
+      setLoadingEmpresa(false);
+    }
+    return () => { isMounted = false; };
+  }, [empresaId]);
+
+  if (!loadingEmpresa && !empresa) {
     return <Navigate to="/404" replace />;
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.relacao || !formData.tipo || !formData.conhecimentoFato || !formData.descricao) {
@@ -62,29 +87,38 @@ export default function DenunciaPublica() {
     }
 
     try {
-      const protocoloGerado = criarDenuncia({
-        empresaId: empresaId!,
+      const payload = {
+        empresa_id: empresaId,
         identificado: formData.identificado,
-        nome: formData.identificado ? formData.nome : undefined,
-        email: formData.identificado ? formData.email : undefined,
+        nome: formData.identificado ? formData.nome : null,
+        email: formData.identificado ? formData.email : null,
         relacao: formData.relacao as any,
         tipo: formData.tipo as any,
-        setor: formData.setor || undefined,
-        conhecimentoFato: formData.conhecimentoFato as any,
-        envolvidosCientes: formData.envolvidosCientes,
+        setor: formData.setor || null,
+        conhecimento_fato: formData.conhecimentoFato as any,
+        envolvidos_cientes: formData.envolvidosCientes,
         descricao: formData.descricao,
-        evidenciasDescricao: formData.evidenciasDescricao || undefined,
-        sugestao: formData.sugestao || undefined
-      });
-      
-      setProtocolo(protocoloGerado);
+        evidencias_descricao: formData.evidenciasDescricao || null,
+        sugestao: formData.sugestao || null,
+      };
+
+      const { data, error } = await supabase
+        .from('denuncias')
+        .insert(payload)
+        .select('protocolo')
+        .single();
+
+      if (error) throw error;
+
+      setProtocolo((data as any).protocolo);
       setSubmitted(true);
       
       toast({
         title: 'Denúncia registrada',
-        description: `Protocolo ${protocoloGerado} gerado com sucesso.`
+        description: `Protocolo ${(data as any).protocolo} gerado com sucesso.`
       });
     } catch (error) {
+      console.error('Erro ao registrar denúncia:', error);
       toast({
         title: 'Erro',
         description: 'Ocorreu um erro ao registrar a denúncia. Tente novamente.',
@@ -92,7 +126,6 @@ export default function DenunciaPublica() {
       });
     }
   };
-
   if (submitted) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">

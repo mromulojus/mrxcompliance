@@ -4,13 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { useHR } from '@/context/HRContext';
 import { Search, FileText, Calendar, MessageSquare } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function ConsultaDenuncia() {
-  const { denuncias } = useHR();
   const [protocolo, setProtocolo] = useState('');
   const [denunciaEncontrada, setDenunciaEncontrada] = useState<any>(null);
   const [pesquisado, setPesquisado] = useState(false);
