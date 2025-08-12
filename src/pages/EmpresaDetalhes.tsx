@@ -91,10 +91,8 @@ export default function EmpresaDetalhes() {
     return acc;
   }, {} as Record<string, number>);
 
-  // Cálculo do valor de rescisão geral - temporariamente desabilitado
-  // const { totalRescisao: valorRescisaoGeral, totalPrevisto: valorPrevistoGeral } = calcularTotalRescisaoEmpresa(colaboradoresEmpresa);
-  const valorRescisaoGeral = 0;
-  const valorPrevistoGeral = 0;
+  // Cálculo do valor de rescisão geral
+  const { totalRescisao: valorRescisaoGeral, totalPrevisto: valorPrevistoGeral } = calcularTotalRescisaoEmpresa(colaboradoresEmpresa as any);
   
   const departamentos = colaboradoresEmpresa.reduce((acc, c) => {
     acc[c.departamento] = (acc[c.departamento] || 0) + 1;
