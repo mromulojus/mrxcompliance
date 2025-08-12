@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Users, Building2, TrendingUp, PieChart, BarChart3, DollarSign, UserPlus, FileSpreadsheet, FileText, CheckSquare, AlertTriangle } from 'lucide-react';
 import { useSupabaseData } from '@/hooks/useSupabaseData';
+import { useHR } from '@/context/HRContext';
 import { ColaboradorCard } from '@/components/hr/ColaboradorCard';
 import { FormColaboradorCompleto } from '@/components/hr/FormColaboradorCompleto';
 import { ImportarColaboradores } from '@/components/hr/ImportarColaboradores';
@@ -28,6 +29,7 @@ export default function EmpresaDetalhes() {
     empresas,
     colaboradores
   } = useSupabaseData();
+  const { colaboradores: colaboradoresHR } = useHR();
   const [showFormColaborador, setShowFormColaborador] = useState(false);
   const [showImportColaboradores, setShowImportColaboradores] = useState(false);
   const [showVisualizacaoColaborador, setShowVisualizacaoColaborador] = useState(false);
@@ -36,7 +38,17 @@ export default function EmpresaDetalhes() {
   const [activeTab, setActiveTab] = useState('colaboradores');
   const empresa = empresas.find(e => e.id === empresaId);
   // Remover as referências de raça dos documentos pois não existem lá
-  const colaboradoresEmpresa = colaboradores.filter(c => c.empresa_id === empresaId);
+  const colaboradoresEmpresa = [
+    ...colaboradores.filter(c => c.empresa_id === empresaId),
+    ...colaboradoresHR
+      .filter((c: any) => c.empresa === empresaId)
+      .map((c: any) => ({
+        // normaliza campos mínimos usados nas análises
+        ...c,
+        empresa_id: c.empresa,
+        salario_base: Number(c.salario_base) || 0,
+      }))
+  ];
   if (!empresa) {
     return <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -407,20 +419,25 @@ export default function EmpresaDetalhes() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {Object.entries(distribuicaoRaca).map(([raca, count]) => <div key={raca} className="flex justify-between items-center">
-                  <span className="text-sm">{raca.replace('_', ' ')}</span>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">{count}</Badge>
-                    <div className="w-16 bg-gray-200 rounded-full h-1.5">
-                      <div className="bg-primary h-1.5 rounded-full" style={{
-                        width: `${count / colaboradoresEmpresa.length * 100}%`
-                      }}></div>
+              {Object.entries(distribuicaoRaca).map(([raca, count]) => {
+                const c = Number(count) || 0;
+                return (
+                  <div key={raca} className="flex justify-between items-center">
+                    <span className="text-sm">{raca.replace('_', ' ')}</span>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">{c}</Badge>
+                      <div className="w-16 bg-gray-200 rounded-full h-1.5">
+                        <div className="bg-primary h-1.5 rounded-full" style={{
+                          width: `${c / colaboradoresEmpresa.length * 100}%`
+                        }}></div>
+                      </div>
+                      <span className="text-xs text-muted-foreground w-8">
+                        {Math.round(c / colaboradoresEmpresa.length * 100)}%
+                      </span>
                     </div>
-                    <span className="text-xs text-muted-foreground w-8">
-                      {Math.round(count / colaboradoresEmpresa.length * 100)}%
-                    </span>
                   </div>
-                </div>)}
+                );
+              })}
             </CardContent>
           </Card>
 
