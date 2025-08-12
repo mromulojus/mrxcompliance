@@ -450,20 +450,25 @@ export default function EmpresaDetalhes() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {Object.entries(distribuicaoEstadoCivil).map(([estado, count]) => <div key={estado} className="flex justify-between items-center">
-                  <span className="text-sm">{estado.replace('_', ' ')}</span>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">{count}</Badge>
-                    <div className="w-16 bg-gray-200 rounded-full h-1.5">
-                      <div className="bg-primary h-1.5 rounded-full" style={{
-                        width: `${count / colaboradoresEmpresa.length * 100}%`
-                      }}></div>
+              {Object.entries(distribuicaoEstadoCivil as Record<string, number>).map(([estado, count]) => {
+                const c = Number(count) || 0;
+                return (
+                  <div key={estado} className="flex justify-between items-center">
+                    <span className="text-sm">{estado.replace('_', ' ')}</span>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">{c}</Badge>
+                      <div className="w-16 bg-gray-200 rounded-full h-1.5">
+                        <div className="bg-primary h-1.5 rounded-full" style={{
+                          width: `${c / colaboradoresEmpresa.length * 100}%`
+                        }}></div>
+                      </div>
+                      <span className="text-xs text-muted-foreground w-8">
+                        {Math.round(c / colaboradoresEmpresa.length * 100)}%
+                      </span>
                     </div>
-                    <span className="text-xs text-muted-foreground w-8">
-                      {Math.round(count / colaboradoresEmpresa.length * 100)}%
-                    </span>
                   </div>
-                </div>)}
+                );
+              })}
             </CardContent>
           </Card>
 
@@ -476,20 +481,25 @@ export default function EmpresaDetalhes() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {Object.entries(distribuicaoEscolaridade).map(([escolaridade, count]) => <div key={escolaridade} className="flex justify-between items-center">
-                  <span className="text-sm">{escolaridade.replace('_', ' ')}</span>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">{count}</Badge>
-                    <div className="w-16 bg-gray-200 rounded-full h-1.5">
-                      <div className="bg-primary h-1.5 rounded-full" style={{
-                        width: `${count / colaboradoresEmpresa.length * 100}%`
-                      }}></div>
+              {Object.entries(distribuicaoEscolaridade as Record<string, number>).map(([escolaridade, count]) => {
+                const c = Number(count) || 0;
+                return (
+                  <div key={escolaridade} className="flex justify-between items-center">
+                    <span className="text-sm">{escolaridade.replace('_', ' ')}</span>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">{c}</Badge>
+                      <div className="w-16 bg-gray-200 rounded-full h-1.5">
+                        <div className="bg-primary h-1.5 rounded-full" style={{
+                          width: `${c / colaboradoresEmpresa.length * 100}%`
+                        }}></div>
+                      </div>
+                      <span className="text-xs text-muted-foreground w-8">
+                        {Math.round(c / colaboradoresEmpresa.length * 100)}%
+                      </span>
                     </div>
-                    <span className="text-xs text-muted-foreground w-8">
-                      {Math.round(count / colaboradoresEmpresa.length * 100)}%
-                    </span>
                   </div>
-                </div>)}
+                );
+              })}
             </CardContent>
           </Card>
 
@@ -502,17 +512,22 @@ export default function EmpresaDetalhes() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {Object.entries(departamentos).map(([dept, count]) => <div key={dept} className="flex justify-between items-center">
-                  <span className="text-sm">{dept}</span>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">{count}</Badge>
-                    <div className="w-16 bg-gray-200 rounded-full h-1.5">
-                      <div className="bg-primary h-1.5 rounded-full" style={{
-                        width: `${count / colaboradoresEmpresa.length * 100}%`
-                      }}></div>
+              {Object.entries(departamentos as Record<string, number>).map(([dept, count]) => {
+                const c = Number(count) || 0;
+                return (
+                  <div key={dept} className="flex justify-between items-center">
+                    <span className="text-sm">{dept}</span>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">{c}</Badge>
+                      <div className="w-16 bg-gray-200 rounded-full h-1.5">
+                        <div className="bg-primary h-1.5 rounded-full" style={{
+                          width: `${c / colaboradoresEmpresa.length * 100}%`
+                        }}></div>
+                      </div>
                     </div>
                   </div>
-                </div>)}
+                );
+              })}
             </CardContent>
           </Card>
 
