@@ -11,10 +11,12 @@ import { Separator } from '@/components/ui/separator';
 import { Shield, AlertTriangle, CheckCircle, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useHR } from '@/context/HRContext';
 
 export default function DenunciaPublica() {
   const { empresaId } = useParams();
   const { toast } = useToast();
+  const { criarDenuncia } = useHR();
   
   const [formData, setFormData] = useState({
     identificado: false,
@@ -124,6 +126,24 @@ export default function DenunciaPublica() {
         .single();
 
       if (error) throw error;
+
+      // Atualiza painel interno (HRContext) para aparecer nos dashboards
+      try {
+        criarDenuncia({
+          empresaId: empresaId!,
+          identificado: formData.identificado,
+          nome: formData.identificado ? formData.nome : undefined,
+          email: formData.identificado ? formData.email : undefined,
+          relacao: formData.relacao as any,
+          tipo: formData.tipo as any,
+          setor: formData.setor || undefined,
+          conhecimentoFato: formData.conhecimentoFato as any,
+          envolvidosCientes: formData.envolvidosCientes,
+          descricao: formData.descricao,
+          evidenciasDescricao: formData.evidenciasDescricao || undefined,
+          sugestao: formData.sugestao || undefined,
+        });
+      } catch {}
 
       setProtocolo((data as any).protocolo);
       setSubmitted(true);

@@ -3,9 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { useSupabaseData } from "@/hooks/useSupabaseData";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useHR } from "@/context/HRContext";
 
 const SystemData: React.FC = () => {
-  const { empresas, colaboradores, loading } = useSupabaseData();
+  const { empresas, colaboradores, loading, refetchEmpresas, refetchColaboradores } = useSupabaseData();
+  const { criarDenuncia } = useHR();
+  const { toast } = useToast();
 
   React.useEffect(() => {
     document.title = "Dados do Sistema - MRx Compliance";

@@ -617,12 +617,21 @@ export default function EmpresaDetalhes() {
                 <p className="text-muted-foreground">Esta empresa ainda não possui colaboradores cadastrados.</p>
               </CardContent>
             </Card> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <p className="text-muted-foreground">Lista de colaboradores temporariamente desabilitada.</p>
-                  <p className="text-sm text-muted-foreground mt-2">Em desenvolvimento - aguarde próximas atualizações.</p>
-                </CardContent>
-              </Card>
+              {colaboradoresEmpresa.map((c: any) => (
+                <Card key={c.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center justify-between text-base">
+                      <span>{c.nome}</span>
+                      <Badge variant="outline">{c.status}</Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm text-muted-foreground space-y-1">
+                    <div><strong>Cargo:</strong> {c.cargo}</div>
+                    <div><strong>Depto:</strong> {c.departamento}</div>
+                    <div><strong>Email:</strong> {c.email}</div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>}
         </section>
 
