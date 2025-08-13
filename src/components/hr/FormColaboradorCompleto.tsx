@@ -111,11 +111,15 @@ export function FormColaboradorCompleto({ colaborador, onSalvar, onCancelar }: F
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('FormData completo:', formData);
+    
     if (!formData.nome || !formData.email || !formData.empresa) {
+      console.log('Campos obrigatórios faltando:', { nome: formData.nome, email: formData.email, empresa: formData.empresa });
       toast.error('Preencha os campos obrigatórios');
       return;
     }
 
+    console.log('Preparando dados para envio...');
     const dados: Omit<Colaborador, 'id' | 'auditoria'> = {
       nome: formData.nome,
       email: formData.email,
@@ -179,11 +183,12 @@ export function FormColaboradorCompleto({ colaborador, onSalvar, onCancelar }: F
     };
 
     if (colaborador) {
+      console.log('Editando colaborador existente:', colaborador.id);
       editarColaborador(colaborador.id, dados);
       toast.success('Colaborador atualizado com sucesso!');
     } else {
+      console.log('Adicionando novo colaborador:', dados);
       adicionarColaborador(dados);
-      toast.success('Colaborador adicionado com sucesso!');
     }
 
     onSalvar?.();

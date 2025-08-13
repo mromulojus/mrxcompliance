@@ -228,6 +228,8 @@ export function HRProvider({ children }: { children: React.ReactNode }) {
 
   const adicionarColaborador = async (colaboradorData: Omit<Colaborador, 'id' | 'auditoria'>) => {
     try {
+      console.log('Dados recebidos para adicionar colaborador:', colaboradorData);
+      
       const supabaseData = convertColaboradorToSupabase({
         ...colaboradorData,
         id: '', // temporary id, will be replaced by supabase
@@ -237,11 +239,14 @@ export function HRProvider({ children }: { children: React.ReactNode }) {
           created_by: ''
         }
       });
+      
+      console.log('Dados convertidos para Supabase:', supabaseData);
+      
       await addColaboradorSupabase(supabaseData as any);
       toast.success('Colaborador adicionado com sucesso!');
     } catch (error) {
       console.error('Erro ao adicionar colaborador:', error);
-      toast.error('Erro ao adicionar colaborador');
+      toast.error('Erro ao adicionar colaborador: ' + (error as Error).message);
     }
   };
 
