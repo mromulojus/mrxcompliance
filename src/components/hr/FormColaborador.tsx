@@ -33,9 +33,9 @@ export function FormColaborador({ colaborador, onSalvar, onCancelar }: FormColab
     salario_base: colaborador?.salario_base || 0,
     telefone: colaborador?.telefone || '',
     endereco: colaborador?.endereco || '',
-    cpf: colaborador?.documentos?.cpf || '',
-    rg: colaborador?.documentos?.rg || '',
-    ctps: colaborador?.documentos?.ctps || ''
+    cpf: colaborador?.documentos?.cpf || (colaborador as any)?.cpf || '',
+    rg: colaborador?.documentos?.rg || (colaborador as any)?.rg || '',
+    ctps: colaborador?.documentos?.ctps || (colaborador as any)?.ctps || ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {

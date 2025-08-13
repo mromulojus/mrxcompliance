@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { Camera, Upload, FileText, Eye, Plus, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useSupabaseData } from '@/hooks/useSupabaseData';
-import { DocumentUpload } from './DocumentUpload';
+import { DocumentsManager } from './DocumentsManager';
 
 interface FormColaboradorCompletoProps {
   colaborador?: Colaborador;
@@ -715,10 +715,10 @@ export function FormColaboradorCompleto({ colaborador, empresaId, onSalvar, onCa
               {/* Upload de documentos */}
               {colaborador && (
                 <div className="space-y-4 mt-6">
-                  <DocumentUpload 
+                  <DocumentsManager 
                     colaboradorId={colaborador.id}
-                    onUploadComplete={(doc) => {
-                      toast.success('Documento enviado com sucesso!');
+                    onDocumentChange={() => {
+                      toast.success('Documento atualizado!');
                     }}
                   />
                 </div>

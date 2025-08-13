@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { DocumentsManager } from './DocumentsManager';
 import {
   User,
   Mail,
@@ -460,41 +461,19 @@ export function VisualizacaoColaboradorCompleta({ colaborador, onClose, onEdit }
               </CardContent>
             </Card>
 
-            {/* Documentos Arquivados */}
+            {/* Documentos do Colaborador */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="h-5 w-5" />
-                  Documentos Arquivados
+                  Documentos do Colaborador
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <ScrollArea className="h-32">
-                  {colaborador.documentos_arquivos?.length ? (
-                    <div className="space-y-2">
-                      {colaborador.documentos_arquivos.map((doc, index) => (
-                        <div key={index} className="flex items-center justify-between p-2 border rounded-lg">
-                          <div>
-                            <p className="font-medium text-sm">{doc.nome}</p>
-                            <p className="text-xs text-muted-foreground">{doc.tipo}</p>
-                          </div>
-                          <div className="flex gap-1">
-                            <Button size="sm" variant="outline">
-                              <Eye className="h-3 w-3" />
-                            </Button>
-                            <Button size="sm" variant="outline">
-                              <Download className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-center text-muted-foreground text-sm py-4">
-                      Nenhum documento arquivado
-                    </p>
-                  )}
-                </ScrollArea>
+                <DocumentsManager 
+                  colaboradorId={colaborador.id}
+                  onDocumentChange={() => {}}
+                />
               </CardContent>
             </Card>
 
