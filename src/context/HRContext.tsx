@@ -228,7 +228,15 @@ export function HRProvider({ children }: { children: React.ReactNode }) {
 
   const adicionarColaborador = async (colaboradorData: Omit<Colaborador, 'id' | 'auditoria'>) => {
     try {
-      const supabaseData = convertColaboradorToSupabase(colaboradorData as Colaborador);
+      const supabaseData = convertColaboradorToSupabase({
+        ...colaboradorData,
+        id: '', // temporary id, will be replaced by supabase
+        auditoria: {
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          created_by: ''
+        }
+      });
       await addColaboradorSupabase(supabaseData as any);
       toast.success('Colaborador adicionado com sucesso!');
     } catch (error) {
@@ -260,7 +268,10 @@ export function HRProvider({ children }: { children: React.ReactNode }) {
 
   const adicionarEmpresa = async (empresaData: Omit<Empresa, 'id'>) => {
     try {
-      const supabaseData = convertEmpresaToSupabase(empresaData as Empresa);
+      const supabaseData = convertEmpresaToSupabase({
+        ...empresaData,
+        id: '' // temporary id, will be replaced by supabase
+      });
       await addEmpresaSupabase(supabaseData as any);
       toast.success('Empresa adicionada com sucesso!');
     } catch (error) {
