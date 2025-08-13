@@ -503,6 +503,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      user_can_access_empresa: {
+        Args: { empresa_uuid: string }
+        Returns: boolean
+      }
     }
     Enums: {
       colaborador_status: "ATIVO" | "INATIVO" | "DEMITIDO"
