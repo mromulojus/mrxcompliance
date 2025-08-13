@@ -507,6 +507,10 @@ export type Database = {
         Args: { empresa_uuid: string }
         Returns: boolean
       }
+      user_can_access_empresa_data: {
+        Args: { empresa_uuid: string }
+        Returns: boolean
+      }
     }
     Enums: {
       colaborador_status: "ATIVO" | "INATIVO" | "DEMITIDO"
