@@ -8,8 +8,8 @@ import { useHR } from '@/context/HRContext';
 export function FiltrosColaboradores() {
   const { filtros, setFiltros, empresas, colaboradores } = useHR();
 
-  // Obter departamentos únicos
-  const departamentos = Array.from(new Set(colaboradores.map(c => c.departamento)));
+  // Obter departamentos únicos (filtrando vazios)
+  const departamentos = Array.from(new Set(colaboradores.map(c => c.departamento).filter(d => d && d.trim() !== '')));
 
   const limparFiltros = () => {
     setFiltros({
