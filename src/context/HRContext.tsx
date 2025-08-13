@@ -230,6 +230,15 @@ export function HRProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('Dados recebidos para adicionar colaborador:', colaboradorData);
       
+      // Verificar se CPF já existe (se não estiver vazio)
+      if (colaboradorData.documentos?.cpf) {
+        const colaboradorExistente = colaboradores.find(c => c.documentos?.cpf === colaboradorData.documentos?.cpf);
+        if (colaboradorExistente) {
+          toast.error(`Já existe um colaborador com o CPF ${colaboradorData.documentos.cpf}`);
+          return;
+        }
+      }
+      
       const supabaseData = convertColaboradorToSupabase({
         ...colaboradorData,
         id: '', // temporary id, will be replaced by supabase
@@ -244,9 +253,15 @@ export function HRProvider({ children }: { children: React.ReactNode }) {
       
       await addColaboradorSupabase(supabaseData as any);
       toast.success('Colaborador adicionado com sucesso!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao adicionar colaborador:', error);
-      toast.error('Erro ao adicionar colaborador: ' + (error as Error).message);
+      
+      // Tratamento específico para erro de CPF duplicado
+      if (error.message?.includes('colaboradores_cpf_key') || error.message?.includes('duplicate key')) {
+        toast.error('Este CPF já está cadastrado no sistema');
+      } else {
+        toast.error('Erro ao adicionar colaborador: ' + error.message);
+      }
     }
   };
 
