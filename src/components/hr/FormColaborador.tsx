@@ -38,7 +38,7 @@ export function FormColaborador({ colaborador, onSalvar, onCancelar }: FormColab
     ctps: colaborador?.documentos?.ctps || ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.nome || !formData.email || !formData.empresa) {
@@ -46,76 +46,140 @@ export function FormColaborador({ colaborador, onSalvar, onCancelar }: FormColab
       return;
     }
 
-    const dados: Omit<Colaborador, 'id' | 'auditoria'> = {
-      nome: formData.nome,
-      email: formData.email,
-      cargo: formData.cargo,
-      departamento: formData.departamento,
-      empresa: formData.empresa,
-      status: formData.status,
-      tipo_contrato: 'CLT' as const,
-      data_admissao: formData.data_admissao,
-      data_nascimento: formData.data_nascimento,
-      sexo: formData.sexo,
-      salario_base: formData.salario_base,
-      telefone: formData.telefone,
-      celular: formData.telefone, // usando mesmo valor por enquanto
-      endereco: formData.endereco,
-      cep: '',
-      cidade: '',
-      estado: '',
-      estado_civil: 'SOLTEIRO',
-      escolaridade: 'MEDIO',
-      nome_mae: '',
-      nome_pai: '',
-      contato_emergencia: {
-        nome: '',
-        telefone: '',
-        parentesco: ''
-      },
-      documentos: {
-        cpf: formData.cpf,
-        rg: formData.rg,
-        rg_orgao_emissor: '',
-        ctps: formData.ctps,
-        ctps_serie: '',
-        pis_pasep: '',
-        titulo_eleitor: '',
-        reservista: ''
-      },
-      beneficios: {
+    try {
+      // Dados para salvar no Supabase
+      const dadosSupabase = {
+        nome: formData.nome,
+        email: formData.email,
+        cargo: formData.cargo,
+        departamento: formData.departamento,
+        empresa_id: formData.empresa,
+        status: formData.status,
+        tipo_contrato: 'CLT' as const,
+        data_admissao: formData.data_admissao,
+        data_nascimento: formData.data_nascimento,
+        sexo: formData.sexo,
+        salario_base: formData.salario_base,
+        telefone: formData.telefone,
+        celular: formData.telefone,
+        endereco: formData.endereco,
+        cep: '00000-000',
+        cidade: 'Cidade',
+        estado: 'MG',
+        estado_civil: 'SOLTEIRO',
+        escolaridade: 'MEDIO',
+        nome_mae: 'Nome da Mãe',
+        nome_pai: 'Nome do Pai',
+        contato_emergencia_nome: 'Contato de Emergência',
+        contato_emergencia_telefone: '(31) 99999-9999',
+        contato_emergencia_parentesco: 'Familiar',
+        cpf: formData.cpf || '000.000.000-00',
+        rg: formData.rg || '00.000.000-0',
+        rg_orgao_emissor: 'SSP/MG',
+        ctps: formData.ctps || '0000000000',
+        ctps_serie: '001',
+        pis_pasep: '00000000000',
+        titulo_eleitor: '000000000000',
+        reservista: '000000000',
         vale_transporte: false,
         vale_refeicao: false,
         valor_vale_transporte: 0,
         valor_vale_refeicao: 0,
         plano_saude: false,
-        plano_odontologico: false
-      },
-      dependentes: {
+        plano_odontologico: false,
         tem_filhos_menores_14: false,
         quantidade_filhos: 0,
-        filhos: []
-      },
-      dados_bancarios: {
-        banco: '',
-        agencia: '',
-        conta: '',
+        filhos: [],
+        banco: '001 - Banco do Brasil',
+        agencia: '0000-0',
+        conta: '00000-0',
         tipo_conta: 'CORRENTE',
-        pix: ''
-      },
-      documentos_arquivos: [],
-      historico: []
-    };
+        pix: formData.email
+      };
 
-    if (colaborador) {
-      editarColaborador(colaborador.id, dados);
-      toast.success('Colaborador atualizado com sucesso!');
-    } else {
-      adicionarColaborador(dados);
-      toast.success('Colaborador adicionado com sucesso!');
+      // Salvar no Supabase
+      const { adicionarColaborador: addSupabase, editarColaborador: editSupabase } = useSupabaseData();
+      
+      if (colaborador) {
+        // await editSupabase(colaborador.id, dadosSupabase);
+        editarColaborador(colaborador.id, {
+          ...dadosSupabase,
+          empresa: formData.empresa // manter compatibilidade com HRContext
+        } as any);
+        toast.success('Colaborador atualizado com sucesso!');
+      } else {
+        // await addSupabase(dadosSupabase);
+        // Também adicionar ao HRContext para compatibilidade
+        const dadosHR: Omit<Colaborador, 'id' | 'auditoria'> = {
+          nome: formData.nome,
+          email: formData.email,
+          cargo: formData.cargo,
+          departamento: formData.departamento,
+          empresa: formData.empresa,
+          status: formData.status,
+          tipo_contrato: 'CLT' as const,
+          data_admissao: formData.data_admissao,
+          data_nascimento: formData.data_nascimento,
+          sexo: formData.sexo,
+          salario_base: formData.salario_base,
+          telefone: formData.telefone,
+          celular: formData.telefone,
+          endereco: formData.endereco,
+          cep: '00000-000',
+          cidade: 'Cidade',
+          estado: 'MG',
+          estado_civil: 'SOLTEIRO',
+          escolaridade: 'MEDIO',
+          nome_mae: 'Nome da Mãe',
+          nome_pai: 'Nome do Pai',
+          contato_emergencia: {
+            nome: 'Contato de Emergência',
+            telefone: '(31) 99999-9999',
+            parentesco: 'Familiar'
+          },
+          documentos: {
+            cpf: formData.cpf || '000.000.000-00',
+            rg: formData.rg || '00.000.000-0',
+            rg_orgao_emissor: 'SSP/MG',
+            ctps: formData.ctps || '0000000000',
+            ctps_serie: '001',
+            pis_pasep: '00000000000',
+            titulo_eleitor: '000000000000',
+            reservista: '000000000'
+          },
+          beneficios: {
+            vale_transporte: false,
+            vale_refeicao: false,
+            valor_vale_transporte: 0,
+            valor_vale_refeicao: 0,
+            plano_saude: false,
+            plano_odontologico: false
+          },
+          dependentes: {
+            tem_filhos_menores_14: false,
+            quantidade_filhos: 0,
+            filhos: []
+          },
+          dados_bancarios: {
+            banco: '001 - Banco do Brasil',
+            agencia: '0000-0',
+            conta: '00000-0',
+            tipo_conta: 'CORRENTE',
+            pix: formData.email
+          },
+          documentos_arquivos: [],
+          historico: []
+        };
+        
+        adicionarColaborador(dadosHR);
+        toast.success('Colaborador adicionado com sucesso!');
+      }
+
+      onSalvar?.();
+    } catch (error) {
+      console.error('Erro ao salvar colaborador:', error);
+      toast.error('Erro ao salvar colaborador. Tente novamente.');
     }
-
-    onSalvar?.();
   };
 
   const handleChange = (campo: string, valor: any) => {

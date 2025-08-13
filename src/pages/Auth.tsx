@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { AlertCircle, User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { AlertCircle, User, Mail, Lock, Eye, EyeOff, Shield, Building2, Users, TrendingUp, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 export default function Auth() {
@@ -118,24 +118,98 @@ export default function Auth() {
         </div>
       </div>;
   }
-  return <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md space-y-6">
-        {/* Header */}
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-foreground">MRx COMPLIANCE</h1>
-          <p className="text-muted-foreground mt-2">Gestão completa de conformidade empresarial</p>
+  return <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 relative overflow-hidden">
+      {/* Background elements */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
+      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-l from-primary/10 to-transparent rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-r from-accent/10 to-transparent rounded-full blur-3xl" />
+      
+      <div className="relative flex min-h-screen">
+        {/* Left side - Features */}
+        <div className="hidden lg:flex lg:w-1/2 flex-col justify-center px-12 xl:px-16">
+          <div className="max-w-lg">
+            <div className="mb-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-primary/10 rounded-xl">
+                  <Shield className="h-8 w-8 text-primary" />
+                </div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+                  MRx COMPLIANCE
+                </h1>
+              </div>
+              <p className="text-xl text-muted-foreground leading-relaxed">
+                Gestão completa e inteligente de conformidade empresarial
+              </p>
+            </div>
+            
+            <div className="space-y-6">
+              <div className="flex items-start gap-4">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Building2 className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">Gestão Empresarial</h3>
+                  <p className="text-sm text-muted-foreground">Controle total sobre suas empresas e estrutura organizacional</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-4">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Users className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">Colaboradores</h3>
+                  <p className="text-sm text-muted-foreground">Gerencie equipes, documentos e histórico profissional</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-4">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">Analytics Avançados</h3>
+                  <p className="text-sm text-muted-foreground">Relatórios detalhados e insights para tomada de decisão</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-4">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <CheckCircle className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">Compliance Total</h3>
+                  <p className="text-sm text-muted-foreground">Mantenha-se sempre em conformidade com as regulamentações</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Auth Card */}
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle>
-              {activeTab === 'login' ? 'Entrar na sua conta' : 'Criar nova conta'}
-            </CardTitle>
-            <CardDescription>
-              {activeTab === 'login' ? 'Entre com suas credenciais para acessar o sistema' : 'Preencha os dados para criar sua conta'}
-            </CardDescription>
-          </CardHeader>
+        {/* Right side - Auth Form */}
+        <div className="flex-1 flex items-center justify-center px-4 py-12 lg:px-8">
+          <div className="w-full max-w-md space-y-8">
+            {/* Mobile header */}
+            <div className="text-center lg:hidden">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <div className="p-2 bg-primary/10 rounded-xl">
+                  <Shield className="h-6 w-6 text-primary" />
+                </div>
+                <h1 className="text-2xl font-bold text-foreground">MRx COMPLIANCE</h1>
+              </div>
+              <p className="text-muted-foreground">Gestão completa de conformidade</p>
+            </div>
+
+            {/* Auth Card */}
+            <Card className="border-0 shadow-2xl bg-card/80 backdrop-blur-sm">
+              <CardHeader className="text-center space-y-2 pb-8">
+                <CardTitle className="text-2xl font-bold">
+                  {activeTab === 'login' ? 'Bem-vindo de volta' : 'Criar nova conta'}
+                </CardTitle>
+                <CardDescription className="text-base">
+                  {activeTab === 'login' ? 'Entre com suas credenciais para acessar o sistema' : 'Preencha os dados para criar sua conta'}
+                </CardDescription>
+              </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-2">
@@ -231,24 +305,30 @@ export default function Auth() {
                 </TabsContent>
 
                 {/* Submit Button */}
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                <Button type="submit" className="w-full h-12 text-base font-semibold bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-200" disabled={isSubmitting}>
                   {isSubmitting ? <div className="flex items-center gap-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                       {activeTab === 'login' ? 'Entrando...' : 'Criando conta...'}
-                    </div> : activeTab === 'login' ? 'Entrar' : 'Criar Conta'}
+                    </div> : activeTab === 'login' ? 'Entrar no Sistema' : 'Criar Conta'}
                 </Button>
               </form>
             </Tabs>
 
-            <div className="mt-6">
-              <Separator />
-              <div className="mt-4 text-center text-sm text-muted-foreground">
-                
-                
+            <div className="mt-8">
+              <Separator className="bg-border/50" />
+              <div className="mt-6 text-center">
+                <p className="text-xs text-muted-foreground">
+                  Ao fazer login, você concorda com nossos{' '}
+                  <a href="#" className="text-primary hover:underline">Termos de Uso</a>
+                  {' '}e{' '}
+                  <a href="#" className="text-primary hover:underline">Política de Privacidade</a>
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
+          </div>
+        </div>
       </div>
     </div>;
 }
