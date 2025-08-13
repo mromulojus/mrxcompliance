@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Colaborador, Empresa, FiltrosColaborador, TemaMode, DashboardStats } from '@/types/hr';
 import { Denuncia, DenunciaStatus, Comentario } from '@/types/denuncia';
+import { useSupabaseData } from '@/hooks/useSupabaseData';
 
 interface HRContextType {
   colaboradores: Colaborador[];
@@ -10,7 +11,7 @@ interface HRContextType {
   selectedEmpresa: string;
   
   // Actions
-  adicionarColaborador: (colaborador: Omit<Colaborador, 'id' | 'auditoria'>) => void;
+  adicionarColaborador: (colaborador: Omit<Colaborador, 'id' | 'auditoria'>) => Promise<void>;
   editarColaborador: (id: string, colaborador: Partial<Colaborador>) => void;
   removerColaborador: (id: string) => void;
   adicionarEmpresa: (empresa: Omit<Empresa, 'id'>) => void;
@@ -546,8 +547,103 @@ const colaboradoresMock: Colaborador[] = [
 ];
 
 export function HRProvider({ children }: { children: React.ReactNode }) {
-  const [colaboradores, setColaboradores] = useState<Colaborador[]>(colaboradoresMock);
+  const { colaboradores: colaboradoresSupabase, empresas: empresasSupabase, refetchColaboradores } = useSupabaseData();
+  
+  // Usar dados do Supabase como fonte primária, com fallback para mock
+  const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
   const [empresas, setEmpresas] = useState<Empresa[]>(empresasMock);
+  
+  // Sincronizar com dados do Supabase quando disponíveis
+  useEffect(() => {
+    if (colaboradoresSupabase.length > 0) {
+      // Converter colaboradores do Supabase para o formato do HRContext
+      const colaboradoresConvertidos = colaboradoresSupabase.map(c => ({
+        id: c.id,
+        nome: c.nome,
+        email: c.email,
+        cargo: c.cargo,
+        departamento: c.departamento,
+        empresa: c.empresa_id, // Mapear empresa_id para empresa
+        status: c.status,
+        tipo_contrato: c.tipo_contrato,
+        data_admissao: c.data_admissao,
+        data_nascimento: c.data_nascimento,
+        sexo: c.sexo,
+        salario_base: Number(c.salario_base),
+        telefone: c.telefone || '',
+        celular: c.celular || '',
+        endereco: c.endereco,
+        cep: c.cep,
+        cidade: c.cidade,
+        estado: c.estado,
+        estado_civil: c.estado_civil,
+        escolaridade: c.escolaridade,
+        nome_mae: c.nome_mae,
+        nome_pai: c.nome_pai || '',
+        contato_emergencia: {
+          nome: c.contato_emergencia_nome,
+          telefone: c.contato_emergencia_telefone,
+          parentesco: c.contato_emergencia_parentesco
+        },
+        documentos: {
+          cpf: c.cpf,
+          rg: c.rg,
+          rg_orgao_emissor: c.rg_orgao_emissor,
+          ctps: c.ctps || '',
+          ctps_serie: c.ctps_serie || '',
+          pis_pasep: c.pis_pasep || '',
+          titulo_eleitor: c.titulo_eleitor || '',
+          reservista: c.reservista || ''
+        },
+        beneficios: {
+          vale_transporte: c.vale_transporte || false,
+          vale_refeicao: c.vale_refeicao || false,
+          valor_vale_transporte: Number(c.valor_vale_transporte) || 0,
+          valor_vale_refeicao: Number(c.valor_vale_refeicao) || 0,
+          plano_saude: c.plano_saude || false,
+          plano_odontologico: c.plano_odontologico || false
+        },
+        dependentes: {
+          tem_filhos_menores_14: c.tem_filhos_menores_14 || false,
+          quantidade_filhos: c.quantidade_filhos || 0,
+          filhos: c.filhos || []
+        },
+        dados_bancarios: {
+          banco: c.banco || '',
+          agencia: c.agencia || '',
+          conta: c.conta || '',
+          tipo_conta: c.tipo_conta || 'CORRENTE',
+          pix: c.pix || ''
+        },
+        foto_perfil: c.foto_perfil,
+        documentos_arquivos: [],
+        historico: [],
+        auditoria: {
+          created_at: c.created_at,
+          updated_at: c.updated_at,
+          created_by: c.created_by || 'system'
+        }
+      }));
+      
+      setColaboradores(colaboradoresConvertidos);
+    }
+  }, [colaboradoresSupabase]);
+  
+  useEffect(() => {
+    if (empresasSupabase.length > 0) {
+      const empresasConvertidas = empresasSupabase.map(e => ({
+        id: e.id,
+        nome: e.nome,
+        cnpj: e.cnpj,
+        endereco: e.endereco,
+        responsavel: e.responsavel,
+        email: e.email,
+        telefone: e.telefone
+      }));
+      setEmpresas([...empresasMock, ...empresasConvertidas]);
+    }
+  }, [empresasSupabase]);
+  
   const [filtros, setFiltrosState] = useState<FiltrosColaborador>({
     nome: '',
     status: '',
@@ -569,10 +665,11 @@ export function HRProvider({ children }: { children: React.ReactNode }) {
     try { localStorage.setItem('denuncias', JSON.stringify(denuncias)); } catch {}
   }, [denuncias]);
 
-  const adicionarColaborador = (novoColaborador: Omit<Colaborador, 'id' | 'auditoria'>) => {
+  const adicionarColaborador = async (novoColaborador: Omit<Colaborador, 'id' | 'auditoria'>) => {
+    // Primeiro adicionar localmente para feedback imediato
     const colaborador: Colaborador = {
       ...novoColaborador,
-      id: Date.now().toString(),
+      id: `temp-${Date.now()}`,
       auditoria: {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -580,6 +677,12 @@ export function HRProvider({ children }: { children: React.ReactNode }) {
       }
     };
     setColaboradores(prev => [...prev, colaborador]);
+    
+    // Em seguida, tentar salvar no Supabase (será implementado no futuro)
+    // Por enquanto, refaz a busca para sincronizar
+    setTimeout(() => {
+      refetchColaboradores?.();
+    }, 100);
   };
 
   const editarColaborador = (id: string, updates: Partial<Colaborador>) => {
