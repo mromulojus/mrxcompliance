@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { Camera, Upload, FileText, Eye, Plus, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useSupabaseData } from '@/hooks/useSupabaseData';
+import { DocumentUpload } from './DocumentUpload';
 
 interface FormColaboradorCompletoProps {
   colaborador?: Colaborador;
@@ -205,7 +206,7 @@ export function FormColaboradorCompleto({ colaborador, onSalvar, onCancelar }: F
             variant="outline"
             size="sm"
             className="ml-auto"
-            onClick={() => toast.info('Conecte ao Supabase para upload de foto')}
+            onClick={() => toast.info('Upload de foto será implementado em breve')}
           >
             <Camera className="h-4 w-4 mr-1" />
             Foto de Perfil
@@ -700,6 +701,18 @@ export function FormColaboradorCompleto({ colaborador, onSalvar, onCancelar }: F
               </div>
 
               {/* Lista de documentos uploadados */}
+              {/* Upload de documentos */}
+              {colaborador && (
+                <div className="space-y-4 mt-6">
+                  <DocumentUpload 
+                    colaboradorId={colaborador.id}
+                    onUploadComplete={(doc) => {
+                      toast.success('Documento enviado com sucesso!');
+                    }}
+                  />
+                </div>
+              )}
+
               <div className="space-y-4 mt-6">
                 <h4 className="font-medium">Documentos Digitais</h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -709,7 +722,7 @@ export function FormColaboradorCompleto({ colaborador, onSalvar, onCancelar }: F
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => toast.info('Conecte ao Supabase para upload')}
+                      onClick={() => colaborador ? toast.info('Use o formulário de upload acima') : toast.info('Salve o colaborador primeiro para fazer upload')}
                       className="flex items-center gap-1"
                     >
                       <FileText className="h-3 w-3" />

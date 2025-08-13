@@ -4,10 +4,23 @@ import { useSupabaseData } from "@/hooks/useSupabaseData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Building2, Eye, Search } from "lucide-react";
+import { Building2, Eye, Search, Trash2 } from "lucide-react";
+import { useHR } from "@/context/HRContext";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const Empresas = () => {
   const { empresas, colaboradores, loading } = useSupabaseData();
+  const { removerEmpresa } = useHR();
   const navigate = useNavigate();
   const [q, setQ] = useState("");
 
@@ -80,9 +93,36 @@ const Empresas = () => {
                     <p className="text-sm text-muted-foreground">CNPJ: {empresa.cnpj}</p>
                   </div>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => navigate(`/empresa/${empresa.id}`)} className="gap-2">
-                  <Eye className="h-4 w-4" /> Ver detalhes
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => navigate(`/empresa/${empresa.id}`)} className="gap-2">
+                    <Eye className="h-4 w-4" /> Ver detalhes
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" size="sm" className="gap-2 text-destructive hover:text-destructive">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Excluir Empresa</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Tem certeza que deseja excluir a empresa "{empresa.nome}"? 
+                          Esta ação também removerá todos os colaboradores associados e não pode ser desfeita.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={() => removerEmpresa(empresa.id)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Excluir
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm text-muted-foreground">{empresa.endereco}</p>
