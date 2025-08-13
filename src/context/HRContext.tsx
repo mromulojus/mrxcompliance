@@ -229,15 +229,17 @@ export function HRProvider({ children }: { children: React.ReactNode }) {
 
   const adicionarColaborador = async (colaboradorData: Omit<Colaborador, 'id' | 'auditoria'>) => {
     try {
-      console.log('Dados recebidos para adicionar colaborador:', colaboradorData);
+      // Validação obrigatória do CPF
+      if (!colaboradorData.documentos?.cpf || colaboradorData.documentos.cpf.trim() === '') {
+        toast.error('CPF é obrigatório para cadastrar o colaborador');
+        return;
+      }
       
-      // Verificar se CPF já existe (se não estiver vazio)
-      if (colaboradorData.documentos?.cpf) {
-        const colaboradorExistente = colaboradores.find(c => c.documentos?.cpf === colaboradorData.documentos?.cpf);
-        if (colaboradorExistente) {
-          toast.error(`Já existe um colaborador com o CPF ${colaboradorData.documentos.cpf}`);
-          return;
-        }
+      // Verificar se CPF já existe
+      const colaboradorExistente = colaboradores.find(c => c.documentos?.cpf === colaboradorData.documentos?.cpf);
+      if (colaboradorExistente) {
+        toast.error(`Já existe um colaborador com o CPF ${colaboradorData.documentos.cpf}`);
+        return;
       }
       
       const supabaseData = convertColaboradorToSupabase({
@@ -249,8 +251,6 @@ export function HRProvider({ children }: { children: React.ReactNode }) {
           created_by: ''
         }
       });
-      
-      console.log('Dados convertidos para Supabase:', supabaseData);
       
       await addColaboradorSupabase(supabaseData as any);
       toast.success('Colaborador adicionado com sucesso!');

@@ -37,18 +37,8 @@ export default function EmpresaDetalhes() {
   const [colaboradorEditando, setColaboradorEditando] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('colaboradores');
   const empresa = empresas.find(e => e.id === empresaId);
-  // Remover as referências de raça dos documentos pois não existem lá
-  const colaboradoresEmpresa = [
-    ...colaboradores.filter(c => c.empresa_id === empresaId),
-    ...colaboradoresHR
-      .filter((c: any) => c.empresa === empresaId)
-      .map((c: any) => ({
-        // normaliza campos mínimos usados nas análises
-        ...c,
-        empresa_id: c.empresa,
-        salario_base: Number(c.salario_base) || 0,
-      }))
-  ];
+  // Usar apenas colaboradores do Supabase para evitar duplicação
+  const colaboradoresEmpresa = colaboradores.filter(c => c.empresa_id === empresaId);
   if (!empresa) {
     return <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -596,13 +586,18 @@ export default function EmpresaDetalhes() {
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-                  <FormColaboradorCompleto colaborador={colaboradorEditando} onSalvar={() => {
+                  <FormColaboradorCompleto 
+                    colaborador={colaboradorEditando} 
+                    empresaId={empresaId} 
+                    onSalvar={() => {
                       setShowFormColaborador(false);
                       setColaboradorEditando(null);
-                    }} onCancelar={() => {
+                    }} 
+                    onCancelar={() => {
                       setShowFormColaborador(false);
                       setColaboradorEditando(null);
-                    }} />
+                    }} 
+                  />
                 </DialogContent>
               </Dialog>
             </div>
@@ -616,19 +611,69 @@ export default function EmpresaDetalhes() {
               </CardContent>
             </Card> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {colaboradoresEmpresa.map((c: any) => (
-                <Card key={c.id} className="hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="flex items-center justify-between text-base">
-                      <span>{c.nome}</span>
-                      <Badge variant="outline">{c.status}</Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-sm text-muted-foreground space-y-1">
-                    <div><strong>Cargo:</strong> {c.cargo}</div>
-                    <div><strong>Depto:</strong> {c.departamento}</div>
-                    <div><strong>Email:</strong> {c.email}</div>
-                  </CardContent>
-                </Card>
+                <ColaboradorCard 
+                  key={c.id} 
+                  colaborador={{
+                    ...c,
+                    empresa: c.empresa_id,
+                    contato_emergencia: {
+                      nome: c.contato_emergencia_nome || '',
+                      telefone: c.contato_emergencia_telefone || '',
+                      parentesco: c.contato_emergencia_parentesco || ''
+                    },
+                    documentos: {
+                      cpf: c.cpf || '',
+                      rg: c.rg || '',
+                      rg_orgao_emissor: c.rg_orgao_emissor || '',
+                      ctps: c.ctps || '',
+                      ctps_serie: c.ctps_serie || '',
+                      pis_pasep: c.pis_pasep || '',
+                      titulo_eleitor: c.titulo_eleitor || '',
+                      reservista: c.reservista || ''
+                    },
+                    beneficios: {
+                      vale_transporte: c.vale_transporte || false,
+                      vale_refeicao: c.vale_refeicao || false,
+                      valor_vale_transporte: Number(c.valor_vale_transporte) || 0,
+                      valor_vale_refeicao: Number(c.valor_vale_refeicao) || 0,
+                      plano_saude: c.plano_saude || false,
+                      plano_odontologico: c.plano_odontologico || false
+                    },
+                    dependentes: {
+                      tem_filhos_menores_14: c.tem_filhos_menores_14 || false,
+                      quantidade_filhos: c.quantidade_filhos || 0,
+                      filhos: Array.isArray(c.filhos) ? c.filhos : []
+                    },
+                    dados_bancarios: {
+                      banco: c.banco || '',
+                      agencia: c.agencia || '',
+                      conta: c.conta || '',
+                      tipo_conta: c.tipo_conta || 'CORRENTE',
+                      pix: c.pix || ''
+                    },
+                    documentos_arquivos: [],
+                    historico: [],
+                    auditoria: {
+                      created_at: c.created_at,
+                      updated_at: c.updated_at,
+                      created_by: c.created_by || ''
+                    }
+                  }} 
+                  onEdit={(id) => {
+                    const colaborador = colaboradoresEmpresa.find(col => col.id === id);
+                    if (colaborador) {
+                      setColaboradorEditando(colaborador);
+                      setShowFormColaborador(true);
+                    }
+                  }}
+                  onView={(id) => {
+                    const colaborador = colaboradoresEmpresa.find(col => col.id === id);
+                    if (colaborador) {
+                      setColaboradorSelecionado(colaborador);
+                      setShowVisualizacaoColaborador(true);
+                    }
+                  }}
+                />
               ))}
             </div>}
         </section>

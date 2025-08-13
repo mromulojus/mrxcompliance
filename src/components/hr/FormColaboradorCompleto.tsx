@@ -17,11 +17,12 @@ import { DocumentUpload } from './DocumentUpload';
 
 interface FormColaboradorCompletoProps {
   colaborador?: Colaborador;
+  empresaId?: string;
   onSalvar?: () => void;
   onCancelar?: () => void;
 }
 
-export function FormColaboradorCompleto({ colaborador, onSalvar, onCancelar }: FormColaboradorCompletoProps) {
+export function FormColaboradorCompleto({ colaborador, empresaId, onSalvar, onCancelar }: FormColaboradorCompletoProps) {
   const { adicionarColaborador, editarColaborador } = useHR();
   const { empresas } = useSupabaseData();
   
@@ -31,7 +32,7 @@ export function FormColaboradorCompleto({ colaborador, onSalvar, onCancelar }: F
     email: colaborador?.email || '',
     cargo: colaborador?.cargo || '',
     departamento: colaborador?.departamento || '',
-    empresa: colaborador?.empresa || '',
+    empresa: colaborador?.empresa || empresaId || '',
     status: colaborador?.status || 'ATIVO' as const,
     tipo_contrato: colaborador?.tipo_contrato || 'CLT' as const,
     data_admissao: colaborador?.data_admissao || '',
@@ -113,9 +114,9 @@ export function FormColaboradorCompleto({ colaborador, onSalvar, onCancelar }: F
     
     console.log('FormData completo:', formData);
     
-    if (!formData.nome || !formData.email || !formData.empresa) {
-      console.log('Campos obrigatórios faltando:', { nome: formData.nome, email: formData.email, empresa: formData.empresa });
-      toast.error('Preencha os campos obrigatórios');
+    if (!formData.nome || !formData.email || !formData.empresa || !formData.cpf) {
+      console.log('Campos obrigatórios faltando:', { nome: formData.nome, email: formData.email, empresa: formData.empresa, cpf: formData.cpf });
+      toast.error('Preencha os campos obrigatórios: Nome, Email, Empresa e CPF');
       return;
     }
 
@@ -560,12 +561,13 @@ export function FormColaboradorCompleto({ colaborador, onSalvar, onCancelar }: F
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="cpf">CPF</Label>
+                  <Label htmlFor="cpf">CPF *</Label>
                   <Input
                     id="cpf"
                     value={formData.cpf}
                     onChange={(e) => handleChange('cpf', e.target.value)}
                     placeholder="000.000.000-00"
+                    required
                   />
                 </div>
                 
