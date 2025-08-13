@@ -210,11 +210,11 @@ export default function Auth() {
                   {activeTab === 'login' ? 'Entre com suas credenciais para acessar o sistema' : 'Preencha os dados para criar sua conta'}
                 </CardDescription>
               </CardHeader>
-          <CardContent>
+          <CardContent className="px-8 pb-8">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                
+              <TabsList className="grid w-full grid-cols-2 mb-8">
+                <TabsTrigger value="login" className="text-sm font-medium">Login</TabsTrigger>
+                <TabsTrigger value="signup" className="text-sm font-medium">Cadastro</TabsTrigger>
               </TabsList>
 
               <form onSubmit={handleSubmit} className="space-y-4 mt-6">
