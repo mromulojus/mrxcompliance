@@ -8,6 +8,7 @@ interface HRContextType {
   // Dados
   colaboradores: Colaborador[];
   empresas: Empresa[];
+  denuncias: Denuncia[];
   loading: boolean;
   
   // Filtros e estado
@@ -34,7 +35,7 @@ interface HRContextType {
   criarDenuncia: (denuncia: any) => void;
   atualizarStatus: (id: string, status: string) => void;
   adicionarComentario: (id: string, comentario: any) => void;
-  denunciasNaoTratadas: number;
+  denunciasNaoTratadas: Denuncia[];
   
   // Computados
   colaboradoresFiltrados: Colaborador[];
@@ -197,9 +198,7 @@ export function HRProvider({ children }: { children: React.ReactNode }) {
     removerEmpresa: removeEmpresaSupabase,
     adicionarColaborador: addColaboradorSupabase,
     editarColaborador: editColaboradorSupabase,
-    removerColaborador: removeColaboradorSupabase,
-    fetchEmpresas,
-    fetchColaboradores
+    removerColaborador: removeColaboradorSupabase
   } = useSupabaseData();
 
   // Convert Supabase data to local format
@@ -213,8 +212,11 @@ export function HRProvider({ children }: { children: React.ReactNode }) {
     [supabaseColaboradores]
   );
 
+  // Mock denuncias data for now
+  const [denuncias, setDenuncias] = useState<Denuncia[]>([]);
+
   // Local state
-  const [filtros, setFiltros] = useState<FiltrosColaborador>({
+  const [filtros, setFiltrosState] = useState<FiltrosColaborador>({
     nome: '',
     status: '',
     empresa: '',
@@ -226,9 +228,8 @@ export function HRProvider({ children }: { children: React.ReactNode }) {
 
   const adicionarColaborador = async (colaboradorData: Omit<Colaborador, 'id' | 'auditoria'>) => {
     try {
-      const supabaseData = convertColaboradorToSupabase(colaboradorData);
-      await addColaboradorSupabase(supabaseData);
-      await fetchColaboradores();
+      const supabaseData = convertColaboradorToSupabase(colaboradorData as Colaborador);
+      await addColaboradorSupabase(supabaseData as any);
       toast.success('Colaborador adicionado com sucesso!');
     } catch (error) {
       console.error('Erro ao adicionar colaborador:', error);
@@ -238,9 +239,8 @@ export function HRProvider({ children }: { children: React.ReactNode }) {
 
   const editarColaborador = async (id: string, dadosAtualizados: Partial<Omit<Colaborador, 'id' | 'auditoria'>>) => {
     try {
-      const supabaseData = convertColaboradorToSupabase(dadosAtualizados as any);
+      const supabaseData = convertColaboradorToSupabase(dadosAtualizados as Colaborador);
       await editColaboradorSupabase(id, supabaseData);
-      await fetchColaboradores();
       toast.success('Colaborador atualizado com sucesso!');
     } catch (error) {
       console.error('Erro ao editar colaborador:', error);
@@ -251,7 +251,6 @@ export function HRProvider({ children }: { children: React.ReactNode }) {
   const removerColaborador = async (id: string) => {
     try {
       await removeColaboradorSupabase(id);
-      await fetchColaboradores();
       toast.success('Colaborador removido com sucesso!');
     } catch (error) {
       console.error('Erro ao remover colaborador:', error);
@@ -261,9 +260,8 @@ export function HRProvider({ children }: { children: React.ReactNode }) {
 
   const adicionarEmpresa = async (empresaData: Omit<Empresa, 'id'>) => {
     try {
-      const supabaseData = convertEmpresaToSupabase(empresaData);
-      await addEmpresaSupabase(supabaseData);
-      await fetchEmpresas();
+      const supabaseData = convertEmpresaToSupabase(empresaData as Empresa);
+      await addEmpresaSupabase(supabaseData as any);
       toast.success('Empresa adicionada com sucesso!');
     } catch (error) {
       console.error('Erro ao adicionar empresa:', error);
@@ -273,9 +271,8 @@ export function HRProvider({ children }: { children: React.ReactNode }) {
 
   const editarEmpresa = async (id: string, dadosAtualizados: Partial<Omit<Empresa, 'id'>>) => {
     try {
-      const supabaseData = convertEmpresaToSupabase(dadosAtualizados as any);
+      const supabaseData = convertEmpresaToSupabase(dadosAtualizados as Empresa);
       await editEmpresaSupabase(id, supabaseData);
-      await fetchEmpresas();
       toast.success('Empresa atualizada com sucesso!');
     } catch (error) {
       console.error('Erro ao editar empresa:', error);
@@ -293,7 +290,6 @@ export function HRProvider({ children }: { children: React.ReactNode }) {
       
       // Then remove the company
       await removeEmpresaSupabase(id);
-      await Promise.all([fetchEmpresas(), fetchColaboradores()]);
       toast.success('Empresa e colaboradores removidos com sucesso!');
     } catch (error) {
       console.error('Erro ao remover empresa:', error);
@@ -302,11 +298,16 @@ export function HRProvider({ children }: { children: React.ReactNode }) {
   };
 
   const refetchData = async () => {
-    await Promise.all([fetchEmpresas(), fetchColaboradores()]);
+    // Data is automatically refreshed by useSupabaseData hook
+    console.log('Data refresh triggered');
   };
 
   const selecionarEmpresa = (empresaId: string | null) => {
     setEmpresaSelecionada(empresaId);
+  };
+
+  const setFiltros = (novosFiltros: Partial<FiltrosColaborador>) => {
+    setFiltrosState(prev => ({ ...prev, ...novosFiltros }));
   };
 
   // Mock denúncias functions for now
@@ -323,6 +324,10 @@ export function HRProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Computed values
+  const denunciasNaoTratadas = useMemo(() => {
+    return denuncias.filter(d => d.status === 'RECEBIDO' || d.status === 'EM_ANALISE');
+  }, [denuncias]);
+
   const colaboradoresFiltrados = useMemo(() => {
     return colaboradores.filter(colaborador => {
       if (filtros.nome && !colaborador.nome.toLowerCase().includes(filtros.nome.toLowerCase())) {
@@ -360,6 +365,7 @@ export function HRProvider({ children }: { children: React.ReactNode }) {
   const value: HRContextType = {
     colaboradores,
     empresas,
+    denuncias,
     loading: supabaseLoading,
     filtros,
     temaMode,
@@ -376,7 +382,7 @@ export function HRProvider({ children }: { children: React.ReactNode }) {
     criarDenuncia,
     atualizarStatus,
     adicionarComentario,
-    denunciasNaoTratadas: 0,
+    denunciasNaoTratadas,
     colaboradoresFiltrados,
     dashboardStats,
     refetchData

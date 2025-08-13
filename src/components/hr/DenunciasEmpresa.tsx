@@ -133,7 +133,7 @@ export function DenunciasEmpresa({ empresaId }: DenunciasEmpresaProps) {
   const handleAdicionarComentario = () => {
     if (!selectedDenuncia || !novoComentario.trim()) return;
     
-    adicionarComentario(selectedDenuncia.id, 'Sistema', novoComentario);
+    adicionarComentario(selectedDenuncia.id, { autor: 'Sistema', mensagem: novoComentario });
     setNovoComentario('');
     
     // Atualizar denúncia local

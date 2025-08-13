@@ -66,7 +66,7 @@ export default function DenunciasDashboard() {
   const handleAdicionarComentario = () => {
     if (!selectedDenuncia || !novoComentario.trim()) return;
     
-    adicionarComentario(selectedDenuncia.id, 'Administrador', novoComentario);
+    adicionarComentario(selectedDenuncia.id, { autor: 'Administrador', mensagem: novoComentario });
     setNovoComentario('');
     
     const updatedDenuncia = { 
