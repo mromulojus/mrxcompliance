@@ -174,10 +174,16 @@ export function DocumentsManager({ colaboradorId, onDocumentChange }: DocumentsM
     }
   };
 
-  const deleteDocument = async (docId: string, fileName: string) => {
+  const deleteDocument = async (docId: string, documentUrl: string) => {
     try {
+      // Extract file path from URL - get everything after the bucket name
+      const urlParts = documentUrl.split('/');
+      const bucketIndex = urlParts.findIndex(part => part === 'colaborador-docs');
+      const filePath = urlParts.slice(bucketIndex + 1).join('/');
+      
+      console.log('Deleting file path:', filePath);
+      
       // Delete from storage
-      const filePath = fileName.split('/').slice(-2).join('/'); // Get the path part
       await supabase.storage
         .from('colaborador-docs')
         .remove([filePath]);
@@ -190,12 +196,13 @@ export function DocumentsManager({ colaboradorId, onDocumentChange }: DocumentsM
 
       if (error) throw error;
 
-      // Add to history
+      // Add to history  
+      const document = documents.find(d => d.id === docId);
       await supabase
         .from('historico_colaborador')
         .insert({
           colaborador_id: colaboradorId,
-          observacao: `Documento removido: ${fileName}`,
+          observacao: `Documento removido: ${document?.nome || 'Documento'}`,
           created_by: (await supabase.auth.getUser()).data.user?.id
         });
 
