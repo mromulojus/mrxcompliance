@@ -85,9 +85,9 @@ export function FormColaboradorCompleto({ colaborador, empresaId, onSalvar, onCa
     filhos: colaborador?.dependentes?.filhos || [],
     
     // Adicionais salariais
-    periculosidade: 0,
-    insalubridade: 0,
-    outros_valores: 0,
+    periculosidade: (colaborador as any)?.periculosidade || 0,
+    insalubridade: (colaborador as any)?.insalubridade || 0,
+    outros_valores: (colaborador as any)?.outros_valores || 0,
     
     // Dados bancários
     banco: colaborador?.dados_bancarios?.banco || '',
@@ -574,16 +574,6 @@ export function FormColaboradorCompleto({ colaborador, empresaId, onSalvar, onCa
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="cpf">CPF *</Label>
-                  <Input
-                    id="cpf"
-                    value={formData.cpf}
-                    onChange={(e) => handleChange('cpf', e.target.value)}
-                    placeholder="000.000.000-00"
-                    required
-                  />
-                </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="rg">RG</Label>

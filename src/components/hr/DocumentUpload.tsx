@@ -63,15 +63,22 @@ export function DocumentUpload({ colaboradorId, onUploadComplete }: DocumentUplo
       const fileExt = selectedFile.name.split('.').pop();
       const fileName = `${colaboradorId}/${documentType}_${Date.now()}.${fileExt}`;
 
+      console.log('Iniciando upload para bucket colaborador-docs:', fileName);
+
       // Upload file to Supabase Storage
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('colaborador-docs')
-        .upload(fileName, selectedFile);
+        .upload(fileName, selectedFile, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (uploadError) {
         console.error('Erro no upload:', uploadError);
         throw new Error(`Erro no upload: ${uploadError.message}`);
       }
+
+      console.log('Upload bem-sucedido:', uploadData);
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage

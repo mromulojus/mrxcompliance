@@ -301,53 +301,73 @@ export function VisualizacaoColaboradorCompleta({ colaborador, onClose, onEdit }
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span>Vale Refeição</span>
-                      <Badge variant={colaborador.beneficios?.vale_refeicao ? 'default' : 'secondary'}>
-                        {colaborador.beneficios?.vale_refeicao ? 'Ativo' : 'Inativo'}
-                      </Badge>
-                    </div>
-                    {colaborador.beneficios?.valor_vale_refeicao && (
-                      <p className="text-sm text-muted-foreground">
-                        Valor: {formatarMoeda(colaborador.beneficios.valor_vale_refeicao)}
-                      </p>
-                    )}
-                  </div>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   <div className="space-y-2">
+                     <div className="flex items-center justify-between">
+                       <span>Vale Refeição</span>
+                       <Badge variant={colaborador.beneficios?.vale_refeicao ? 'default' : 'secondary'}>
+                         {colaborador.beneficios?.vale_refeicao ? 'Ativo' : 'Inativo'}
+                       </Badge>
+                     </div>
+                     {colaborador.beneficios?.valor_vale_refeicao && colaborador.beneficios.valor_vale_refeicao > 0 && (
+                       <p className="text-sm text-muted-foreground">
+                         Valor: {formatarMoeda(colaborador.beneficios.valor_vale_refeicao)}
+                       </p>
+                     )}
+                   </div>
 
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span>Vale Transporte</span>
-                      <Badge variant={colaborador.beneficios?.vale_transporte ? 'default' : 'secondary'}>
-                        {colaborador.beneficios?.vale_transporte ? 'Ativo' : 'Inativo'}
-                      </Badge>
-                    </div>
-                    {colaborador.beneficios?.valor_vale_transporte && (
-                      <p className="text-sm text-muted-foreground">
-                        Valor: {formatarMoeda(colaborador.beneficios.valor_vale_transporte)}
-                      </p>
-                    )}
-                  </div>
+                   <div className="space-y-2">
+                     <div className="flex items-center justify-between">
+                       <span>Vale Transporte</span>
+                       <Badge variant={colaborador.beneficios?.vale_transporte ? 'default' : 'secondary'}>
+                         {colaborador.beneficios?.vale_transporte ? 'Ativo' : 'Inativo'}
+                       </Badge>
+                     </div>
+                     {colaborador.beneficios?.valor_vale_transporte && colaborador.beneficios.valor_vale_transporte > 0 && (
+                       <p className="text-sm text-muted-foreground">
+                         Valor: {formatarMoeda(colaborador.beneficios.valor_vale_transporte)}
+                       </p>
+                     )}
+                   </div>
 
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span>Plano de Saúde</span>
-                      <Badge variant={colaborador.beneficios?.plano_saude ? 'default' : 'secondary'}>
-                        {colaborador.beneficios?.plano_saude ? 'Ativo' : 'Inativo'}
-                      </Badge>
-                    </div>
-                  </div>
+                   <div className="space-y-2">
+                     <div className="flex items-center justify-between">
+                       <span>Plano de Saúde</span>
+                       <Badge variant={colaborador.beneficios?.plano_saude ? 'default' : 'secondary'}>
+                         {colaborador.beneficios?.plano_saude ? 'Ativo' : 'Inativo'}
+                       </Badge>
+                     </div>
+                   </div>
 
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span>Plano Odontológico</span>
-                      <Badge variant={colaborador.beneficios?.plano_odontologico ? 'default' : 'secondary'}>
-                        {colaborador.beneficios?.plano_odontologico ? 'Ativo' : 'Inativo'}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
+                   <div className="space-y-2">
+                     <div className="flex items-center justify-between">
+                       <span>Plano Odontológico</span>
+                       <Badge variant={colaborador.beneficios?.plano_odontologico ? 'default' : 'secondary'}>
+                         {colaborador.beneficios?.plano_odontologico ? 'Ativo' : 'Inativo'}
+                       </Badge>
+                     </div>
+                   </div>
+                 </div>
+
+                 {/* Adicionais Salariais */}
+                 <Separator />
+                 <div>
+                   <h4 className="font-semibold mb-3">Adicionais Salariais</h4>
+                   <div className="grid grid-cols-3 gap-4">
+                     <div>
+                       <label className="text-sm font-medium text-muted-foreground">Periculosidade</label>
+                       <p className="font-semibold">{formatarMoeda((colaborador as any)?.periculosidade || 0)}</p>
+                     </div>
+                     <div>
+                       <label className="text-sm font-medium text-muted-foreground">Insalubridade</label>
+                       <p className="font-semibold">{formatarMoeda((colaborador as any)?.insalubridade || 0)}</p>
+                     </div>
+                     <div>
+                       <label className="text-sm font-medium text-muted-foreground">Outros Valores</label>
+                       <p className="font-semibold">{formatarMoeda((colaborador as any)?.outros_valores || 0)}</p>
+                     </div>
+                   </div>
+                 </div>
               </CardContent>
             </Card>
 
