@@ -163,7 +163,8 @@ const convertColaboradorToSupabase = (colaborador: Partial<Colaborador>): Partia
   contato_emergencia_nome: colaborador.contato_emergencia?.nome,
   contato_emergencia_telefone: colaborador.contato_emergencia?.telefone,
   contato_emergencia_parentesco: colaborador.contato_emergencia?.parentesco,
-  cpf: colaborador.documentos?.cpf,
+  // Só incluir CPF se não estiver vazio
+  cpf: colaborador.documentos?.cpf && colaborador.documentos.cpf.trim() !== '' ? colaborador.documentos.cpf : null,
   rg: colaborador.documentos?.rg,
   rg_orgao_emissor: colaborador.documentos?.rg_orgao_emissor,
   ctps: colaborador.documentos?.ctps,
