@@ -84,6 +84,11 @@ export function FormColaboradorCompleto({ colaborador, empresaId, onSalvar, onCa
     quantidade_filhos: colaborador?.dependentes?.quantidade_filhos || 0,
     filhos: colaborador?.dependentes?.filhos || [],
     
+    // Adicionais salariais
+    periculosidade: 0,
+    insalubridade: 0,
+    outros_valores: 0,
+    
     // Dados bancários
     banco: colaborador?.dados_bancarios?.banco || '',
     agencia: colaborador?.dados_bancarios?.agencia || '',
@@ -222,19 +227,18 @@ export function FormColaboradorCompleto({ colaborador, empresaId, onSalvar, onCa
       <CardContent>
         <form onSubmit={handleSubmit}>
           <Tabs defaultValue="basicos" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-6">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="basicos">Básicos</TabsTrigger>
               <TabsTrigger value="endereco">Endereço</TabsTrigger>
               <TabsTrigger value="documentos">Documentos</TabsTrigger>
-              <TabsTrigger value="beneficios">Benefícios</TabsTrigger>
-              <TabsTrigger value="dependentes">Dependentes</TabsTrigger>
+              <TabsTrigger value="beneficios">Benefícios e Dependentes</TabsTrigger>
               <TabsTrigger value="historico">Histórico</TabsTrigger>
             </TabsList>
 
             <TabsContent value="basicos" className="space-y-4">
               <h3 className="text-lg font-semibold">Informações Básicas</h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="nome">Nome Completo *</Label>
                   <Input
@@ -253,6 +257,16 @@ export function FormColaboradorCompleto({ colaborador, empresaId, onSalvar, onCa
                     value={formData.email}
                     onChange={(e) => handleChange('email', e.target.value)}
                     placeholder="email@empresa.com"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="cpf">CPF *</Label>
+                  <Input
+                    id="cpf"
+                    value={formData.cpf}
+                    onChange={(e) => handleChange('cpf', e.target.value)}
+                    placeholder="000.000.000-00"
                   />
                 </div>
               </div>
@@ -740,124 +754,179 @@ export function FormColaboradorCompleto({ colaborador, empresaId, onSalvar, onCa
               </div>
             </TabsContent>
 
-            <TabsContent value="beneficios" className="space-y-4">
-              <h3 className="text-lg font-semibold">Benefícios</h3>
-              
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="vale_transporte"
-                    checked={formData.vale_transporte}
-                    onCheckedChange={(checked) => handleChange('vale_transporte', checked)}
-                  />
-                  <Label htmlFor="vale_transporte">Vale Transporte</Label>
-                </div>
-
-                {formData.vale_transporte && (
-                  <div className="space-y-2 ml-6">
-                    <Label htmlFor="valor_vale_transporte">Valor do Vale Transporte</Label>
-                    <Input
-                      id="valor_vale_transporte"
-                      type="number"
-                      value={formData.valor_vale_transporte}
-                      onChange={(e) => handleChange('valor_vale_transporte', parseFloat(e.target.value) || 0)}
-                      placeholder="0.00"
-                    />
-                  </div>
-                )}
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="vale_refeicao"
-                    checked={formData.vale_refeicao}
-                    onCheckedChange={(checked) => handleChange('vale_refeicao', checked)}
-                  />
-                  <Label htmlFor="vale_refeicao">Vale Refeição</Label>
-                </div>
-
-                {formData.vale_refeicao && (
-                  <div className="space-y-2 ml-6">
-                    <Label htmlFor="valor_vale_refeicao">Valor do Vale Refeição</Label>
-                    <Input
-                      id="valor_vale_refeicao"
-                      type="number"
-                      value={formData.valor_vale_refeicao}
-                      onChange={(e) => handleChange('valor_vale_refeicao', parseFloat(e.target.value) || 0)}
-                      placeholder="0.00"
-                    />
-                  </div>
-                )}
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="plano_saude"
-                    checked={formData.plano_saude}
-                    onCheckedChange={(checked) => handleChange('plano_saude', checked)}
-                  />
-                  <Label htmlFor="plano_saude">Plano de Saúde</Label>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="plano_odontologico"
-                    checked={formData.plano_odontologico}
-                    onCheckedChange={(checked) => handleChange('plano_odontologico', checked)}
-                  />
-                  <Label htmlFor="plano_odontologico">Plano Odontológico</Label>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="dependentes" className="space-y-4">
-              <h3 className="text-lg font-semibold">Dependentes</h3>
-              
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="tem_filhos_menores_14"
-                    checked={formData.tem_filhos_menores_14}
-                    onCheckedChange={(checked) => handleChange('tem_filhos_menores_14', checked)}
-                  />
-                  <Label htmlFor="tem_filhos_menores_14">Tem filhos menores de 14 anos</Label>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="quantidade_filhos">Quantidade de Filhos</Label>
-                  <Input
-                    id="quantidade_filhos"
-                    type="number"
-                    value={formData.quantidade_filhos}
-                    onChange={(e) => handleChange('quantidade_filhos', parseInt(e.target.value) || 0)}
-                    placeholder="0"
-                    min="0"
-                  />
-                </div>
-
-                {formData.filhos.length > 0 && (
-                  <div className="space-y-2">
-                    <Label>Dados dos Filhos</Label>
-                    {formData.filhos.map((filho, index) => (
-                      <div key={index} className="p-3 border rounded-lg">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                          <div>
-                            <Label>Nome</Label>
-                            <span className="block text-sm">{filho.nome}</span>
-                          </div>
-                          <div>
-                            <Label>Data de Nascimento</Label>
-                            <span className="block text-sm">{new Date(filho.data_nascimento).toLocaleDateString()}</span>
-                          </div>
-                          <div>
-                            <Label>CPF</Label>
-                            <span className="block text-sm">{filho.cpf || 'Não informado'}</span>
-                          </div>
-                        </div>
+            <TabsContent value="beneficios" className="space-y-6">
+              <div className="space-y-6">
+                {/* Benefícios */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Benefícios</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="vale_transporte"
+                          checked={formData.vale_transporte}
+                          onCheckedChange={(checked) => handleChange('vale_transporte', checked)}
+                        />
+                        <Label htmlFor="vale_transporte">Vale Transporte</Label>
                       </div>
-                    ))}
+
+                      {formData.vale_transporte && (
+                        <div className="space-y-2 ml-6">
+                          <Label htmlFor="valor_vale_transporte">Valor do Vale Transporte</Label>
+                          <Input
+                            id="valor_vale_transporte"
+                            type="number"
+                            value={formData.valor_vale_transporte}
+                            onChange={(e) => handleChange('valor_vale_transporte', parseFloat(e.target.value) || 0)}
+                            placeholder="0.00"
+                          />
+                        </div>
+                      )}
+
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="vale_refeicao"
+                          checked={formData.vale_refeicao}
+                          onCheckedChange={(checked) => handleChange('vale_refeicao', checked)}
+                        />
+                        <Label htmlFor="vale_refeicao">Vale Refeição</Label>
+                      </div>
+
+                      {formData.vale_refeicao && (
+                        <div className="space-y-2 ml-6">
+                          <Label htmlFor="valor_vale_refeicao">Valor do Vale Refeição</Label>
+                          <Input
+                            id="valor_vale_refeicao"
+                            type="number"
+                            value={formData.valor_vale_refeicao}
+                            onChange={(e) => handleChange('valor_vale_refeicao', parseFloat(e.target.value) || 0)}
+                            placeholder="0.00"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="plano_saude"
+                          checked={formData.plano_saude}
+                          onCheckedChange={(checked) => handleChange('plano_saude', checked)}
+                        />
+                        <Label htmlFor="plano_saude">Plano de Saúde</Label>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="plano_odontologico"
+                          checked={formData.plano_odontologico}
+                          onCheckedChange={(checked) => handleChange('plano_odontologico', checked)}
+                        />
+                        <Label htmlFor="plano_odontologico">Plano Odontológico</Label>
+                      </div>
+                    </div>
                   </div>
-                )}
+                </div>
+
+                {/* Adicionais Salariais */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Adicionais Salariais</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="periculosidade">Periculosidade (R$)</Label>
+                      <Input
+                        id="periculosidade"
+                        type="number"
+                        value={formData.periculosidade}
+                        onChange={(e) => handleChange('periculosidade', parseFloat(e.target.value) || 0)}
+                        placeholder="0.00"
+                        step="0.01"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="insalubridade">Insalubridade (R$)</Label>
+                      <Input
+                        id="insalubridade"
+                        type="number"
+                        value={formData.insalubridade}
+                        onChange={(e) => handleChange('insalubridade', parseFloat(e.target.value) || 0)}
+                        placeholder="0.00"
+                        step="0.01"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="outros_valores">Outros Valores (R$)</Label>
+                      <Input
+                        id="outros_valores"
+                        type="number"
+                        value={formData.outros_valores}
+                        onChange={(e) => handleChange('outros_valores', parseFloat(e.target.value) || 0)}
+                        placeholder="0.00"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Dependentes */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Dependentes</h3>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="tem_filhos_menores_14"
+                        checked={formData.tem_filhos_menores_14}
+                        onCheckedChange={(checked) => handleChange('tem_filhos_menores_14', checked)}
+                      />
+                      <Label htmlFor="tem_filhos_menores_14">Tem filhos menores de 14 anos</Label>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="quantidade_filhos">Quantidade de Filhos</Label>
+                      <Input
+                        id="quantidade_filhos"
+                        type="number"
+                        value={formData.quantidade_filhos}
+                        onChange={(e) => handleChange('quantidade_filhos', parseInt(e.target.value) || 0)}
+                        placeholder="0"
+                        min="0"
+                        className="w-32"
+                      />
+                    </div>
+
+                    {formData.filhos.length > 0 && (
+                      <div className="space-y-2">
+                        <Label>Dados dos Filhos</Label>
+                        {formData.filhos.map((filho, index) => (
+                          <div key={index} className="p-3 border rounded-lg">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                              <div>
+                                <Label>Nome</Label>
+                                <span className="block text-sm">{filho.nome}</span>
+                              </div>
+                              <div>
+                                <Label>Data de Nascimento</Label>
+                                <span className="block text-sm">{new Date(filho.data_nascimento).toLocaleDateString()}</span>
+                              </div>
+                              <div>
+                                <Label>CPF</Label>
+                                <span className="block text-sm">{filho.cpf || 'Não informado'}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </TabsContent>
+
 
             <TabsContent value="historico" className="space-y-4">
               <h3 className="text-lg font-semibold">Histórico de Observações</h3>

@@ -41,8 +41,8 @@ export function FormColaborador({ colaborador, onSalvar, onCancelar }: FormColab
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.nome || !formData.email || !formData.empresa) {
-      toast.error('Preencha os campos obrigatórios');
+    if (!formData.nome || !formData.email || !formData.empresa || !formData.cpf) {
+      toast.error('Preencha os campos obrigatórios: Nome, Email, Empresa e CPF');
       return;
     }
 
@@ -73,7 +73,7 @@ export function FormColaborador({ colaborador, onSalvar, onCancelar }: FormColab
         contato_emergencia_nome: 'Contato de Emergência',
         contato_emergencia_telefone: '(31) 99999-9999',
         contato_emergencia_parentesco: 'Familiar',
-        cpf: formData.cpf || '000.000.000-00',
+        cpf: formData.cpf,
         rg: formData.rg || '00.000.000-0',
         rg_orgao_emissor: 'SSP/MG',
         ctps: formData.ctps || '0000000000',
@@ -138,7 +138,7 @@ export function FormColaborador({ colaborador, onSalvar, onCancelar }: FormColab
             parentesco: 'Familiar'
           },
           documentos: {
-            cpf: formData.cpf || '000.000.000-00',
+            cpf: formData.cpf,
             rg: formData.rg || '00.000.000-0',
             rg_orgao_emissor: 'SSP/MG',
             ctps: formData.ctps || '0000000000',
@@ -202,7 +202,7 @@ export function FormColaborador({ colaborador, onSalvar, onCancelar }: FormColab
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Informações Básicas</h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="nome">Nome Completo *</Label>
                 <Input
@@ -221,6 +221,16 @@ export function FormColaborador({ colaborador, onSalvar, onCancelar }: FormColab
                   value={formData.email}
                   onChange={(e) => handleChange('email', e.target.value)}
                   placeholder="email@empresa.com"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cpf">CPF *</Label>
+                <Input
+                  id="cpf"
+                  value={formData.cpf}
+                  onChange={(e) => handleChange('cpf', e.target.value)}
+                  placeholder="000.000.000-00"
                 />
               </div>
             </div>
@@ -352,21 +362,11 @@ export function FormColaborador({ colaborador, onSalvar, onCancelar }: FormColab
             </div>
           </div>
 
-          {/* Documentos */}
+          {/* Documentos Básicos */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Documentos</h3>
+            <h3 className="text-lg font-semibold">Documentos Básicos</h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="cpf">CPF</Label>
-                <Input
-                  id="cpf"
-                  value={formData.cpf}
-                  onChange={(e) => handleChange('cpf', e.target.value)}
-                  placeholder="000.000.000-00"
-                />
-              </div>
-              
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="rg">RG</Label>
                 <Input

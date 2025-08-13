@@ -4,9 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { MoreVertical, Edit, Eye, UserX } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Colaborador } from '@/types/hr';
 import { useHR } from '@/context/HRContext';
 import { calcularRescisaoColaborador, calcularValorPrevisto } from '@/lib/rescisao';
+import { VisualizacaoColaboradorCompleta } from './VisualizacaoColaboradorCompleta';
+import { useState } from 'react';
 
 interface ColaboradorCardProps {
   colaborador: Colaborador;
@@ -16,6 +19,7 @@ interface ColaboradorCardProps {
 
 export function ColaboradorCard({ colaborador, onEdit, onView }: ColaboradorCardProps) {
   const { removerColaborador, empresas } = useHR();
+  const [showVisualizacao, setShowVisualizacao] = useState(false);
   
   const iniciais = colaborador.nome
     .split(' ')
@@ -72,7 +76,7 @@ export function ColaboradorCard({ colaborador, onEdit, onView }: ColaboradorCard
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onView?.(colaborador.id)}>
+            <DropdownMenuItem onClick={() => setShowVisualizacao(true)}>
               <Eye className="mr-2 h-4 w-4" />
               Visualizar
             </DropdownMenuItem>
@@ -137,6 +141,21 @@ export function ColaboradorCard({ colaborador, onEdit, onView }: ColaboradorCard
           </p>
         </div>
       </CardContent>
+
+      {showVisualizacao && (
+        <Dialog open={showVisualizacao} onOpenChange={setShowVisualizacao}>
+          <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden p-0">
+            <VisualizacaoColaboradorCompleta 
+              colaborador={colaborador}
+              onClose={() => setShowVisualizacao(false)}
+              onEdit={(id) => {
+                setShowVisualizacao(false);
+                onEdit?.(id);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </Card>
   );
 }

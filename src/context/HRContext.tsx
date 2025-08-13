@@ -252,7 +252,24 @@ export function HRProvider({ children }: { children: React.ReactNode }) {
         }
       });
       
-      await addColaboradorSupabase(supabaseData as any);
+      const novoColaborador = await addColaboradorSupabase(supabaseData as any);
+      
+      // Adicionar entrada no histórico se possível
+      if (novoColaborador?.id) {
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          await supabase
+            .from('historico_colaborador')
+            .insert({
+              colaborador_id: novoColaborador.id,
+              observacao: `Colaborador criado: ${colaboradorData.nome}`,
+              created_by: (await supabase.auth.getUser()).data.user?.id
+            });
+        } catch (histError) {
+          console.log('Erro ao criar histórico:', histError);
+        }
+      }
+      
       toast.success('Colaborador adicionado com sucesso!');
     } catch (error: any) {
       console.error('Erro ao adicionar colaborador:', error);
@@ -270,6 +287,21 @@ export function HRProvider({ children }: { children: React.ReactNode }) {
     try {
       const supabaseData = convertColaboradorToSupabase(dadosAtualizados as Colaborador);
       await editColaboradorSupabase(id, supabaseData);
+      
+      // Adicionar entrada no histórico
+      try {
+        const { supabase } = await import('@/integrations/supabase/client');
+        await supabase
+          .from('historico_colaborador')
+          .insert({
+            colaborador_id: id,
+            observacao: `Colaborador atualizado`,
+            created_by: (await supabase.auth.getUser()).data.user?.id
+          });
+      } catch (histError) {
+        console.log('Erro ao criar histórico:', histError);
+      }
+      
       toast.success('Colaborador atualizado com sucesso!');
     } catch (error) {
       console.error('Erro ao editar colaborador:', error);

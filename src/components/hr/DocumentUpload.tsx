@@ -68,7 +68,10 @@ export function DocumentUpload({ colaboradorId, onUploadComplete }: DocumentUplo
         .from('colaborador-docs')
         .upload(fileName, selectedFile);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Erro no upload:', uploadError);
+        throw new Error(`Erro no upload: ${uploadError.message}`);
+      }
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
@@ -87,7 +90,19 @@ export function DocumentUpload({ colaboradorId, onUploadComplete }: DocumentUplo
         .select()
         .single();
 
-      if (docError) throw docError;
+      if (docError) {
+        console.error('Erro ao salvar no banco:', docError);
+        throw new Error(`Erro ao salvar documento: ${docError.message}`);
+      }
+
+      // Adicionar entrada no histórico
+      await supabase
+        .from('historico_colaborador')
+        .insert({
+          colaborador_id: colaboradorId,
+          observacao: `Documento adicionado: ${selectedFile.name} (${documentType})`,
+          created_by: (await supabase.auth.getUser()).data.user?.id
+        });
 
       toast.success('Documento enviado com sucesso!');
       
@@ -98,9 +113,9 @@ export function DocumentUpload({ colaboradorId, onUploadComplete }: DocumentUplo
       // Call callback
       onUploadComplete?.(docData);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao enviar documento:', error);
-      toast.error('Erro ao enviar documento');
+      toast.error(error.message || 'Erro ao enviar documento');
     } finally {
       setUploading(false);
     }
