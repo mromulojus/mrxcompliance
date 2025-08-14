@@ -14,47 +14,130 @@ import {
   BarChart3
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { useState, useEffect } from 'react';
+import { AuditoriaEmpresa as IAuditoriaEmpresa, ItemAuditoria, StatusAuditoria } from '@/types/auditoria';
 
 interface ComplianceAuditDashboardProps {
   empresaId: string;
 }
 
 export function ComplianceAuditDashboard({ empresaId }: ComplianceAuditDashboardProps) {
-  // Dados simulados de compliance
-  const complianceData = {
-    score: 85,
-    documentosTotal: 156,
-    documentosConformes: 132,
-    documentosPendentes: 18,
-    documentosVencidos: 6,
-    proximasAuditorias: 3,
-    alertasCriticos: 2,
-    melhorias: 8
+  const [auditoriaData, setAuditoriaData] = useState<IAuditoriaEmpresa | null>(null);
+
+  useEffect(() => {
+    // Carregar dados reais da auditoria do localStorage
+    const dados = localStorage.getItem(`auditoria-${empresaId}`);
+    if (dados) {
+      setAuditoriaData(JSON.parse(dados));
+    }
+  }, [empresaId]);
+
+  // Calcular estatísticas reais baseadas nos dados de auditoria
+  const calcularEstatisticas = () => {
+    if (!auditoriaData?.itens) {
+      return {
+        total: 0,
+        entregues: 0,
+        solicitados: 0,
+        naoSolicitados: 0,
+        vencidos: 0,
+        score: 0
+      };
+    }
+
+    const itensValidos = auditoriaData.itens.filter(item => item.documento && item.documento.trim() !== '');
+    const total = itensValidos.length;
+    const entregues = itensValidos.filter(item => item.status === 'ENTREGUE').length;
+    const solicitados = itensValidos.filter(item => item.status === 'SOLICITADO').length;
+    const naoSolicitados = itensValidos.filter(item => item.status === 'NAO_SOLICITADO').length;
+    
+    // Verificar vencidos (itens solicitados com data_vencimento passada)
+    const hoje = new Date();
+    const vencidos = itensValidos.filter(item => {
+      if (item.status === 'SOLICITADO' && item.data_vencimento) {
+        return new Date(item.data_vencimento) < hoje;
+      }
+      return false;
+    }).length;
+
+    const score = total > 0 ? Math.round((entregues / total) * 100) : 0;
+
+    return {
+      total,
+      entregues,
+      solicitados,
+      naoSolicitados,
+      vencidos,
+      score
+    };
   };
 
-  // Dados para gráficos
-  const conformidadePorCategoria = [
-    { categoria: 'Trabalhista', score: 92, total: 45, conformes: 41 },
-    { categoria: 'Fiscal', score: 78, total: 38, conformes: 30 },
-    { categoria: 'Ambiental', score: 85, total: 28, conformes: 24 },
-    { categoria: 'Segurança', score: 90, total: 25, conformes: 23 },
-    { categoria: 'Qualidade', score: 82, total: 20, conformes: 16 }
-  ];
+  // Calcular conformidade por categoria
+  const calcularConformidadePorCategoria = () => {
+    if (!auditoriaData?.itens) return [];
 
+    const categorias = new Map<string, { total: number; entregues: number }>();
+    
+    auditoriaData.itens.forEach(item => {
+      if (item.categoria && item.categoria.trim() !== '' && item.documento && item.documento.trim() !== '') {
+        if (!categorias.has(item.categoria)) {
+          categorias.set(item.categoria, { total: 0, entregues: 0 });
+        }
+        const cat = categorias.get(item.categoria)!;
+        cat.total++;
+        if (item.status === 'ENTREGUE') {
+          cat.entregues++;
+        }
+      }
+    });
+
+    return Array.from(categorias.entries()).map(([categoria, dados]) => ({
+      categoria: categoria.replace(/^[IVX]+\.\s*/, ''), // Remove numeração romana
+      score: dados.total > 0 ? Math.round((dados.entregues / dados.total) * 100) : 0,
+      total: dados.total,
+      conformes: dados.entregues
+    }));
+  };
+
+  // Calcular próximos vencimentos
+  const calcularProximosVencimentos = () => {
+    if (!auditoriaData?.itens) return [];
+
+    const hoje = new Date();
+    const em30Dias = new Date();
+    em30Dias.setDate(hoje.getDate() + 30);
+
+    return auditoriaData.itens
+      .filter(item => {
+        if (item.status === 'SOLICITADO' && item.data_vencimento) {
+          const vencimento = new Date(item.data_vencimento);
+          return vencimento >= hoje && vencimento <= em30Dias;
+        }
+        return false;
+      })
+      .map(item => {
+        const diasRestantes = Math.ceil((new Date(item.data_vencimento!).getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+        return {
+          item: item.documento,
+          data: new Date(item.data_vencimento!).toLocaleDateString('pt-BR'),
+          criticidade: diasRestantes <= 7 ? 'alta' : diasRestantes <= 15 ? 'média' : 'baixa'
+        };
+      })
+      .sort((a, b) => new Date(a.data.split('/').reverse().join('-')).getTime() - new Date(b.data.split('/').reverse().join('-')).getTime());
+  };
+
+  const stats = calcularEstatisticas();
+  const conformidadePorCategoria = calcularConformidadePorCategoria();
+  const proximosVencimentos = calcularProximosVencimentos();
+
+  // Evolução simulada para o gráfico de linha (mantido para visualização)
   const evolucaoCompliance = [
-    { mes: 'Jan', score: 78 },
-    { mes: 'Fev', score: 80 },
-    { mes: 'Mar', score: 82 },
-    { mes: 'Abr', score: 85 },
-    { mes: 'Mai', score: 83 },
-    { mes: 'Jun', score: 85 }
-  ];
-
-  const proximas30Dias = [
-    { item: 'Auditoria ISO 9001', data: '2025-01-25', criticidade: 'alta' },
-    { item: 'Renovação AVCB', data: '2025-02-10', criticidade: 'média' },
-    { item: 'Relatório RAIS', data: '2025-02-15', criticidade: 'alta' },
-    { item: 'Inspeção CIPA', data: '2025-02-20', criticidade: 'baixa' }
+    { mes: 'Jan', score: Math.max(0, stats.score - 10) },
+    { mes: 'Fev', score: Math.max(0, stats.score - 8) },
+    { mes: 'Mar', score: Math.max(0, stats.score - 5) },
+    { mes: 'Abr', score: Math.max(0, stats.score - 3) },
+    { mes: 'Mai', score: Math.max(0, stats.score - 1) },
+    { mes: 'Jun', score: stats.score }
   ];
 
   const getCriticidadeColor = (criticidade: string) => {
@@ -82,10 +165,10 @@ export function ComplianceAuditDashboard({ empresaId }: ComplianceAuditDashboard
             <Shield className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${getScoreColor(complianceData.score)}`}>
-              {complianceData.score}%
+            <div className={`text-2xl font-bold ${getScoreColor(stats.score)}`}>
+              {stats.score}%
             </div>
-            <Progress value={complianceData.score} className="mt-2" />
+            <Progress value={stats.score} className="mt-2" />
           </CardContent>
         </Card>
 
@@ -95,9 +178,9 @@ export function ComplianceAuditDashboard({ empresaId }: ComplianceAuditDashboard
             <CheckSquare className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{complianceData.documentosConformes}</div>
+            <div className="text-2xl font-bold">{stats.entregues}</div>
             <p className="text-xs text-muted-foreground">
-              de {complianceData.documentosTotal} total
+              de {stats.total} total
             </p>
           </CardContent>
         </Card>
@@ -108,9 +191,9 @@ export function ComplianceAuditDashboard({ empresaId }: ComplianceAuditDashboard
             <Clock className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{complianceData.documentosPendentes}</div>
+            <div className="text-2xl font-bold text-orange-600">{stats.solicitados}</div>
             <p className="text-xs text-muted-foreground">
-              {complianceData.documentosVencidos} vencidos
+              {stats.vencidos} vencidos
             </p>
           </CardContent>
         </Card>
@@ -121,7 +204,7 @@ export function ComplianceAuditDashboard({ empresaId }: ComplianceAuditDashboard
             <AlertTriangle className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{complianceData.alertasCriticos}</div>
+            <div className="text-2xl font-bold text-red-600">{stats.vencidos}</div>
             <p className="text-xs text-muted-foreground">
               Ação imediata necessária
             </p>
@@ -221,7 +304,7 @@ export function ComplianceAuditDashboard({ empresaId }: ComplianceAuditDashboard
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {proximas30Dias.map((item, index) => (
+              {proximosVencimentos.length > 0 ? proximosVencimentos.map((item, index) => (
                 <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex-1">
                     <h4 className="font-medium text-sm">{item.item}</h4>
@@ -231,7 +314,11 @@ export function ComplianceAuditDashboard({ empresaId }: ComplianceAuditDashboard
                     {item.criticidade}
                   </Badge>
                 </div>
-              ))}
+              )) : (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  Nenhuma atividade com vencimento nos próximos 30 dias
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -287,8 +374,8 @@ export function ComplianceAuditDashboard({ empresaId }: ComplianceAuditDashboard
             <div className="space-y-2">
               <h4 className="font-medium">Status Geral</h4>
               <p className="text-sm text-muted-foreground">
-                A empresa apresenta um nível de compliance satisfatório com {complianceData.score}% 
-                de conformidade geral. Foram identificados {complianceData.alertasCriticos} itens 
+                A empresa apresenta um nível de compliance satisfatório com {stats.score}% 
+                de conformidade geral. Foram identificados {stats.vencidos} itens 
                 críticos que necessitam atenção imediata.
               </p>
             </div>
@@ -296,18 +383,22 @@ export function ComplianceAuditDashboard({ empresaId }: ComplianceAuditDashboard
             <div className="space-y-2">
               <h4 className="font-medium">Principais Riscos</h4>
               <p className="text-sm text-muted-foreground">
-                Documentos vencidos na área fiscal e necessidade de renovação 
-                de certificações. Recomenda-se implementar cronograma de 
-                monitoramento automático.
+                {stats.vencidos > 0 ? 
+                  `${stats.vencidos} documentos vencidos necessitam atenção imediata. ` : 
+                  'Nenhum documento vencido identificado. '}
+                Recomenda-se implementar cronograma de 
+                monitoramento automático para manter a conformidade.
               </p>
             </div>
             
             <div className="space-y-2">
               <h4 className="font-medium">Próximos Passos</h4>
               <p className="text-sm text-muted-foreground">
-                Priorizar a regularização dos {complianceData.documentosVencidos} 
-                documentos vencidos e preparar para as {complianceData.proximasAuditorias} 
-                auditorias programadas.
+                {stats.vencidos > 0 ? 
+                  `Priorizar a regularização dos ${stats.vencidos} documentos vencidos e ` : 
+                  'Manter '}
+                preparar para futuras auditorias com base nos {stats.solicitados} itens 
+                em andamento.
               </p>
             </div>
           </div>
