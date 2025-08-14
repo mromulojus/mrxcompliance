@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Building2 } from 'lucide-react';
 import { useSupabaseData, Empresa } from '@/hooks/useSupabaseData';
+import { DueDiligenceButton } from '@/components/ui/due-diligence-button';
 
 interface FormEmpresaProps {
   empresa?: Empresa;
@@ -150,6 +151,11 @@ export function FormEmpresa({ empresa, onSalvar, onCancelar }: FormEmpresaProps)
             <Button type="button" variant="outline" onClick={onCancelar}>
               Cancelar
             </Button>
+            <DueDiligenceButton 
+              entityType="empresa"
+              entityId={empresa?.id || "temp-id"}
+              entityName={form.nome || 'Nova Empresa'}
+            />
             <Button type="submit">
               {empresa ? 'Atualizar' : 'Salvar'}
             </Button>

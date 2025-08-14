@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Colaborador } from '@/types/hr';
 import { useHR } from '@/context/HRContext';
 import { useSupabaseData } from '@/hooks/useSupabaseData';
+import { DueDiligenceButton } from '@/components/ui/due-diligence-button';
 import { toast } from 'sonner';
 
 interface FormColaboradorProps {
@@ -394,6 +395,11 @@ export function FormColaborador({ colaborador, onSalvar, onCancelar }: FormColab
             <Button type="button" variant="outline" onClick={onCancelar}>
               Cancelar
             </Button>
+            <DueDiligenceButton 
+              entityType="colaborador"
+              entityId={colaborador?.id || "temp-id"}
+              entityName={formData.nome || 'Novo Colaborador'}
+            />
             <Button type="submit">
               {colaborador ? 'Atualizar' : 'Salvar'}
             </Button>

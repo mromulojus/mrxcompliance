@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { User, Building2, Phone, Mail, MapPin, Settings } from "lucide-react";
 import { useDebtoData } from "@/hooks/useDebtoData";
+import { DueDiligenceButton } from "@/components/ui/due-diligence-button";
 import { toast } from "sonner";
 
 const debtorSchema = z.object({
@@ -334,6 +335,12 @@ export function FormDebtor({ onSuccess }: FormDebtorProps) {
         <Button type="button" variant="outline" onClick={() => onSuccess?.()}>
           Cancelar
         </Button>
+        <DueDiligenceButton 
+          entityType="devedor"
+          entityId="temp-id"
+          entityName={watch('nome') || 'Novo Devedor'}
+          disabled={isSubmitting}
+        />
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Cadastrando...' : 'Cadastrar Devedor'}
         </Button>
