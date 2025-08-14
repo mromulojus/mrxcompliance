@@ -146,7 +146,7 @@ export function useDebtoData() {
       const { data, error } = await query;
 
       if (error) throw error;
-      setHistorico(data || []);
+      setHistorico((data || []) as HistoricoCobranca[]);
     } catch (error) {
       console.error('Erro ao buscar histórico:', error);
       toast.error('Erro ao carregar histórico');
@@ -201,18 +201,33 @@ export function useDebtoData() {
     try {
       const { data: user } = await supabase.auth.getUser();
       
+      // Garantir que campos obrigatórios estão presentes
+      if (!historicoData.divida_id || !historicoData.devedor_id || !historicoData.tipo_acao || 
+          !historicoData.canal || !historicoData.descricao) {
+        throw new Error('Campos obrigatórios não fornecidos');
+      }
+      
       const { data, error } = await supabase
         .from('historico_cobrancas')
         .insert({
-          ...historicoData,
+          divida_id: historicoData.divida_id,
+          devedor_id: historicoData.devedor_id,
+          tipo_acao: historicoData.tipo_acao,
+          canal: historicoData.canal,
+          descricao: historicoData.descricao,
+          resultado: historicoData.resultado,
+          valor_negociado: historicoData.valor_negociado,
+          data_compromisso: historicoData.data_compromisso,
+          observacoes: historicoData.observacoes,
+          anexos: historicoData.anexos,
           created_by: user.user?.id
-        })
+        } as any)
         .select()
         .single();
 
       if (error) throw error;
       
-      setHistorico(prev => [data, ...prev]);
+      setHistorico(prev => [data as HistoricoCobranca, ...prev]);
       toast.success('Histórico adicionado com sucesso!');
       return data;
     } catch (error) {
@@ -226,14 +241,14 @@ export function useDebtoData() {
     try {
       const { data, error } = await supabase
         .from('dividas')
-        .update(updates)
+        .update(updates as any)
         .eq('id', dividaId)
         .select()
         .single();
 
       if (error) throw error;
       
-      setDividas(prev => prev.map(d => d.id === dividaId ? data : d));
+      setDividas(prev => prev.map(d => d.id === dividaId ? data as Divida : d));
       toast.success('Dívida atualizada com sucesso!');
       return data;
     } catch (error) {
