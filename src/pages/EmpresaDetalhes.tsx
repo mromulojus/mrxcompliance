@@ -15,6 +15,7 @@ import { ImportarColaboradores } from '@/components/hr/ImportarColaboradores';
 import { VisualizacaoColaborador } from '@/components/hr/VisualizacaoColaborador';
 import { AuditoriaEmpresa } from '@/components/hr/AuditoriaEmpresa';
 import { DenunciasEmpresa } from '@/components/hr/DenunciasEmpresa';
+import { DebtoEmpresa } from '@/components/debto/DebtoEmpresa';
 import { ExportPdf } from '@/components/hr/ExportPdf';
 import { PainelAvisos } from '@/components/hr/PainelAvisos';
 import { Logo } from '@/components/ui/logo';
@@ -136,10 +137,14 @@ export default function EmpresaDetalhes() {
       <main className="container mx-auto px-4 py-8 space-y-8">
         {/* Tabs de Navegação */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="colaboradores" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Colaboradores & Analytics
+            </TabsTrigger>
+            <TabsTrigger value="cobrancas" className="flex items-center gap-2">
+              <DollarSign className="h-4 w-4" />
+              Cobranças
             </TabsTrigger>
             <TabsTrigger value="auditoria" className="flex items-center gap-2">
               <CheckSquare className="h-4 w-4" />
@@ -682,6 +687,10 @@ export default function EmpresaDetalhes() {
 
         <TabsContent value="auditoria" className="space-y-8">
           <AuditoriaEmpresa empresaId={empresaId!} nomeEmpresa={empresa.nome} />
+        </TabsContent>
+
+        <TabsContent value="cobrancas" className="space-y-8">
+          <DebtoEmpresa empresaId={empresaId!} />
         </TabsContent>
 
         <TabsContent value="denuncias" className="space-y-8">
