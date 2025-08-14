@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
+import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useDebtoData } from "@/hooks/useDebtoData";
 
 export default function DebtosDashboard() {
-  const { can } = useSupabaseAuth();
+  const { hasRole } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedEmpresa, setSelectedEmpresa] = useState<string>("");
@@ -58,7 +58,7 @@ export default function DebtosDashboard() {
           </div>
           
           <div className="flex gap-2">
-            {can('administrador') && (
+            {hasRole('administrador') && (
               <>
                 <Dialog open={isDebtorDialogOpen} onOpenChange={setIsDebtorDialogOpen}>
                   <DialogTrigger asChild>

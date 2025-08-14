@@ -11,14 +11,14 @@ import { FormDebtor } from "@/components/debto/FormDebtor";
 import { FormDivida } from "@/components/debto/FormDivida";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useDebtoData } from "@/hooks/useDebtoData";
-import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
+import { useAuth } from "@/context/AuthContext";
 
 interface DebtoEmpresaProps {
   empresaId: string;
 }
 
 export function DebtoEmpresa({ empresaId }: DebtoEmpresaProps) {
-  const { can } = useSupabaseAuth();
+  const { hasRole } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
   const [isDebtorDialogOpen, setIsDebtorDialogOpen] = useState(false);
@@ -93,7 +93,7 @@ export function DebtoEmpresa({ empresaId }: DebtoEmpresaProps) {
         </div>
         
         <div className="flex gap-2">
-          {can('administrador') && (
+          {hasRole('administrador') && (
             <>
               <Dialog open={isDebtorDialogOpen} onOpenChange={setIsDebtorDialogOpen}>
                 <DialogTrigger asChild>
