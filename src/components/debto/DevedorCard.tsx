@@ -109,7 +109,10 @@ export function DevedorCard({ devedor, compact = false, onUpdate }: DevedorCardP
 
   if (compact) {
     return (
-      <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-md transition-all duration-200">
+      <Card 
+        className="border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-md transition-all duration-200 cursor-pointer"
+        onClick={() => window.location.href = `/devedor/${devedor.id}`}
+      >
         <CardContent className="p-4">
           <div className="flex items-center gap-3">
             <Avatar className="w-10 h-10">
@@ -121,9 +124,12 @@ export function DevedorCard({ devedor, compact = false, onUpdate }: DevedorCardP
               <div className="font-medium truncate">{devedor.nome}</div>
               <div className="text-sm text-muted-foreground">{devedor.documento}</div>
             </div>
-            <Badge className={`text-xs ${getScoreColor(devedor.score_recuperabilidade)}`}>
-              {devedor.score_recuperabilidade}
-            </Badge>
+            <div className="text-right">
+              <div className="text-xs text-muted-foreground">Valor Dívida</div>
+              <div className="font-bold text-destructive text-sm">
+                {formatCurrency(stats.totalDividas)}
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -159,11 +165,11 @@ export function DevedorCard({ devedor, compact = false, onUpdate }: DevedorCardP
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => window.location.href = `/devedor/${devedor.id}`}>
                   <Eye className="w-4 h-4 mr-2" />
                   Visualizar
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => console.log('Editar devedor:', devedor.id)}>
                   <Edit className="w-4 h-4 mr-2" />
                   Editar
                 </DropdownMenuItem>
@@ -174,11 +180,11 @@ export function DevedorCard({ devedor, compact = false, onUpdate }: DevedorCardP
       </CardHeader>
       
       <CardContent className="space-y-4">
-        {/* Score de Recuperabilidade */}
+        {/* Valor da Dívida Atualizada */}
         <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">Score de Recuperabilidade</span>
-          <Badge className={getScoreColor(devedor.score_recuperabilidade)}>
-            {devedor.score_recuperabilidade}/100
+          <span className="text-sm text-muted-foreground">Valor da Dívida Atualizada</span>
+          <Badge className="bg-red-100 text-red-700">
+            {formatCurrency(stats.totalDividas)}
           </Badge>
         </div>
 

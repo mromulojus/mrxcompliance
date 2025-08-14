@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Users, Building2, TrendingUp, PieChart, BarChart3, DollarSign, UserPlus, FileSpreadsheet, FileText, CheckSquare, AlertTriangle } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { ArrowLeft, Users, Building2, TrendingUp, PieChart, BarChart3, DollarSign, UserPlus, FileSpreadsheet, FileText, CheckSquare, AlertTriangle, Search, LayoutDashboard } from 'lucide-react';
 import { useSupabaseData } from '@/hooks/useSupabaseData';
 import { useHR } from '@/context/HRContext';
 import { ColaboradorCard } from '@/components/hr/ColaboradorCard';
@@ -21,6 +22,8 @@ import { PainelAvisos } from '@/components/hr/PainelAvisos';
 import { Logo } from '@/components/ui/logo';
 import { Footer } from '@/components/ui/footer';
 import { calcularTotalRescisaoEmpresa } from '@/lib/rescisao';
+import { EmpresaDashboard } from '@/components/dashboard/EmpresaDashboard';
+import { ComplianceAuditDashboard } from '@/components/dashboard/ComplianceAuditDashboard';
 export default function EmpresaDetalhes() {
   const {
     empresaId
@@ -36,10 +39,19 @@ export default function EmpresaDetalhes() {
   const [showVisualizacaoColaborador, setShowVisualizacaoColaborador] = useState(false);
   const [colaboradorSelecionado, setColaboradorSelecionado] = useState<any>(null);
   const [colaboradorEditando, setColaboradorEditando] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState('colaboradores');
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [searchColaboradores, setSearchColaboradores] = useState('');
   const empresa = empresas.find(e => e.id === empresaId);
   // Usar apenas colaboradores do Supabase para evitar duplicação
   const colaboradoresEmpresa = colaboradores.filter(c => c.empresa_id === empresaId);
+  
+  // Filtrar colaboradores pela busca
+  const colaboradoresFiltrados = colaboradoresEmpresa.filter(colaborador =>
+    colaborador.nome.toLowerCase().includes(searchColaboradores.toLowerCase()) ||
+    colaborador.cpf.toLowerCase().includes(searchColaboradores.toLowerCase()) ||
+    colaborador.cargo.toLowerCase().includes(searchColaboradores.toLowerCase()) ||
+    colaborador.departamento.toLowerCase().includes(searchColaboradores.toLowerCase())
+  );
   if (!empresa) {
     return <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -137,7 +149,11 @@ export default function EmpresaDetalhes() {
       <main className="container mx-auto px-4 py-8 space-y-8">
         {/* Tabs de Navegação */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="dashboard" className="flex items-center gap-2">
+              <LayoutDashboard className="h-4 w-4" />
+              Dashboard
+            </TabsTrigger>
             <TabsTrigger value="colaboradores" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Colaboradores & Analytics
@@ -156,9 +172,24 @@ export default function EmpresaDetalhes() {
             </TabsTrigger>
           </TabsList>
 
+          <TabsContent value="dashboard" className="space-y-8">
+            <EmpresaDashboard empresaId={empresa.id} />
+          </TabsContent>
+
           <TabsContent value="colaboradores" className="space-y-8">
         {/* Painel de Avisos */}
         <PainelAvisos empresaId={empresa.id} />
+        
+        {/* Barra de Pesquisa */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <Input
+            placeholder="Buscar colaboradores por nome, CPF, cargo ou departamento..."
+            value={searchColaboradores}
+            onChange={(e) => setSearchColaboradores(e.target.value)}
+            className="pl-10"
+          />
+        </div>
         
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -685,9 +716,9 @@ export default function EmpresaDetalhes() {
 
         </TabsContent>
 
-        <TabsContent value="auditoria" className="space-y-8">
-          <AuditoriaEmpresa empresaId={empresaId!} nomeEmpresa={empresa.nome} />
-        </TabsContent>
+          <TabsContent value="auditoria" className="space-y-8">
+            <ComplianceAuditDashboard empresaId={empresaId!} />
+          </TabsContent>
 
         <TabsContent value="cobrancas" className="space-y-8">
           <DebtoEmpresa empresaId={empresaId!} />

@@ -133,11 +133,11 @@ export function DividaCard({ divida, compact = false, onUpdate }: DividaCardProp
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => console.log('Visualizar dívida:', divida.id)}>
                   <Eye className="w-4 h-4 mr-2" />
                   Visualizar
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => console.log('Editar dívida:', divida.id)}>
                   <Edit className="w-4 h-4 mr-2" />
                   Editar
                 </DropdownMenuItem>
@@ -213,13 +213,23 @@ export function DividaCard({ divida, compact = false, onUpdate }: DividaCardProp
 
             {/* Ações */}
             <div className="flex gap-2 pt-2">
-              <Button size="sm" variant="outline" className="flex-1 text-xs">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="flex-1 text-xs"
+                onClick={() => console.log('Ver detalhes da dívida:', divida.id)}
+              >
                 <Eye className="w-3 h-3 mr-1" />
                 Detalhes
               </Button>
-              <Button size="sm" variant="outline" className="flex-1 text-xs">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="flex-1 text-xs"
+                onClick={() => console.log('Criar acordo para dívida:', divida.id)}
+              >
                 <DollarSign className="w-3 h-3 mr-1" />
-                Cobrança
+                Acordo
               </Button>
             </div>
           </TabsContent>
