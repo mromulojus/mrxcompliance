@@ -133,11 +133,11 @@ export function DividaCard({ divida, compact = false, onUpdate }: DividaCardProp
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => console.log('Visualizar dívida:', divida.id)}>
+                <DropdownMenuItem onClick={() => window.open(`/divida/${divida.id}`, '_blank')}>
                   <Eye className="w-4 h-4 mr-2" />
                   Visualizar
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => console.log('Editar dívida:', divida.id)}>
+                <DropdownMenuItem onClick={() => window.open(`/divida/${divida.id}/editar`, '_blank')}>
                   <Edit className="w-4 h-4 mr-2" />
                   Editar
                 </DropdownMenuItem>
@@ -217,7 +217,7 @@ export function DividaCard({ divida, compact = false, onUpdate }: DividaCardProp
                 size="sm" 
                 variant="outline" 
                 className="flex-1 text-xs"
-                onClick={() => console.log('Ver detalhes da dívida:', divida.id)}
+                onClick={() => window.open(`/divida/${divida.id}`, '_blank')}
               >
                 <Eye className="w-3 h-3 mr-1" />
                 Detalhes
@@ -226,7 +226,12 @@ export function DividaCard({ divida, compact = false, onUpdate }: DividaCardProp
                 size="sm" 
                 variant="outline" 
                 className="flex-1 text-xs"
-                onClick={() => console.log('Criar acordo para dívida:', divida.id)}
+                onClick={() => {
+                  const tabsElement = document.querySelector('[data-tabs-value="acordo"]');
+                  if (tabsElement) {
+                    (tabsElement as HTMLElement).click();
+                  }
+                }}
               >
                 <DollarSign className="w-3 h-3 mr-1" />
                 Acordo

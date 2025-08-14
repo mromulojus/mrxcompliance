@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Trash2, Plus, TrendingUp, Calculator } from "lucide-react";
+import { Calendar, Trash2, Plus, TrendingUp, Calculator, DollarSign, Edit } from "lucide-react";
 import { toast } from "sonner";
 
 interface Parcela {
@@ -29,16 +29,11 @@ export function CorrecaoValores({ valorOriginal, dataVencimento, onValorAtualiza
   const [valorAtualizado, setValorAtualizado] = useState(valorOriginal);
 
   const indicesCorrecao = [
+    { value: "INPC_IPCA", label: "Índices oficiais TJDFT (INPC até 31/08/2024, IPCA a partir de 01/09/2024)", taxa: 4.62 },
+    { value: "INPC", label: "INPC (Durante todo o período)", taxa: 4.58 },
     { value: "IPCA", label: "IPCA - Índice de Preços ao Consumidor Amplo", taxa: 4.62 },
-    { value: "IPCA-E", label: "IPCA-E - Índice de Preços ao Consumidor Amplo Especial", taxa: 4.85 },
     { value: "IGP-M", label: "IGP-M - Índice Geral de Preços do Mercado", taxa: 5.12 },
     { value: "IGP-DI", label: "IGP-DI - Índice Geral de Preços - Disponibilidade Interna", taxa: 5.08 },
-    { value: "IPC", label: "IPC - Índice de Preços ao Consumidor", taxa: 4.72 },
-    { value: "INPC", label: "INPC - Índice Nacional de Preços ao Consumidor", taxa: 4.58 },
-    { value: "CDI", label: "CDI - Certificado de Depósito Interbancário", taxa: 13.75 },
-    { value: "SELIC", label: "SELIC - Taxa Básica de Juros", taxa: 13.25 },
-    { value: "TJLP", label: "TJLP - Taxa de Juros de Longo Prazo", taxa: 7.50 },
-    { value: "TR", label: "TR - Taxa Referencial", taxa: 0.17 },
     { value: "PERSONALIZADO", label: "Taxa Personalizada", taxa: 0 }
   ];
 
@@ -119,31 +114,15 @@ export function CorrecaoValores({ valorOriginal, dataVencimento, onValorAtualiza
 
   return (
     <div className="space-y-6">
-      {/* Correção de Valores */}
+      {/* Índice de Atualização Monetária */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5" />
-            Correção de Valores
+            Índice de atualização monetária
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Valor Original</Label>
-              <div className="text-lg font-semibold text-muted-foreground">
-                {formatCurrency(valorOriginal)}
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label>Valor Atualizado</Label>
-              <div className="text-lg font-bold text-primary">
-                {formatCurrency(valorAtualizado)}
-              </div>
-            </div>
-          </div>
-
           <div className="space-y-2">
             <Label>Índice de Correção</Label>
             <Select value={indiceCorrecao} onValueChange={setIndiceCorrecao}>
@@ -179,113 +158,97 @@ export function CorrecaoValores({ valorOriginal, dataVencimento, onValorAtualiza
               />
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Valores */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <DollarSign className="h-5 w-5" />
+            Valores
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-3 gap-4 p-4 border rounded-lg items-end">
+            <div className="space-y-2">
+              <Label className="text-xs">Valor</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={valorOriginal}
+                readOnly
+                className="bg-muted"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs">Data do valor</Label>
+              <Input
+                type="date"
+                value={dataVencimento}
+                readOnly
+                className="bg-muted"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs">Descrição (opcional)</Label>
+              <Input
+                type="text"
+                placeholder="Descrição"
+              />
+            </div>
+          </div>
+
+          <Button className="gap-2" variant="outline">
+            <Plus className="h-4 w-4" />
+            Adicionar valor
+          </Button>
+
+          <div className="space-y-4">
+            <div className="grid grid-cols-4 gap-4 p-4 border rounded-lg items-center text-sm font-medium bg-muted/50">
+              <div>Valor</div>
+              <div>Data Valor</div>
+              <div>Descrição</div>
+              <div>Ações</div>
+            </div>
+            
+            <div className="grid grid-cols-4 gap-4 p-4 border rounded-lg items-center text-sm">
+              <div>{formatCurrency(valorOriginal)}</div>
+              <div>{new Date(dataVencimento).toLocaleDateString('pt-BR')}</div>
+              <div>-</div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-600">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
+            <div className="space-y-2">
+              <Label>Valor Original</Label>
+              <div className="text-lg font-semibold text-muted-foreground">
+                {formatCurrency(valorOriginal)}
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Valor Atualizado</Label>
+              <div className="text-lg font-bold text-primary">
+                {formatCurrency(valorAtualizado)}
+              </div>
+            </div>
+          </div>
 
           <Button onClick={calcularValorAtualizado} className="w-full gap-2">
             <Calculator className="h-4 w-4" />
             Calcular Valor Atualizado
           </Button>
-        </CardContent>
-      </Card>
-
-      {/* Sistema de Parcelas */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Parcelas
-            </CardTitle>
-            <Button onClick={adicionarParcela} size="sm" className="gap-2">
-              <Plus className="h-4 w-4" />
-              Adicionar Parcela
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {parcelas.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Nenhuma parcela adicionada</p>
-              <p className="text-sm">Clique em "Adicionar Parcela" para começar</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {parcelas.map((parcela) => (
-                <div key={parcela.id} className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 border rounded-lg items-end">
-                  <div className="space-y-2">
-                    <Label className="text-xs">Parcela</Label>
-                    <div className="h-10 flex items-center font-medium">
-                      {parcela.numero}°
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs">Valor</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={parcela.valor}
-                      onChange={(e) => atualizarParcela(parcela.id, 'valor', parseFloat(e.target.value) || 0)}
-                      placeholder="0,00"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs">Data de Vencimento</Label>
-                    <Input
-                      type="date"
-                      value={parcela.data_vencimento}
-                      onChange={(e) => atualizarParcela(parcela.id, 'data_vencimento', e.target.value)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs">Status</Label>
-                    <Select 
-                      value={parcela.status} 
-                      onValueChange={(value) => atualizarParcela(parcela.id, 'status', value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-background border shadow-lg z-50">
-                        <SelectItem value="pendente">
-                          <Badge className="bg-yellow-100 text-yellow-800">Pendente</Badge>
-                        </SelectItem>
-                        <SelectItem value="pago">
-                          <Badge className="bg-green-100 text-green-800">Pago</Badge>
-                        </SelectItem>
-                        <SelectItem value="vencido">
-                          <Badge className="bg-red-100 text-red-800">Vencido</Badge>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="flex justify-center">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => removerParcela(parcela.id)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-              
-              {/* Resumo das Parcelas */}
-              <div className="border-t pt-4 mt-4">
-                <div className="flex justify-between items-center">
-                  <span className="font-medium">Total das Parcelas:</span>
-                  <span className="text-lg font-bold">
-                    {formatCurrency(parcelas.reduce((sum, p) => sum + p.valor, 0))}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>

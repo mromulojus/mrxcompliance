@@ -17,7 +17,8 @@ import {
   TrendingUp,
   Clock,
   DollarSign,
-  Plus
+  Plus,
+  Edit
 } from "lucide-react";
 import { useDebtoData, Devedor, Divida } from "@/hooks/useDebtoData";
 import { DividaCard } from "@/components/debto/DividaCard";
@@ -144,6 +145,10 @@ export default function DevedorDetalhes() {
           <Badge className={getScoreColor(devedor.score_recuperabilidade)}>
             Score: {devedor.score_recuperabilidade}/100
           </Badge>
+          <Button variant="outline" onClick={() => window.open(`/devedor/${devedor.id}/editar`, '_blank')}>
+            <Edit className="w-4 h-4 mr-2" />
+            Editar
+          </Button>
           <Dialog>
             <DialogTrigger asChild>
               <Button>
@@ -342,6 +347,10 @@ export default function DevedorDetalhes() {
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        <TabsContent value="historico" className="space-y-6">
+          <HistoricoAtualizacaoDivida devedorId={devedor.id} />
         </TabsContent>
 
         <TabsContent value="comentarios">

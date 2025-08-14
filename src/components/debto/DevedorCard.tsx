@@ -169,7 +169,7 @@ export function DevedorCard({ devedor, compact = false, onUpdate }: DevedorCardP
                   <Eye className="w-4 h-4 mr-2" />
                   Visualizar
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => console.log('Editar devedor:', devedor.id)}>
+                <DropdownMenuItem onClick={() => window.open(`/devedor/${devedor.id}/editar`, '_blank')}>
                   <Edit className="w-4 h-4 mr-2" />
                   Editar
                 </DropdownMenuItem>
