@@ -7,13 +7,85 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.4"
   }
   public: {
     Tables: {
+      acordos: {
+        Row: {
+          created_at: string
+          created_by: string
+          data_primeira_parcela: string | null
+          data_vencimento_entrada: string | null
+          desconto_percentual: number | null
+          devedor_id: string
+          divida_id: string
+          forma_pagamento: string | null
+          id: string
+          observacoes: string | null
+          parcelas: number | null
+          status: string
+          updated_at: string
+          valor_acordo: number
+          valor_entrada: number | null
+          valor_parcela: number | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          data_primeira_parcela?: string | null
+          data_vencimento_entrada?: string | null
+          desconto_percentual?: number | null
+          devedor_id: string
+          divida_id: string
+          forma_pagamento?: string | null
+          id?: string
+          observacoes?: string | null
+          parcelas?: number | null
+          status?: string
+          updated_at?: string
+          valor_acordo: number
+          valor_entrada?: number | null
+          valor_parcela?: number | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          data_primeira_parcela?: string | null
+          data_vencimento_entrada?: string | null
+          desconto_percentual?: number | null
+          devedor_id?: string
+          divida_id?: string
+          forma_pagamento?: string | null
+          id?: string
+          observacoes?: string | null
+          parcelas?: number | null
+          status?: string
+          updated_at?: string
+          valor_acordo?: number
+          valor_entrada?: number | null
+          valor_parcela?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "acordos_devedor_id_fkey"
+            columns: ["devedor_id"]
+            isOneToOne: false
+            referencedRelation: "devedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "acordos_divida_id_fkey"
+            columns: ["divida_id"]
+            isOneToOne: false
+            referencedRelation: "dividas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       activity_logs: {
         Row: {
           action: string
@@ -311,6 +383,176 @@ export type Database = {
           },
         ]
       }
+      devedores: {
+        Row: {
+          canal_preferencial: string | null
+          cep: string | null
+          cidade: string | null
+          contato_emergencia_nome: string | null
+          contato_emergencia_telefone: string | null
+          created_at: string
+          created_by: string | null
+          documento: string
+          email_principal: string | null
+          email_secundario: string | null
+          empresa_id: string
+          endereco_completo: string | null
+          estado: string | null
+          id: string
+          local_trabalho: string | null
+          nome: string
+          observacoes: string | null
+          score_recuperabilidade: number | null
+          telefone_principal: string | null
+          telefone_whatsapp: string | null
+          telefones_outros: string[] | null
+          tipo_pessoa: string
+          updated_at: string
+        }
+        Insert: {
+          canal_preferencial?: string | null
+          cep?: string | null
+          cidade?: string | null
+          contato_emergencia_nome?: string | null
+          contato_emergencia_telefone?: string | null
+          created_at?: string
+          created_by?: string | null
+          documento: string
+          email_principal?: string | null
+          email_secundario?: string | null
+          empresa_id: string
+          endereco_completo?: string | null
+          estado?: string | null
+          id?: string
+          local_trabalho?: string | null
+          nome: string
+          observacoes?: string | null
+          score_recuperabilidade?: number | null
+          telefone_principal?: string | null
+          telefone_whatsapp?: string | null
+          telefones_outros?: string[] | null
+          tipo_pessoa: string
+          updated_at?: string
+        }
+        Update: {
+          canal_preferencial?: string | null
+          cep?: string | null
+          cidade?: string | null
+          contato_emergencia_nome?: string | null
+          contato_emergencia_telefone?: string | null
+          created_at?: string
+          created_by?: string | null
+          documento?: string
+          email_principal?: string | null
+          email_secundario?: string | null
+          empresa_id?: string
+          endereco_completo?: string | null
+          estado?: string | null
+          id?: string
+          local_trabalho?: string | null
+          nome?: string
+          observacoes?: string | null
+          score_recuperabilidade?: number | null
+          telefone_principal?: string | null
+          telefone_whatsapp?: string | null
+          telefones_outros?: string[] | null
+          tipo_pessoa?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devedores_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dividas: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          data_negativacao: string | null
+          data_protesto: string | null
+          data_vencimento: string
+          devedor_id: string
+          empresa_id: string
+          estagio: string
+          id: string
+          numero_contrato: string | null
+          numero_nf: string | null
+          origem_divida: string
+          status: string
+          updated_at: string
+          urgency_score: number | null
+          valor_atualizado: number
+          valor_correcao: number | null
+          valor_juros: number | null
+          valor_multa: number | null
+          valor_original: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          data_negativacao?: string | null
+          data_protesto?: string | null
+          data_vencimento: string
+          devedor_id: string
+          empresa_id: string
+          estagio?: string
+          id?: string
+          numero_contrato?: string | null
+          numero_nf?: string | null
+          origem_divida: string
+          status?: string
+          updated_at?: string
+          urgency_score?: number | null
+          valor_atualizado: number
+          valor_correcao?: number | null
+          valor_juros?: number | null
+          valor_multa?: number | null
+          valor_original: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          data_negativacao?: string | null
+          data_protesto?: string | null
+          data_vencimento?: string
+          devedor_id?: string
+          empresa_id?: string
+          estagio?: string
+          id?: string
+          numero_contrato?: string | null
+          numero_nf?: string | null
+          origem_divida?: string
+          status?: string
+          updated_at?: string
+          urgency_score?: number | null
+          valor_atualizado?: number
+          valor_correcao?: number | null
+          valor_juros?: number | null
+          valor_multa?: number | null
+          valor_original?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dividas_devedor_id_fkey"
+            columns: ["devedor_id"]
+            isOneToOne: false
+            referencedRelation: "devedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dividas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documentos_colaborador: {
         Row: {
           colaborador_id: string
@@ -345,6 +587,94 @@ export type Database = {
             columns: ["colaborador_id"]
             isOneToOne: false
             referencedRelation: "colaboradores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documentos_divida: {
+        Row: {
+          created_at: string
+          divida_id: string
+          id: string
+          mime_type: string | null
+          nome_arquivo: string
+          tamanho_arquivo: number | null
+          tipo_documento: string
+          uploaded_by: string
+          url_arquivo: string
+        }
+        Insert: {
+          created_at?: string
+          divida_id: string
+          id?: string
+          mime_type?: string | null
+          nome_arquivo: string
+          tamanho_arquivo?: number | null
+          tipo_documento: string
+          uploaded_by: string
+          url_arquivo: string
+        }
+        Update: {
+          created_at?: string
+          divida_id?: string
+          id?: string
+          mime_type?: string | null
+          nome_arquivo?: string
+          tamanho_arquivo?: number | null
+          tipo_documento?: string
+          uploaded_by?: string
+          url_arquivo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documentos_divida_divida_id_fkey"
+            columns: ["divida_id"]
+            isOneToOne: false
+            referencedRelation: "dividas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      empresa_cobranca_config: {
+        Row: {
+          correcao_padrao: number
+          created_at: string
+          dias_negativacao: number | null
+          dias_protesto: number | null
+          empresa_id: string
+          id: string
+          juros_padrao: number
+          multa_padrao: number
+          updated_at: string
+        }
+        Insert: {
+          correcao_padrao?: number
+          created_at?: string
+          dias_negativacao?: number | null
+          dias_protesto?: number | null
+          empresa_id: string
+          id?: string
+          juros_padrao?: number
+          multa_padrao?: number
+          updated_at?: string
+        }
+        Update: {
+          correcao_padrao?: number
+          created_at?: string
+          dias_negativacao?: number | null
+          dias_protesto?: number | null
+          empresa_id?: string
+          id?: string
+          juros_padrao?: number
+          multa_padrao?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empresa_cobranca_config_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: true
+            referencedRelation: "empresas"
             referencedColumns: ["id"]
           },
         ]
@@ -388,6 +718,69 @@ export type Database = {
         }
         Relationships: []
       }
+      historico_cobrancas: {
+        Row: {
+          anexos: string[] | null
+          canal: string
+          created_at: string
+          created_by: string
+          data_compromisso: string | null
+          descricao: string
+          devedor_id: string
+          divida_id: string
+          id: string
+          observacoes: string | null
+          resultado: string | null
+          tipo_acao: string
+          valor_negociado: number | null
+        }
+        Insert: {
+          anexos?: string[] | null
+          canal: string
+          created_at?: string
+          created_by: string
+          data_compromisso?: string | null
+          descricao: string
+          devedor_id: string
+          divida_id: string
+          id?: string
+          observacoes?: string | null
+          resultado?: string | null
+          tipo_acao: string
+          valor_negociado?: number | null
+        }
+        Update: {
+          anexos?: string[] | null
+          canal?: string
+          created_at?: string
+          created_by?: string
+          data_compromisso?: string | null
+          descricao?: string
+          devedor_id?: string
+          divida_id?: string
+          id?: string
+          observacoes?: string | null
+          resultado?: string | null
+          tipo_acao?: string
+          valor_negociado?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historico_cobrancas_devedor_id_fkey"
+            columns: ["devedor_id"]
+            isOneToOne: false
+            referencedRelation: "devedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_cobrancas_divida_id_fkey"
+            columns: ["divida_id"]
+            isOneToOne: false
+            referencedRelation: "dividas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       historico_colaborador: {
         Row: {
           colaborador_id: string
@@ -416,6 +809,60 @@ export type Database = {
             columns: ["colaborador_id"]
             isOneToOne: false
             referencedRelation: "colaboradores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pagamentos: {
+        Row: {
+          acordo_id: string | null
+          comprovante_url: string | null
+          created_at: string
+          created_by: string
+          data_pagamento: string
+          divida_id: string
+          forma_pagamento: string
+          id: string
+          observacoes: string | null
+          valor_pago: number
+        }
+        Insert: {
+          acordo_id?: string | null
+          comprovante_url?: string | null
+          created_at?: string
+          created_by: string
+          data_pagamento: string
+          divida_id: string
+          forma_pagamento: string
+          id?: string
+          observacoes?: string | null
+          valor_pago: number
+        }
+        Update: {
+          acordo_id?: string | null
+          comprovante_url?: string | null
+          created_at?: string
+          created_by?: string
+          data_pagamento?: string
+          divida_id?: string
+          forma_pagamento?: string
+          id?: string
+          observacoes?: string | null
+          valor_pago?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pagamentos_acordo_id_fkey"
+            columns: ["acordo_id"]
+            isOneToOne: false
+            referencedRelation: "acordos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagamentos_divida_id_fkey"
+            columns: ["divida_id"]
+            isOneToOne: false
+            referencedRelation: "dividas"
             referencedColumns: ["id"]
           },
         ]
@@ -473,12 +920,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      atualizar_valores_dividas: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       authenticate_by_username: {
-        Args: { username_input: string; password_input: string }
+        Args: { password_input: string; username_input: string }
         Returns: {
-          user_id: string
           email: string
+          user_id: string
         }[]
+      }
+      calcular_valor_atualizado: {
+        Args: {
+          correcao_perc?: number
+          data_vencimento: string
+          juros_perc?: number
+          multa_perc?: number
+          valor_original: number
+        }
+        Returns: number
       }
       generate_protocol: {
         Args: Record<PropertyKey, never>
@@ -494,8 +955,8 @@ export type Database = {
       }
       has_role: {
         Args: {
-          user_uuid: string
           required_role: Database["public"]["Enums"]["user_role"]
+          user_uuid: string
         }
         Returns: boolean
       }
