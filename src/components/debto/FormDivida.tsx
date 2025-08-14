@@ -26,7 +26,7 @@ const dividaSchema = z.object({
   juros_personalizado: z.number().min(0).max(100).optional(),
   correcao_personalizada: z.number().min(0).max(100).optional(),
   // Campos adicionais
-  multa_adicional: z.number().min(0).optional(),
+  multa_adicional: z.number().min(0).max(100).optional(),
   honorarios_percentual: z.number().min(0).max(100).optional(),
   permitir_parcelamento: z.boolean().optional(),
   max_parcelas: z.number().min(1).max(60).optional()
@@ -74,7 +74,7 @@ export function FormDivida({ onSuccess }: FormDividaProps) {
     customMulta?: number, 
     customJuros?: number, 
     customCorrecao?: number,
-    multaAdicional?: number,
+    multaAdicionalPercentual?: number,
     honorariosPercentual?: number
   ) => {
     if (!valorOriginal || !dataVencimento) return valorOriginal || 0;
@@ -85,9 +85,9 @@ export function FormDivida({ onSuccess }: FormDividaProps) {
 
     let valorCalculado = valorOriginal;
 
-    // Aplicar multa adicional (valor fixo)
-    if (multaAdicional) {
-      valorCalculado += multaAdicional;
+    // Aplicar multa adicional (percentual sobre o valor)
+    if (multaAdicionalPercentual) {
+      valorCalculado += valorOriginal * (multaAdicionalPercentual / 100);
     }
 
     // Aplicar honorários (percentual sobre o valor)
@@ -360,14 +360,14 @@ export function FormDivida({ onSuccess }: FormDividaProps) {
                 <h4 className="font-medium text-blue-800 mb-3">Valores Adicionais</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="multa_adicional">Multa Adicional (R$)</Label>
+                    <Label htmlFor="multa_adicional">Multa Adicional (%)</Label>
                     <Input
                       type="number"
                       step="0.01"
                       placeholder="0,00"
                       {...register('multa_adicional', { valueAsNumber: true })}
                     />
-                    <p className="text-xs text-muted-foreground">Valor fixo adicional de multa</p>
+                    <p className="text-xs text-muted-foreground">Percentual adicional de multa sobre o valor</p>
                   </div>
 
                   <div className="space-y-2">
