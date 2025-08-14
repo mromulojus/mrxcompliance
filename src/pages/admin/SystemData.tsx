@@ -195,7 +195,7 @@ const SystemData: React.FC = () => {
           valor_atualizado: valorOriginal * (1 + rand(5, 30) / 100), // 5% a 30% de juros
           data_vencimento: dataVencimento.toISOString().split('T')[0],
           status: pick(['pendente', 'negociacao', 'acordado', 'pago', 'judicial']),
-          estagio: pick(['vencimento_proximo', 'vencido', 'cobranca_ativa', 'judicial']),
+          estagio: pick(['vencimento_proximo', 'vencido', 'negociacao', 'formal', 'judicial']),
           urgency_score: rand(0, 100),
           numero_nf: `NF-${rand(1000, 9999)}`,
           numero_contrato: `CONT-${rand(1000, 9999)}`,
