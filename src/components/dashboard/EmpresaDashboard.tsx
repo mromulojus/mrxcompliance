@@ -39,8 +39,26 @@ export function EmpresaDashboard({ empresaId }: EmpresaDashboardProps) {
   const denunciasEmpresa = denuncias.filter(d => d.empresa_id === empresaId);
   const denunciasAbertas = denunciasEmpresa.filter(d => d.status === 'RECEBIDO' || d.status === 'EM_ANALISE').length;
 
-  // Compliance rate simulado
-  const complianceRate = Math.floor(Math.random() * 30) + 70; // 70-100%
+  // Compliance rate baseado em dados reais da auditoria
+  const getComplianceRate = () => {
+    const auditData = localStorage.getItem(`auditoria-${empresaId}`);
+    if (!auditData) return 0;
+    
+    try {
+      const data = JSON.parse(auditData);
+      if (!data.itens || !Array.isArray(data.itens)) return 0;
+      
+      const itensValidos = data.itens.filter(item => item.documento && item.documento.trim() !== '');
+      const total = itensValidos.length;
+      const entregues = itensValidos.filter(item => item.status === 'ENTREGUE').length;
+      
+      return total > 0 ? Math.round((entregues / total) * 100) : 0;
+    } catch {
+      return 0;
+    }
+  };
+  
+  const complianceRate = getComplianceRate();
 
   // Dados para gráficos
   const statusData = [
@@ -203,33 +221,42 @@ export function EmpresaDashboard({ empresaId }: EmpresaDashboardProps) {
           </CardContent>
         </Card>
 
-        {/* Alertas e Pendências */}
+        {/* Maiores Dívidas */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5" />
-              Alertas e Pendências
+              <DollarSign className="h-5 w-5" />
+              Maiores Dívidas
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Documentos Vencidos</span>
-              <Badge variant="destructive">3</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Acordos Vencendo</span>
-              <Badge variant="outline">5</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Denúncias Abertas</span>
-              <Badge variant="secondary">{denunciasAbertas}</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Compliance Baixo</span>
-              <Badge variant={complianceRate < 80 ? "destructive" : "default"}>
-                {complianceRate < 80 ? "Atenção" : "OK"}
-              </Badge>
-            </div>
+          <CardContent className="space-y-3">
+            {dividasEmpresa
+              .sort((a, b) => b.valor_atualizado - a.valor_atualizado)
+              .slice(0, 5)
+              .map((divida, index) => {
+                const devedor = devedoresEmpresa.find(d => d.id === divida.devedor_id);
+                return (
+                  <div key={index} className="flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">{devedor?.nome || 'N/A'}</span>
+                      <span className="text-xs text-muted-foreground">
+                        Venc: {new Date(divida.data_vencimento).toLocaleDateString('pt-BR')}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-bold">{formatCurrency(divida.valor_atualizado)}</div>
+                      <Badge variant={divida.estagio === 'vencido' ? 'destructive' : 'outline'} className="text-xs">
+                        {divida.status}
+                      </Badge>
+                    </div>
+                  </div>
+                );
+              })}
+            {dividasEmpresa.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                Nenhuma dívida cadastrada
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -278,21 +305,33 @@ export function EmpresaDashboard({ empresaId }: EmpresaDashboardProps) {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Compliance</CardTitle>
+            <CardTitle className="text-base">Ações Recomendadas</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-sm">Documentos Conformes</span>
-              <span className="text-sm font-medium">{complianceRate}%</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm">Última Auditoria</span>
-              <span className="text-sm font-medium">15/12/2024</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm">Próxima Revisão</span>
-              <span className="text-sm font-medium">15/03/2025</span>
-            </div>
+            {complianceRate < 80 && (
+              <div className="p-2 bg-red-50 border border-red-200 rounded text-sm">
+                <span className="font-medium text-red-800">Compliance Baixo:</span>
+                <span className="text-red-600"> Revisar documentação pendente</span>
+              </div>
+            )}
+            {denunciasAbertas > 0 && (
+              <div className="p-2 bg-yellow-50 border border-yellow-200 rounded text-sm">
+                <span className="font-medium text-yellow-800">Denúncias Abertas:</span>
+                <span className="text-yellow-600"> {denunciasAbertas} casos precisam de análise</span>
+              </div>
+            )}
+            {dividasVencidas > 0 && (
+              <div className="p-2 bg-orange-50 border border-orange-200 rounded text-sm">
+                <span className="font-medium text-orange-800">Dívidas Vencidas:</span>
+                <span className="text-orange-600"> {dividasVencidas} cobranças atrasadas</span>
+              </div>
+            )}
+            {complianceRate >= 80 && denunciasAbertas === 0 && dividasVencidas === 0 && (
+              <div className="p-2 bg-green-50 border border-green-200 rounded text-sm">
+                <span className="font-medium text-green-800">Status OK:</span>
+                <span className="text-green-600"> Manter monitoramento regular</span>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

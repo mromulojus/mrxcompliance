@@ -333,29 +333,52 @@ export function ComplianceAuditDashboard({ empresaId }: ComplianceAuditDashboard
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <div className="p-3 border border-red-200 rounded-lg bg-red-50">
-                <h4 className="font-medium text-sm text-red-800">Crítico</h4>
-                <p className="text-xs text-red-600">Renovar certificado ISO vencido</p>
-                <Button size="sm" variant="destructive" className="mt-2">
-                  Ação Imediata
-                </Button>
-              </div>
+              {stats.vencidos > 0 && (
+                <div className="p-3 border border-red-200 rounded-lg bg-red-50">
+                  <h4 className="font-medium text-sm text-red-800">Crítico</h4>
+                  <p className="text-xs text-red-600">{stats.vencidos} documento(s) vencido(s) precisam atenção imediata</p>
+                  <Button size="sm" variant="destructive" className="mt-2">
+                    Ação Imediata
+                  </Button>
+                </div>
+              )}
               
-              <div className="p-3 border border-yellow-200 rounded-lg bg-yellow-50">
-                <h4 className="font-medium text-sm text-yellow-800">Atenção</h4>
-                <p className="text-xs text-yellow-600">Atualizar documentos de segurança</p>
-                <Button size="sm" variant="outline" className="mt-2">
-                  Programar
-                </Button>
-              </div>
+              {stats.solicitados > 0 && (
+                <div className="p-3 border border-yellow-200 rounded-lg bg-yellow-50">
+                  <h4 className="font-medium text-sm text-yellow-800">Atenção</h4>
+                  <p className="text-xs text-yellow-600">{stats.solicitados} documento(s) solicitado(s) aguardando entrega</p>
+                  <Button size="sm" variant="outline" className="mt-2">
+                    Acompanhar
+                  </Button>
+                </div>
+              )}
               
-              <div className="p-3 border border-blue-200 rounded-lg bg-blue-50">
-                <h4 className="font-medium text-sm text-blue-800">Melhoria</h4>
-                <p className="text-xs text-blue-600">Implementar checklist digital</p>
-                <Button size="sm" variant="outline" className="mt-2">
-                  Avaliar
-                </Button>
-              </div>
+              {stats.score < 80 && (
+                <div className="p-3 border border-orange-200 rounded-lg bg-orange-50">
+                  <h4 className="font-medium text-sm text-orange-800">Melhoria</h4>
+                  <p className="text-xs text-orange-600">Score de compliance baixo ({stats.score}%) - revisar processos</p>
+                  <Button size="sm" variant="outline" className="mt-2">
+                    Plano de Ação
+                  </Button>
+                </div>
+              )}
+              
+              {stats.score >= 90 && stats.vencidos === 0 && stats.solicitados === 0 && (
+                <div className="p-3 border border-green-200 rounded-lg bg-green-50">
+                  <h4 className="font-medium text-sm text-green-800">Excelente</h4>
+                  <p className="text-xs text-green-600">Compliance em dia - manter monitoramento regular</p>
+                </div>
+              )}
+              
+              {!auditoriaData && (
+                <div className="p-3 border border-gray-200 rounded-lg bg-gray-50">
+                  <h4 className="font-medium text-sm text-gray-800">Configuração</h4>
+                  <p className="text-xs text-gray-600">Configure a auditoria para visualizar recomendações específicas</p>
+                  <Button size="sm" variant="outline" className="mt-2">
+                    Configurar
+                  </Button>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
