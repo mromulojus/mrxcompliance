@@ -314,13 +314,15 @@ export function FormDivida({ onSuccess }: FormDividaProps) {
 
                 <div className="space-y-2">
                   <Label htmlFor="correcao_personalizada">Correção (% ao mês)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    placeholder="1.50"
-                    {...register('correcao_personalizada', { valueAsNumber: true })}
-                  />
-                  <p className="text-xs text-muted-foreground">Padrão: 1.5% ao mês</p>
+                  <Select onValueChange={(value) => setValue('correcao_personalizada', parseFloat(value))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="1.50" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1.50">1.50</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">Padrão: 1.5% ao mês (IGPM)</p>
                 </div>
               </div>
 

@@ -144,10 +144,16 @@ export function HistoricoCobrancasComComentarios({ dividaId, devedorId }: Histor
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Histórico de Cobranças</h3>
-        <Button size="sm" variant="outline">
-          <Plus className="w-4 h-4 mr-2" />
-          Nova Ação
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline">
+            <Plus className="w-4 h-4 mr-2" />
+            Nova Ação
+          </Button>
+          <Button size="sm" variant="outline">
+            <Plus className="w-4 h-4 mr-2" />
+            Upload Documentos
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-4">
