@@ -50,6 +50,9 @@ const SystemData: React.FC = () => {
 
   const createDemoData = async () => {
     try {
+      // Obter usuário atual
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('Usuário não autenticado');
       // 1) Empresa
       const empresaPayload = {
         nome: 'Empresa Teste MRx',
@@ -145,11 +148,112 @@ const SystemData: React.FC = () => {
       }));
       try { localStorage.setItem(`auditoria-${(empresa as any).id}`, JSON.stringify({ itens })); } catch {}
 
+      // 5) Dados de Cobrança (Debto)
+      // 5.1) Devedores
+      const devedoresPayload = Array.from({ length: 8 }).map((_, i) => {
+        const nome = `${pick(firstNames)} ${pick(lastNames)}`;
+        const tipoPessoa = pick(['FISICA', 'JURIDICA']);
+        return {
+          empresa_id: (empresa as any).id,
+          nome,
+          documento: tipoPessoa === 'FISICA' ? fakeCPF() : fakeCNPJ(),
+          tipo_pessoa: tipoPessoa,
+          email_principal: `${nome.toLowerCase().replace(/\s+/g,'.')}@devedor.com`,
+          telefone_principal: `(11) 9${rand(1000,9999)}-${rand(1000,9999)}`,
+          telefone_whatsapp: `(11) 9${rand(1000,9999)}-${rand(1000,9999)}`,
+          endereco_completo: `Rua ${pick(['das Flores', 'do Sol', 'da Paz', 'Central'])}, ${rand(100,999)}`,
+          cidade: pick(['São Paulo', 'Rio de Janeiro', 'Belo Horizonte', 'Salvador']),
+          estado: pick(['SP', 'RJ', 'MG', 'BA']),
+          cep: `${rand(10000,99999)}-${rand(100,999)}`,
+          score_recuperabilidade: rand(0, 100),
+          canal_preferencial: pick(['whatsapp', 'telefone', 'email']),
+          observacoes: 'Devedor criado automaticamente para demonstração'
+        } as any;
+      });
+
+      const { data: devedores, error: devErr } = await supabase
+        .from('devedores')
+        .insert(devedoresPayload)
+        .select('*');
+      if (devErr) throw devErr;
+
+      // 5.2) Dívidas
+      const dividasPayload = devedores.map((devedor: any) => {
+        const valorOriginal = rand(500, 50000);
+        const dataVencimento = new Date();
+        dataVencimento.setDate(dataVencimento.getDate() - rand(0, 180)); // 0 a 180 dias atrás
+        
+        return {
+          empresa_id: (empresa as any).id,
+          devedor_id: devedor.id,
+          origem_divida: pick(['PRODUTO', 'SERVICO', 'FINANCIAMENTO', 'CARTAO', 'OUTROS']),
+          valor_original: valorOriginal,
+          valor_atualizado: valorOriginal * (1 + rand(5, 30) / 100), // 5% a 30% de juros
+          data_vencimento: dataVencimento.toISOString().split('T')[0],
+          status: pick(['pendente', 'negociacao', 'acordado', 'pago', 'judicial']),
+          estagio: pick(['vencimento_proximo', 'vencido', 'cobranca_ativa', 'judicial']),
+          urgency_score: rand(0, 100),
+          numero_nf: `NF-${rand(1000, 9999)}`,
+          numero_contrato: `CONT-${rand(1000, 9999)}`,
+          created_by: user.user.id
+        } as any;
+      });
+
+      const { data: dividasInseridas, error: divErr } = await supabase
+        .from('dividas')
+        .insert(dividasPayload)
+        .select('*');
+      if (divErr) throw divErr;
+
+      // 5.3) Histórico de Cobranças
+      const historicoPayload = dividasInseridas.slice(0, 5).map((divida: any, i: number) => ({
+        divida_id: divida.id,
+        devedor_id: divida.devedor_id,
+        tipo_acao: pick(['LIGACAO', 'WHATSAPP', 'EMAIL', 'CARTA']),
+        canal: pick(['telefone', 'whatsapp', 'email', 'correios']),
+        descricao: pick([
+          'Tentativa de contato via telefone',
+          'Mensagem enviada pelo WhatsApp',
+          'Email de cobrança enviado',
+          'Proposta de acordo apresentada'
+        ]),
+        resultado: pick(['CONTATO_REALIZADO', 'SEM_RESPOSTA', 'PROMESSA_PAGAMENTO', 'RECUSA']),
+        data_compromisso: Math.random() < 0.5 ? randomDate(2024, 2025) : null,
+        valor_negociado: Math.random() < 0.3 ? rand(100, divida.valor_original) : null,
+        observacoes: 'Histórico gerado automaticamente para demonstração',
+        created_by: user.user.id
+      }));
+
+      const { error: histErr } = await supabase.from('historico_cobrancas').insert(historicoPayload);
+      if (histErr) throw histErr;
+
+      // 5.4) Configuração de Cobrança da Empresa
+      const configCobrancaPayload = {
+        empresa_id: (empresa as any).id,
+        multa_padrao: 2.0,
+        juros_padrao: 1.0,
+        correcao_padrao: 1.5,
+        dias_negativacao: 30,
+        dias_protesto: 45
+      };
+
+      const { error: configErr } = await supabase
+        .from('empresa_cobranca_config')
+        .insert(configCobrancaPayload);
+      if (configErr) throw configErr;
+
       await Promise.all([refetchEmpresas(), refetchColaboradores()]);
-      toast({ title: 'Dados de demonstração criados!', description: 'Empresa, 10 colaboradores e denúncias geradas.' });
+      toast({ 
+        title: 'Dados de demonstração criados!', 
+        description: 'Empresa, colaboradores, denúncias e módulo de cobrança gerados com sucesso.' 
+      });
     } catch (e: any) {
       console.error(e);
-      toast({ title: 'Erro ao criar dados de demonstração', description: e?.message || 'Tente novamente.', variant: 'destructive' });
+      toast({ 
+        title: 'Erro ao criar dados de demonstração', 
+        description: e?.message || 'Tente novamente.', 
+        variant: 'destructive' 
+      });
     }
   };
   const exportEmpresas = () => {
