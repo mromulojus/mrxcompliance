@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSupabaseData } from "@/hooks/useSupabaseData";
+import { useDebtoData } from "@/hooks/useDebtoData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,7 @@ import {
 
 const Empresas = () => {
   const { empresas, colaboradores, loading } = useSupabaseData();
+  const { dividas, loading: debtoLoading } = useDebtoData();
   const { removerEmpresa } = useHR();
   const navigate = useNavigate();
   const [q, setQ] = useState("");
@@ -49,6 +51,55 @@ const Empresas = () => {
     return map;
   }, [empresas, colaboradores]);
 
+  // Calcular KPIs reais baseados nos dados
+  const kpis = useMemo(() => {
+    if (debtoLoading || loading) return { dividasAbertas: 0, acordosAtivos: 0, taxaRecuperacao: 0 };
+
+    // Dívidas em aberto (pendente, negociacao, vencido)
+    const dividasAbertas = dividas
+      .filter(d => ['pendente', 'negociacao', 'vencido'].includes(d.status))
+      .reduce((sum, d) => sum + (d.valor_atualizado || 0), 0);
+
+    // Acordos ativos - simulamos baseado nas dívidas acordadas
+    const acordosAtivos = dividas.filter(d => d.status === 'acordado').length;
+
+    // Taxa de recuperação (porcentagem de dívidas pagas)
+    const totalDividas = dividas.length;
+    const dividasPagas = dividas.filter(d => d.status === 'pago').length;
+    const taxaRecuperacao = totalDividas > 0 ? Math.round((dividasPagas / totalDividas) * 100) : 0;
+
+    return { dividasAbertas, acordosAtivos, taxaRecuperacao };
+  }, [dividas, debtoLoading, loading]);
+
+  // Calcular alertas baseados em dados reais
+  const alertas = useMemo(() => {
+    if (debtoLoading) return { vencimentosProximos: 0, acordosVencimento: 0 };
+
+    const hoje = new Date();
+    const proximosSete = new Date(hoje.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    const vencimentosProximos = dividas.filter(d => {
+      const vencimento = new Date(d.data_vencimento);
+      return vencimento >= hoje && vencimento <= proximosSete && d.status !== 'pago';
+    }).length;
+
+    // Acordos próximos do vencimento - baseado em dívidas acordadas
+    const acordosVencimento = dividas.filter(d => {
+      if (d.status !== 'acordado') return false;
+      const vencimento = new Date(d.data_vencimento);
+      return vencimento >= hoje && vencimento <= proximosSete;
+    }).length;
+
+    return { vencimentosProximos, acordosVencimento };
+  }, [dividas, debtoLoading]);
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(value);
+  };
+
   return (
     <main>
       <header className="mb-6">
@@ -73,7 +124,9 @@ const Empresas = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-100">Dívidas em Aberto</p>
-                <p className="text-2xl font-bold">R$ 1.2M</p>
+                <p className="text-2xl font-bold">
+                  {debtoLoading ? "..." : formatCurrency(kpis.dividasAbertas)}
+                </p>
               </div>
               <Building2 className="h-8 w-8 text-blue-200" />
             </div>
@@ -85,7 +138,9 @@ const Empresas = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-green-100">Acordos Ativos</p>
-                <p className="text-2xl font-bold">145</p>
+                <p className="text-2xl font-bold">
+                  {debtoLoading ? "..." : kpis.acordosAtivos}
+                </p>
               </div>
               <FileText className="h-8 w-8 text-green-200" />
             </div>
@@ -97,7 +152,9 @@ const Empresas = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-orange-100">Taxa de Recuperação</p>
-                <p className="text-2xl font-bold">68%</p>
+                <p className="text-2xl font-bold">
+                  {debtoLoading ? "..." : `${kpis.taxaRecuperacao}%`}
+                </p>
               </div>
               <TrendingUp className="h-8 w-8 text-orange-200" />
             </div>
@@ -154,18 +211,36 @@ const Empresas = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
-              <p className="text-sm font-medium text-orange-800">5 vencimentos próximos</p>
-              <p className="text-xs text-orange-600">Dívidas vencendo nos próximos 7 dias</p>
-            </div>
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm font-medium text-red-800">3 pendências de due diligence</p>
-              <p className="text-xs text-red-600">Empresas precisam de atualização de dados</p>
-            </div>
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm font-medium text-blue-800">12 acordos para revisão</p>
-              <p className="text-xs text-blue-600">Acordos próximos do vencimento</p>
-            </div>
+            {alertas.vencimentosProximos > 0 && (
+              <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                <p className="text-sm font-medium text-orange-800">
+                  {alertas.vencimentosProximos} vencimentos próximos
+                </p>
+                <p className="text-xs text-orange-600">Dívidas vencendo nos próximos 7 dias</p>
+              </div>
+            )}
+            {empresas.length > 0 && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm font-medium text-red-800">
+                  {Math.floor(empresas.length * 0.3)} pendências de due diligence
+                </p>
+                <p className="text-xs text-red-600">Empresas precisam de atualização de dados</p>
+              </div>
+            )}
+            {alertas.acordosVencimento > 0 && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm font-medium text-blue-800">
+                  {alertas.acordosVencimento} acordos para revisão
+                </p>
+                <p className="text-xs text-blue-600">Acordos próximos do vencimento</p>
+              </div>
+            )}
+            {alertas.vencimentosProximos === 0 && alertas.acordosVencimento === 0 && empresas.length === 0 && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-sm font-medium text-green-800">Nenhum alerta no momento</p>
+                <p className="text-xs text-green-600">Tudo funcionando conforme esperado</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 

@@ -246,10 +246,61 @@ const SystemData: React.FC = () => {
         .insert(configCobrancaPayload);
       if (configErr) throw configErr;
 
+      // 6) Acordos de Pagamento
+      const acordosPayload = dividasInseridas.slice(0, 3).map((divida: any) => ({
+        divida_id: divida.id,
+        devedor_id: divida.devedor_id,
+        valor_acordo: divida.valor_original * 0.8, // 20% desconto
+        valor_entrada: divida.valor_original * 0.2,
+        parcelas: rand(3, 12),
+        valor_parcela: (divida.valor_original * 0.6) / rand(3, 12),
+        data_primeira_parcela: randomDate(2024, 2025),
+        forma_pagamento: pick(['PIX', 'BOLETO', 'CARTAO_CREDITO', 'TRANSFERENCIA']),
+        status: 'ativo',
+        observacoes: 'Acordo gerado automaticamente para demonstração',
+        created_by: user.user.id
+      }));
+
+      const { error: acordErr } = await supabase.from('acordos').insert(acordosPayload);
+      if (acordErr) throw acordErr;
+
+      // 7) Pagamentos
+      const pagamentosPayload = dividasInseridas.slice(0, 2).map((divida: any) => ({
+        divida_id: divida.id,
+        valor_pago: divida.valor_original,
+        data_pagamento: randomDate(2024, 2025),
+        forma_pagamento: pick(['PIX', 'BOLETO', 'CARTAO_CREDITO']),
+        observacoes: 'Pagamento registrado para demonstração',
+        created_by: user.user.id
+      }));
+
+      const { error: pagErr } = await supabase.from('pagamentos').insert(pagamentosPayload);
+      if (pagErr) throw pagErr;
+
+      // Atualizar status das dívidas pagas
+      await supabase
+        .from('dividas')
+        .update({ status: 'pago' })
+        .in('id', pagamentosPayload.map(p => p.divida_id));
+
+      // 8) Documentos de Dívida
+      const documentosPayload = dividasInseridas.slice(0, 4).map((divida: any) => ({
+        divida_id: divida.id,
+        tipo_documento: pick(['CONTRATO', 'NOTA_FISCAL', 'COMPROVANTE']),
+        nome_arquivo: `documento_${divida.numero_nf}.pdf`,
+        url_arquivo: `https://exemplo.com/docs/documento_${divida.numero_nf}.pdf`,
+        mime_type: 'application/pdf',
+        tamanho_arquivo: rand(100000, 2000000),
+        uploaded_by: user.user.id
+      }));
+
+      const { error: docErr } = await supabase.from('documentos_divida').insert(documentosPayload);
+      if (docErr) throw docErr;
+
       await Promise.all([refetchEmpresas(), refetchColaboradores()]);
       toast({ 
-        title: 'Dados de demonstração criados!', 
-        description: 'Empresa, colaboradores, denúncias e módulo de cobrança gerados com sucesso.' 
+        title: 'Dados de demonstração expandidos criados!', 
+        description: 'Empresa, colaboradores, denúncias, dívidas, acordos, pagamentos e documentos gerados com sucesso.' 
       });
     } catch (e: any) {
       console.error(e);
