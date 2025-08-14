@@ -221,7 +221,7 @@ const SystemData: React.FC = () => {
           'Email de cobrança enviado',
           'Proposta de acordo apresentada'
         ]),
-        resultado: pick(['CONTATO_REALIZADO', 'SEM_RESPOSTA', 'PROMESSA_PAGAMENTO', 'RECUSA']),
+        resultado: pick(['SUCESSO', 'SEM_RESPOSTA', 'PROMESSA', 'RECUSA', 'REAGENDADO']),
         data_compromisso: Math.random() < 0.5 ? randomDate(2024, 2025) : null,
         valor_negociado: Math.random() < 0.3 ? rand(100, divida.valor_original) : null,
         observacoes: 'Histórico gerado automaticamente para demonstração',
