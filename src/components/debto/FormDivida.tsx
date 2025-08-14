@@ -20,7 +20,13 @@ const dividaSchema = z.object({
   data_vencimento: z.string().min(1, "Data de vencimento é obrigatória"),
   valor_original: z.number().min(0.01, "Valor deve ser maior que zero"),
   status: z.enum(['pendente', 'negociacao', 'acordado', 'pago', 'judicial', 'negativado', 'protestado', 'cancelado']),
-  estagio: z.enum(['vencimento_proximo', 'vencido', 'negociacao', 'formal', 'judicial'])
+  estagio: z.enum(['vencimento_proximo', 'vencido', 'negociacao', 'formal', 'judicial']),
+  // Índices personalizados
+  multa_personalizada: z.number().min(0).max(100).optional(),
+  juros_personalizado: z.number().min(0).max(100).optional(),
+  correcao_personalizada: z.number().min(0).max(100).optional(),
+  permitir_parcelamento: z.boolean().optional(),
+  max_parcelas: z.number().min(1).max(60).optional()
 });
 
 type DividaFormData = z.infer<typeof dividaSchema>;
@@ -49,11 +55,15 @@ export function FormDivida({ onSuccess }: FormDividaProps) {
 
   const selectedEmpresa = watch('empresa_id');
   const valorOriginal = watch('valor_original');
+  const multaPersonalizada = watch('multa_personalizada');
+  const jurosPersonalizado = watch('juros_personalizado');
+  const correcaoPersonalizada = watch('correcao_personalizada');
+  const permitirParcelamento = watch('permitir_parcelamento');
 
   // Filtrar devedores pela empresa selecionada
   const devedoresFiltrados = devedores.filter(d => d.empresa_id === selectedEmpresa);
 
-  const calcularValorAtualizado = (valorOriginal: number, dataVencimento: string) => {
+  const calcularValorAtualizado = (valorOriginal: number, dataVencimento: string, customMulta?: number, customJuros?: number, customCorrecao?: number) => {
     if (!valorOriginal || !dataVencimento) return valorOriginal || 0;
 
     const hoje = new Date();
@@ -62,10 +72,14 @@ export function FormDivida({ onSuccess }: FormDividaProps) {
 
     if (diasAtraso === 0) return valorOriginal;
 
-    // Aplicar multa de 2%, juros de 1% ao mês e correção de 1.5% ao mês
-    const multa = valorOriginal * 0.02;
-    const juros = valorOriginal * 0.01 * (diasAtraso / 30);
-    const correcao = valorOriginal * 0.015 * (diasAtraso / 30);
+    // Usar valores personalizados ou padrão
+    const percentualMulta = (customMulta ?? 2) / 100;
+    const percentualJuros = (customJuros ?? 1) / 100;
+    const percentualCorrecao = (customCorrecao ?? 1.5) / 100;
+
+    const multa = valorOriginal * percentualMulta;
+    const juros = valorOriginal * percentualJuros * (diasAtraso / 30);
+    const correcao = valorOriginal * percentualCorrecao * (diasAtraso / 30);
 
     return valorOriginal + multa + juros + correcao;
   };
@@ -103,7 +117,13 @@ export function FormDivida({ onSuccess }: FormDividaProps) {
   const onSubmit = async (data: DividaFormData) => {
     setIsSubmitting(true);
     try {
-      const valorAtualizado = calcularValorAtualizado(data.valor_original, data.data_vencimento);
+      const valorAtualizado = calcularValorAtualizado(
+        data.valor_original, 
+        data.data_vencimento,
+        data.multa_personalizada,
+        data.juros_personalizado,
+        data.correcao_personalizada
+      );
       const urgencyScore = calcularUrgencyScore(data.data_vencimento, data.valor_original);
 
       await adicionarDivida({
@@ -249,13 +269,91 @@ export function FormDivida({ onSuccess }: FormDividaProps) {
             <div className="p-4 bg-muted/50 rounded-lg">
               <h4 className="font-medium mb-2">Valor Atualizado (Estimativa)</h4>
               <p className="text-2xl font-bold text-primary">
-                {formatCurrency(calcularValorAtualizado(valorOriginal, watch('data_vencimento')))}
+                {formatCurrency(calcularValorAtualizado(
+                  valorOriginal, 
+                  watch('data_vencimento'),
+                  multaPersonalizada,
+                  jurosPersonalizado,
+                  correcaoPersonalizada
+                ))}
               </p>
               <p className="text-sm text-muted-foreground">
                 Inclui multas, juros e correção monetária
               </p>
             </div>
           )}
+
+          {/* Índices de Atualização Personalizada */}
+          <Card className="bg-blue-50 border-blue-200">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base text-blue-800">Índices de Atualização Monetária</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="multa_personalizada">Multa (%)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="2.00"
+                    {...register('multa_personalizada', { valueAsNumber: true })}
+                  />
+                  <p className="text-xs text-muted-foreground">Padrão: 2%</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="juros_personalizado">Juros (% ao mês)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="1.00"
+                    {...register('juros_personalizado', { valueAsNumber: true })}
+                  />
+                  <p className="text-xs text-muted-foreground">Padrão: 1% ao mês</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="correcao_personalizada">Correção (% ao mês)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="1.50"
+                    {...register('correcao_personalizada', { valueAsNumber: true })}
+                  />
+                  <p className="text-xs text-muted-foreground">Padrão: 1.5% ao mês</p>
+                </div>
+              </div>
+
+              {/* Opções de Parcelamento */}
+              <div className="pt-4 border-t border-blue-200">
+                <div className="flex items-center space-x-2 mb-4">
+                  <input
+                    type="checkbox"
+                    id="permitir_parcelamento"
+                    {...register('permitir_parcelamento')}
+                    className="w-4 h-4"
+                  />
+                  <Label htmlFor="permitir_parcelamento">Permitir Parcelamento</Label>
+                </div>
+
+                {permitirParcelamento && (
+                  <div className="space-y-2">
+                    <Label htmlFor="max_parcelas">Máximo de Parcelas</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      max="60"
+                      placeholder="12"
+                      {...register('max_parcelas', { valueAsNumber: true })}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Número máximo de parcelas permitidas para acordo
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </CardContent>
       </Card>
 

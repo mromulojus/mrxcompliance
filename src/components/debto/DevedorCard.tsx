@@ -13,7 +13,7 @@ import {
   Eye,
   MoreVertical
 } from "lucide-react";
-import { Devedor } from "@/hooks/useDebtoData";
+import { Devedor, useDebtoData } from "@/hooks/useDebtoData";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/context/AuthContext";
 
@@ -25,6 +25,7 @@ interface DevedorCardProps {
 
 export function DevedorCard({ devedor, compact = false, onUpdate }: DevedorCardProps) {
   const { hasRole } = useAuth();
+  const { dividas } = useDebtoData();
 
   const getInitials = (nome: string) => {
     return nome
@@ -80,6 +81,31 @@ export function DevedorCard({ devedor, compact = false, onUpdate }: DevedorCardP
         break;
     }
   };
+
+  const calcularEstatisticasDevedor = () => {
+    const dividasDevedor = dividas.filter(d => d.devedor_id === devedor.id);
+    const total = dividasDevedor.reduce((acc, d) => acc + d.valor_atualizado, 0);
+    const maisAntiga = dividasDevedor
+      .filter(d => new Date(d.data_vencimento) < new Date())
+      .sort((a, b) => new Date(a.data_vencimento).getTime() - new Date(b.data_vencimento).getTime())[0];
+
+    const diasVencimento = maisAntiga ? 
+      Math.floor((new Date().getTime() - new Date(maisAntiga.data_vencimento).getTime()) / (1000 * 60 * 60 * 24)) : 0;
+
+    return {
+      totalDividas: total,
+      diasMaisAntiga: diasVencimento
+    };
+  };
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value || 0);
+  };
+
+  const stats = calcularEstatisticasDevedor();
 
   if (compact) {
     return (
@@ -154,6 +180,20 @@ export function DevedorCard({ devedor, compact = false, onUpdate }: DevedorCardP
           <Badge className={getScoreColor(devedor.score_recuperabilidade)}>
             {devedor.score_recuperabilidade}/100
           </Badge>
+        </div>
+
+        {/* Estatísticas de Dívidas */}
+        <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border/50">
+          <div>
+            <p className="text-xs text-muted-foreground">Total em Dívidas</p>
+            <p className="font-bold text-primary text-sm">{formatCurrency(stats.totalDividas)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Dias Vencida</p>
+            <p className={`font-bold text-sm ${stats.diasMaisAntiga > 0 ? 'text-red-600' : 'text-green-600'}`}>
+              {stats.diasMaisAntiga > 0 ? `${stats.diasMaisAntiga} dias` : 'Em dia'}
+            </p>
+          </div>
         </div>
 
         {/* Informações de Contato */}
@@ -249,7 +289,12 @@ export function DevedorCard({ devedor, compact = false, onUpdate }: DevedorCardP
             {getCanalIcon(devedor.canal_preferencial)}
             <span className="ml-1">Contatar</span>
           </Button>
-          <Button size="sm" variant="outline" className="flex-1 text-xs">
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="flex-1 text-xs"
+            onClick={() => window.location.href = `/devedor/${devedor.id}`}
+          >
             <Eye className="w-3 h-3 mr-1" />
             Dívidas
           </Button>

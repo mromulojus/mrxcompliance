@@ -1,20 +1,19 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { 
-  DollarSign, 
   Calendar, 
-  AlertTriangle, 
-  TrendingUp, 
+  DollarSign, 
+  FileText, 
+  TrendingUp,
   Clock,
-  FileText,
-  MoreVertical,
-  History
+  Edit,
+  Eye,
+  MoreVertical
 } from "lucide-react";
 import { Divida } from "@/hooks/useDebtoData";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
+import { useAuth } from "@/context/AuthContext";
 
 interface DividaCardProps {
   divida: Divida;
@@ -23,86 +22,85 @@ interface DividaCardProps {
 }
 
 export function DividaCard({ divida, compact = false, onUpdate }: DividaCardProps) {
-  const { can } = useSupabaseAuth();
+  const { hasRole } = useAuth();
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL'
-    }).format(value);
+    }).format(value || 0);
   };
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('pt-BR');
-  };
-
-  const getDaysOverdue = (vencimento: string) => {
-    const today = new Date();
-    const dueDate = new Date(vencimento);
-    const diffTime = today.getTime() - dueDate.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR');
   };
 
   const getStatusColor = (status: string) => {
-    const colors = {
-      'pendente': 'bg-yellow-100 text-yellow-700',
-      'negociacao': 'bg-blue-100 text-blue-700',
-      'acordado': 'bg-purple-100 text-purple-700',
-      'pago': 'bg-green-100 text-green-700',
-      'judicial': 'bg-red-100 text-red-700',
-      'negativado': 'bg-orange-100 text-orange-700',
-      'protestado': 'bg-red-200 text-red-800',
-      'cancelado': 'bg-gray-100 text-gray-700'
-    };
-    return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-700';
+    switch (status) {
+      case 'pendente':
+        return 'bg-yellow-100 text-yellow-700';
+      case 'negociacao':
+        return 'bg-blue-100 text-blue-700';
+      case 'acordado':
+        return 'bg-green-100 text-green-700';
+      case 'pago':
+        return 'bg-green-100 text-green-700';
+      case 'judicial':
+        return 'bg-red-100 text-red-700';
+      case 'negativado':
+        return 'bg-orange-100 text-orange-700';
+      case 'protestado':
+        return 'bg-red-100 text-red-700';
+      case 'cancelado':
+        return 'bg-gray-100 text-gray-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
+    }
   };
 
   const getEstagioColor = (estagio: string) => {
-    const colors = {
-      'vencimento_proximo': 'bg-yellow-100 text-yellow-700',
-      'vencido': 'bg-orange-100 text-orange-700',
-      'negociacao': 'bg-blue-100 text-blue-700',
-      'formal': 'bg-purple-100 text-purple-700',
-      'judicial': 'bg-red-100 text-red-700'
-    };
-    return colors[estagio as keyof typeof colors] || 'bg-gray-100 text-gray-700';
+    switch (estagio) {
+      case 'vencimento_proximo':
+        return 'bg-yellow-100 text-yellow-700';
+      case 'vencido':
+        return 'bg-red-100 text-red-700';
+      case 'negociacao':
+        return 'bg-blue-100 text-blue-700';
+      case 'formal':
+        return 'bg-orange-100 text-orange-700';
+      case 'judicial':
+        return 'bg-red-100 text-red-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
+    }
   };
 
-  const getUrgencyLevel = (score: number) => {
-    if (score >= 80) return { level: 'Crítico', color: 'text-red-600' };
-    if (score >= 60) return { level: 'Alto', color: 'text-orange-600' };
-    if (score >= 40) return { level: 'Médio', color: 'text-yellow-600' };
-    return { level: 'Baixo', color: 'text-green-600' };
+  const calcularDiasAtraso = () => {
+    const hoje = new Date();
+    const vencimento = new Date(divida.data_vencimento);
+    const diasAtraso = Math.floor((hoje.getTime() - vencimento.getTime()) / (1000 * 60 * 60 * 24));
+    return Math.max(0, diasAtraso);
   };
 
-  const daysOverdue = getDaysOverdue(divida.data_vencimento);
-  const urgency = getUrgencyLevel(divida.urgency_score);
-  const isOverdue = daysOverdue > 0 && divida.status !== 'pago';
+  const diasAtraso = calcularDiasAtraso();
 
   if (compact) {
     return (
       <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-md transition-all duration-200">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="font-medium text-sm">{divida.origem_divida}</span>
-                <Badge className={`text-xs ${getStatusColor(divida.status)}`}>
-                  {divida.status}
-                </Badge>
-              </div>
-              <div className="text-lg font-bold text-primary">
-                {formatCurrency(divida.valor_atualizado)}
-              </div>
-              <div className="text-xs text-muted-foreground">
-                Venc: {formatDate(divida.data_vencimento)}
-                {isOverdue && <span className="text-red-600 ml-1">({daysOverdue}d em atraso)</span>}
+            <div className="flex-1">
+              <div className="font-medium truncate">{divida.origem_divida}</div>
+              <div className="text-sm text-muted-foreground">
+                Vencimento: {formatDate(divida.data_vencimento)}
               </div>
             </div>
-            {divida.urgency_score > 70 && (
-              <AlertTriangle className="w-5 h-5 text-red-500" />
-            )}
+            <div className="text-right">
+              <div className="font-bold text-primary">{formatCurrency(divida.valor_atualizado)}</div>
+              <Badge className={`text-xs ${getStatusColor(divida.status)}`}>
+                {divida.status}
+              </Badge>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -114,25 +112,18 @@ export function DividaCard({ divida, compact = false, onUpdate }: DividaCardProp
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <CardTitle className="text-lg leading-tight flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-primary" />
-              {divida.origem_divida}
-            </CardTitle>
-            <div className="flex items-center gap-2 mt-1">
-              {divida.numero_contrato && (
-                <Badge variant="outline" className="text-xs">
-                  Contrato: {divida.numero_contrato}
-                </Badge>
-              )}
-              {divida.numero_nf && (
-                <Badge variant="outline" className="text-xs">
-                  NF: {divida.numero_nf}
-                </Badge>
-              )}
+            <CardTitle className="text-lg leading-tight">{divida.origem_divida}</CardTitle>
+            <div className="flex items-center gap-2 mt-2">
+              <Badge className={getStatusColor(divida.status)}>
+                {divida.status}
+              </Badge>
+              <Badge variant="outline" className={getEstagioColor(divida.estagio)}>
+                {divida.estagio.replace('_', ' ')}
+              </Badge>
             </div>
           </div>
           
-          {can('administrador') && (
+          {hasRole('administrador') && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
@@ -141,12 +132,12 @@ export function DividaCard({ divida, compact = false, onUpdate }: DividaCardProp
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem>
-                  <History className="w-4 h-4 mr-2" />
-                  Histórico
+                  <Eye className="w-4 h-4 mr-2" />
+                  Visualizar
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <FileText className="w-4 h-4 mr-2" />
-                  Documentos
+                  <Edit className="w-4 h-4 mr-2" />
+                  Editar
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -156,106 +147,69 @@ export function DividaCard({ divida, compact = false, onUpdate }: DividaCardProp
       
       <CardContent className="space-y-4">
         {/* Valores */}
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">Valor Original</span>
-            <span className="font-medium">{formatCurrency(divida.valor_original)}</span>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p className="text-sm text-muted-foreground">Valor Original</p>
+            <p className="font-medium">{formatCurrency(divida.valor_original)}</p>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">Valor Atualizado</span>
-            <span className="text-lg font-bold text-primary">{formatCurrency(divida.valor_atualizado)}</span>
+          <div>
+            <p className="text-sm text-muted-foreground">Valor Atualizado</p>
+            <p className="font-bold text-primary">{formatCurrency(divida.valor_atualizado)}</p>
+          </div>
+        </div>
+
+        {/* Datas */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-sm">
+            <Calendar className="w-4 h-4 text-muted-foreground" />
+            <span>Vencimento: {formatDate(divida.data_vencimento)}</span>
           </div>
           
-          {(divida.valor_multa > 0 || divida.valor_juros > 0 || divida.valor_correcao > 0) && (
-            <div className="text-xs text-muted-foreground space-y-1 pl-2 border-l-2 border-border/50">
-              {divida.valor_multa > 0 && (
-                <div className="flex justify-between">
-                  <span>Multa:</span>
-                  <span>{formatCurrency(divida.valor_multa)}</span>
-                </div>
-              )}
-              {divida.valor_juros > 0 && (
-                <div className="flex justify-between">
-                  <span>Juros:</span>
-                  <span>{formatCurrency(divida.valor_juros)}</span>
-                </div>
-              )}
-              {divida.valor_correcao > 0 && (
-                <div className="flex justify-between">
-                  <span>Correção:</span>
-                  <span>{formatCurrency(divida.valor_correcao)}</span>
-                </div>
-              )}
+          {diasAtraso > 0 && (
+            <div className="flex items-center gap-2 text-sm">
+              <Clock className="w-4 h-4 text-red-600" />
+              <span className="text-red-600">{diasAtraso} dias em atraso</span>
             </div>
           )}
         </div>
 
-        {/* Data de Vencimento */}
-        <div className="flex items-center gap-2 text-sm">
-          <Calendar className="w-4 h-4 text-muted-foreground" />
-          <span className="flex-1">Vencimento: {formatDate(divida.data_vencimento)}</span>
-          {isOverdue && (
-            <Badge className="bg-red-100 text-red-700 text-xs">
-              {daysOverdue}d em atraso
-            </Badge>
-          )}
-        </div>
-
-        {/* Status e Estágio */}
-        <div className="flex items-center justify-between">
-          <Badge className={getStatusColor(divida.status)}>
-            {divida.status.charAt(0).toUpperCase() + divida.status.slice(1)}
-          </Badge>
-          <Badge className={getEstagioColor(divida.estagio)} variant="outline">
-            {divida.estagio.replace('_', ' ').charAt(0).toUpperCase() + divida.estagio.replace('_', ' ').slice(1)}
-          </Badge>
-        </div>
-
-        {/* Score de Urgência */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Urgência</span>
-            <span className={`font-medium ${urgency.color}`}>
-              {urgency.level} ({divida.urgency_score}/100)
-            </span>
-          </div>
-          <Progress value={divida.urgency_score} className="h-2" />
-        </div>
-
-        {/* Datas Especiais */}
-        {(divida.data_negativacao || divida.data_protesto) && (
-          <div className="space-y-1 text-xs text-muted-foreground">
-            {divida.data_negativacao && (
+        {/* Documentos */}
+        {(divida.numero_contrato || divida.numero_nf) && (
+          <div className="space-y-1 text-sm">
+            {divida.numero_contrato && (
               <div className="flex items-center gap-2">
-                <AlertTriangle className="w-3 h-3 text-orange-500" />
-                <span>Negativado em: {formatDate(divida.data_negativacao)}</span>
+                <FileText className="w-4 h-4 text-muted-foreground" />
+                <span>Contrato: {divida.numero_contrato}</span>
               </div>
             )}
-            {divida.data_protesto && (
+            {divida.numero_nf && (
               <div className="flex items-center gap-2">
-                <AlertTriangle className="w-3 h-3 text-red-500" />
-                <span>Protestado em: {formatDate(divida.data_protesto)}</span>
+                <FileText className="w-4 h-4 text-muted-foreground" />
+                <span>NF: {divida.numero_nf}</span>
               </div>
             )}
           </div>
         )}
 
+        {/* Score de Urgência */}
+        <div className="flex items-center justify-between pt-2 border-t border-border/50">
+          <span className="text-xs text-muted-foreground">Score de Urgência</span>
+          <Badge variant="outline" className="text-xs">
+            <TrendingUp className="w-3 h-3 mr-1" />
+            {divida.urgency_score}/100
+          </Badge>
+        </div>
+
         {/* Ações */}
-        <div className="flex gap-2 pt-2 border-t border-border/50">
+        <div className="flex gap-2 pt-2">
           <Button size="sm" variant="outline" className="flex-1 text-xs">
-            <History className="w-3 h-3 mr-1" />
-            Histórico
+            <Eye className="w-3 h-3 mr-1" />
+            Detalhes
           </Button>
           <Button size="sm" variant="outline" className="flex-1 text-xs">
-            <FileText className="w-3 h-3 mr-1" />
-            Docs
+            <DollarSign className="w-3 h-3 mr-1" />
+            Cobrança
           </Button>
-          {can('administrador') && (
-            <Button size="sm" className="flex-1 text-xs bg-primary/10 text-primary hover:bg-primary/20">
-              <TrendingUp className="w-3 h-3 mr-1" />
-              Ação
-            </Button>
-          )}
         </div>
       </CardContent>
     </Card>

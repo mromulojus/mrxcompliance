@@ -22,6 +22,7 @@ import Auth from "@/pages/Auth";
 import Login from "@/pages/Login";
 import Empresas from "@/pages/Empresas";
 import DebtosDashboard from "@/pages/DebtosDashboard";
+import DevedorDetalhes from "./pages/DevedorDetalhes";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,7 @@ const App = () => (
                 <Route path="/empresas" element={<Empresas />} />
                 <Route path="/empresa/:empresaId" element={<EmpresaDetalhes />} />
                 <Route path="/debto" element={<DebtosDashboard />} />
+                <Route path="/devedor/:devedorId" element={<DevedorDetalhes />} />
                 <Route path="/denuncias/dashboard" element={<DenunciasDashboard />} />
                 <Route path="/denuncias/consulta" element={<ConsultaDenuncia />} />
                 
