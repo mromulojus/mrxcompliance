@@ -717,7 +717,23 @@ export default function EmpresaDetalhes() {
         </TabsContent>
 
           <TabsContent value="auditoria" className="space-y-8">
-            <ComplianceAuditDashboard empresaId={empresaId!} />
+            <Tabs defaultValue="dashboard" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+                <TabsTrigger value="gerenciar">Gerenciar Auditoria</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="dashboard" className="space-y-6">
+                <ComplianceAuditDashboard empresaId={empresaId!} />
+              </TabsContent>
+              
+              <TabsContent value="gerenciar" className="space-y-6">
+                <AuditoriaEmpresa 
+                  empresaId={empresaId!} 
+                  nomeEmpresa={empresa?.nome || ''} 
+                />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
         <TabsContent value="cobrancas" className="space-y-8">
