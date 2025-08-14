@@ -25,6 +25,9 @@ const dividaSchema = z.object({
   multa_personalizada: z.number().min(0).max(100).optional(),
   juros_personalizado: z.number().min(0).max(100).optional(),
   correcao_personalizada: z.number().min(0).max(100).optional(),
+  // Campos adicionais
+  multa_adicional: z.number().min(0).optional(),
+  honorarios_percentual: z.number().min(0).max(100).optional(),
   permitir_parcelamento: z.boolean().optional(),
   max_parcelas: z.number().min(1).max(60).optional()
 });
@@ -58,21 +61,43 @@ export function FormDivida({ onSuccess }: FormDividaProps) {
   const multaPersonalizada = watch('multa_personalizada');
   const jurosPersonalizado = watch('juros_personalizado');
   const correcaoPersonalizada = watch('correcao_personalizada');
+  const multaAdicional = watch('multa_adicional');
+  const honorariosPercentual = watch('honorarios_percentual');
   const permitirParcelamento = watch('permitir_parcelamento');
 
   // Filtrar devedores pela empresa selecionada
   const devedoresFiltrados = devedores.filter(d => d.empresa_id === selectedEmpresa);
 
-  const calcularValorAtualizado = (valorOriginal: number, dataVencimento: string, customMulta?: number, customJuros?: number, customCorrecao?: number) => {
+  const calcularValorAtualizado = (
+    valorOriginal: number, 
+    dataVencimento: string, 
+    customMulta?: number, 
+    customJuros?: number, 
+    customCorrecao?: number,
+    multaAdicional?: number,
+    honorariosPercentual?: number
+  ) => {
     if (!valorOriginal || !dataVencimento) return valorOriginal || 0;
 
     const hoje = new Date();
     const vencimento = new Date(dataVencimento);
     const diasAtraso = Math.max(0, Math.floor((hoje.getTime() - vencimento.getTime()) / (1000 * 60 * 60 * 24)));
 
-    if (diasAtraso === 0) return valorOriginal;
+    let valorCalculado = valorOriginal;
 
-    // Usar valores personalizados ou padrão
+    // Aplicar multa adicional (valor fixo)
+    if (multaAdicional) {
+      valorCalculado += multaAdicional;
+    }
+
+    // Aplicar honorários (percentual sobre o valor)
+    if (honorariosPercentual) {
+      valorCalculado += valorOriginal * (honorariosPercentual / 100);
+    }
+
+    if (diasAtraso === 0) return valorCalculado;
+
+    // Usar valores personalizados ou padrão para correção por atraso
     const percentualMulta = (customMulta ?? 2) / 100;
     const percentualJuros = (customJuros ?? 1) / 100;
     const percentualCorrecao = (customCorrecao ?? 1.5) / 100;
@@ -81,7 +106,7 @@ export function FormDivida({ onSuccess }: FormDividaProps) {
     const juros = valorOriginal * percentualJuros * (diasAtraso / 30);
     const correcao = valorOriginal * percentualCorrecao * (diasAtraso / 30);
 
-    return valorOriginal + multa + juros + correcao;
+    return valorCalculado + multa + juros + correcao;
   };
 
   const calcularUrgencyScore = (dataVencimento: string, valor: number) => {
@@ -122,7 +147,9 @@ export function FormDivida({ onSuccess }: FormDividaProps) {
         data.data_vencimento,
         data.multa_personalizada,
         data.juros_personalizado,
-        data.correcao_personalizada
+        data.correcao_personalizada,
+        data.multa_adicional,
+        data.honorarios_percentual
       );
       const urgencyScore = calcularUrgencyScore(data.data_vencimento, data.valor_original);
 
@@ -274,7 +301,9 @@ export function FormDivida({ onSuccess }: FormDividaProps) {
                   watch('data_vencimento'),
                   multaPersonalizada,
                   jurosPersonalizado,
-                  correcaoPersonalizada
+                  correcaoPersonalizada,
+                  multaAdicional,
+                  honorariosPercentual
                 ))}
               </p>
               <p className="text-sm text-muted-foreground">
@@ -319,10 +348,38 @@ export function FormDivida({ onSuccess }: FormDividaProps) {
                       <SelectValue placeholder="1.50" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1.50">1.50</SelectItem>
+                      <SelectItem value="1.50">1.50 (IGPM)</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">Padrão: 1.5% ao mês (IGPM)</p>
+                </div>
+              </div>
+
+              {/* Valores Adicionais */}
+              <div className="pt-4 border-t border-blue-200">
+                <h4 className="font-medium text-blue-800 mb-3">Valores Adicionais</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="multa_adicional">Multa Adicional (R$)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="0,00"
+                      {...register('multa_adicional', { valueAsNumber: true })}
+                    />
+                    <p className="text-xs text-muted-foreground">Valor fixo adicional de multa</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="honorarios_percentual">Honorários (%)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="0,00"
+                      {...register('honorarios_percentual', { valueAsNumber: true })}
+                    />
+                    <p className="text-xs text-muted-foreground">Percentual sobre o valor original</p>
+                  </div>
                 </div>
               </div>
 
