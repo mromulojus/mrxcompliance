@@ -344,8 +344,27 @@ export default function DevedorDetalhes() {
           )}
         </TabsContent>
 
-        <TabsContent value="historico">
-          <HistoricoAtualizacaoDivida devedorId={devedor.id} />
+        <TabsContent value="comentarios">
+          <Card>
+            <CardHeader>
+              <CardTitle>Comentários do Devedor</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Área livre para anotações manuais sobre o devedor
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <textarea
+                  className="w-full min-h-[120px] p-3 border rounded-md resize-y"
+                  placeholder="Digite seus comentários sobre o devedor..."
+                  defaultValue={devedor.observacoes || ""}
+                />
+                <Button size="sm">
+                  Salvar Comentários
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

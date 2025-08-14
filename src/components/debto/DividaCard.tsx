@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AcordoManager } from "./AcordoManager";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Calendar, 
   DollarSign, 
@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Divida } from "@/hooks/useDebtoData";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AcordoManager } from "./AcordoManager";
 import { useAuth } from "@/context/AuthContext";
 
 interface DividaCardProps {
@@ -147,71 +148,93 @@ export function DividaCard({ divida, compact = false, onUpdate }: DividaCardProp
       </CardHeader>
       
       <CardContent className="space-y-4">
-        {/* Valores */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm text-muted-foreground">Valor Original</p>
-            <p className="font-medium">{formatCurrency(divida.valor_original)}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Valor Atualizado</p>
-            <p className="font-bold text-primary">{formatCurrency(divida.valor_atualizado)}</p>
-          </div>
-        </div>
-
-        {/* Datas */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-sm">
-            <Calendar className="w-4 h-4 text-muted-foreground" />
-            <span>Vencimento: {formatDate(divida.data_vencimento)}</span>
-          </div>
+        {/* Tabs com Acordo */}
+        <Tabs defaultValue="detalhes" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="detalhes">Detalhes</TabsTrigger>
+            <TabsTrigger value="acordo">Acordo</TabsTrigger>
+            <TabsTrigger value="historico">Histórico</TabsTrigger>
+          </TabsList>
           
-          {diasAtraso > 0 && (
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="w-4 h-4 text-red-600" />
-              <span className="text-red-600">{diasAtraso} dias em atraso</span>
+          <TabsContent value="detalhes" className="mt-4 space-y-4">
+            {/* Valores */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Valor Original</p>
+                <p className="font-medium">{formatCurrency(divida.valor_original)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Valor Atualizado</p>
+                <p className="font-bold text-primary">{formatCurrency(divida.valor_atualizado)}</p>
+              </div>
             </div>
-          )}
-        </div>
 
-        {/* Documentos */}
-        {(divida.numero_contrato || divida.numero_nf) && (
-          <div className="space-y-1 text-sm">
-            {divida.numero_contrato && (
-              <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4 text-muted-foreground" />
-                <span>Contrato: {divida.numero_contrato}</span>
+            {/* Datas */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm">
+                <Calendar className="w-4 h-4 text-muted-foreground" />
+                <span>Vencimento: {formatDate(divida.data_vencimento)}</span>
+              </div>
+              
+              {diasAtraso > 0 && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Clock className="w-4 h-4 text-red-600" />
+                  <span className="text-red-600">{diasAtraso} dias em atraso</span>
+                </div>
+              )}
+            </div>
+
+            {/* Documentos */}
+            {(divida.numero_contrato || divida.numero_nf) && (
+              <div className="space-y-1 text-sm">
+                {divida.numero_contrato && (
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-muted-foreground" />
+                    <span>Contrato: {divida.numero_contrato}</span>
+                  </div>
+                )}
+                {divida.numero_nf && (
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-muted-foreground" />
+                    <span>NF: {divida.numero_nf}</span>
+                  </div>
+                )}
               </div>
             )}
-            {divida.numero_nf && (
-              <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4 text-muted-foreground" />
-                <span>NF: {divida.numero_nf}</span>
-              </div>
-            )}
-          </div>
-        )}
 
-        {/* Score de Urgência */}
-        <div className="flex items-center justify-between pt-2 border-t border-border/50">
-          <span className="text-xs text-muted-foreground">Score de Urgência</span>
-          <Badge variant="outline" className="text-xs">
-            <TrendingUp className="w-3 h-3 mr-1" />
-            {divida.urgency_score}/100
-          </Badge>
-        </div>
+            {/* Score de Urgência */}
+            <div className="flex items-center justify-between pt-2 border-t border-border/50">
+              <span className="text-xs text-muted-foreground">Score de Urgência</span>
+              <Badge variant="outline" className="text-xs">
+                <TrendingUp className="w-3 h-3 mr-1" />
+                {divida.urgency_score}/100
+              </Badge>
+            </div>
 
-        {/* Ações */}
-        <div className="flex gap-2 pt-2">
-          <Button size="sm" variant="outline" className="flex-1 text-xs">
-            <Eye className="w-3 h-3 mr-1" />
-            Detalhes
-          </Button>
-          <Button size="sm" variant="outline" className="flex-1 text-xs">
-            <DollarSign className="w-3 h-3 mr-1" />
-            Cobrança
-          </Button>
-        </div>
+            {/* Ações */}
+            <div className="flex gap-2 pt-2">
+              <Button size="sm" variant="outline" className="flex-1 text-xs">
+                <Eye className="w-3 h-3 mr-1" />
+                Detalhes
+              </Button>
+              <Button size="sm" variant="outline" className="flex-1 text-xs">
+                <DollarSign className="w-3 h-3 mr-1" />
+                Cobrança
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="acordo" className="mt-4">
+            <AcordoManager dividaId={divida.id} valorOriginal={divida.valor_original} />
+          </TabsContent>
+
+          <TabsContent value="historico" className="mt-4">
+            <div className="text-center py-8 text-muted-foreground">
+              <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">Histórico de atualizações em desenvolvimento</p>
+            </div>
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );
