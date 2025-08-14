@@ -1,16 +1,20 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useSupabaseData } from "@/hooks/useSupabaseData";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useHR } from "@/context/HRContext";
+import { ImportarDevedores } from "@/components/debto/ImportarDevedores";
+import { FileSpreadsheet, Plus } from "lucide-react";
 
 const SystemData: React.FC = () => {
   const { empresas, colaboradores, loading, refetchEmpresas, refetchColaboradores } = useSupabaseData();
   const { criarDenuncia } = useHR();
   const { toast } = useToast();
+  const [showImportDevedores, setShowImportDevedores] = useState(false);
 
   React.useEffect(() => {
     document.title = "Dados do Sistema - MRx Compliance";
@@ -290,7 +294,33 @@ const SystemData: React.FC = () => {
       <header className="mb-4">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Dados do Sistema</h1>
-          <Button variant="default" onClick={createDemoData}>Criar Dados de Demonstração</Button>
+          <div className="flex gap-2">
+            <Dialog open={showImportDevedores} onOpenChange={setShowImportDevedores}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <FileSpreadsheet className="h-4 w-4" />
+                  Importar Devedores
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <ImportarDevedores 
+                  empresas={empresas}
+                  onClose={() => setShowImportDevedores(false)}
+                  onSuccess={() => {
+                    setShowImportDevedores(false);
+                    toast({
+                      title: 'Devedores importados',
+                      description: 'Os devedores foram importados com sucesso.'
+                    });
+                  }}
+                />
+              </DialogContent>
+            </Dialog>
+            <Button variant="default" onClick={createDemoData}>
+              <Plus className="h-4 w-4 mr-2" />
+              Criar Dados de Demonstração
+            </Button>
+          </div>
         </div>
       </header>
 
