@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { Devedor } from "@/hooks/useDebtoData";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
+import { useAuth } from "@/context/AuthContext";
 
 interface DevedorCardProps {
   devedor: Devedor;
@@ -24,7 +24,7 @@ interface DevedorCardProps {
 }
 
 export function DevedorCard({ devedor, compact = false, onUpdate }: DevedorCardProps) {
-  const { can } = useSupabaseAuth();
+  const { hasRole } = useAuth();
 
   const getInitials = (nome: string) => {
     return nome
@@ -125,7 +125,7 @@ export function DevedorCard({ devedor, compact = false, onUpdate }: DevedorCardP
             </div>
           </div>
           
-          {can('administrador') && (
+          {hasRole('administrador') && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
