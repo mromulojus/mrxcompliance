@@ -1,15 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { SplashCursor } from '@/components/ui/splash-cursor';
 import { SignInPage, type Testimonial } from '@/components/ui/sign-in';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
 const testimonials: Testimonial[] = [
   {
-    avatarSrc: "https://images.unsplash.com/photo-1494790108755-2616b612b5aa?w=400&h=400&fit=crop&crop=face",
-    name: "Maria Silva",
-    handle: "@maria_compliance",
+    avatarSrc: "https://avatars.githubusercontent.com/u/99661785?s=200&v=4",
+    name: "Italo Lima",
+    handle: "@Hustapp",
     text: "A plataforma transformou nossa gestão de conformidade. Interface intuitiva e recursos poderosos."
   },
   {
@@ -101,16 +99,6 @@ export default function Auth() {
   return (
     <div className="relative overflow-hidden">
       <SplashCursor />
-      
-      {/* Back to Homepage Button */}
-      <div className="absolute top-4 left-4 z-50">
-        <Button variant="ghost" size="sm" asChild>
-          <Link to="/">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Voltar ao Início
-          </Link>
-        </Button>
-      </div>
       
       <SignInPage
         title={
