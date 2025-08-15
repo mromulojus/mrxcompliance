@@ -1,1 +1,4 @@
 project_id = "pxpscjyeqmqqxzbttbep"
+
+[auth.otp]
+expiry_duration = "60s"  # valor conforme política interna
