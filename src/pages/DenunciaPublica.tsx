@@ -104,53 +104,29 @@ export default function DenunciaPublica() {
     }
 
     try {
-      const payload = {
-        empresa_id: empresaId,
+      const denuncia = await criarDenuncia({
+        empresaId: empresaId!,
         identificado: formData.identificado,
-        nome: formData.identificado ? formData.nome : null,
-        email: formData.identificado ? formData.email : null,
+        nome: formData.identificado ? formData.nome : undefined,
+        email: formData.identificado ? formData.email : undefined,
         relacao: formData.relacao as any,
         tipo: formData.tipo as any,
-        setor: formData.setor || null,
-        conhecimento_fato: formData.conhecimentoFato as any,
-        envolvidos_cientes: formData.envolvidosCientes,
+        setor: formData.setor || undefined,
+        conhecimentoFato: formData.conhecimentoFato as any,
+        envolvidosCientes: formData.envolvidosCientes,
         descricao: formData.descricao,
-        evidencias_descricao: formData.evidenciasDescricao || null,
-        sugestao: formData.sugestao || null,
-      };
+        evidenciasDescricao: formData.evidenciasDescricao || undefined,
+        sugestao: formData.sugestao || undefined,
+      });
 
-      const { data, error } = await supabase
-        .from('denuncias')
-        .insert(payload)
-        .select('protocolo')
-        .single();
+      if (!denuncia) throw new Error('Falha ao criar denúncia');
 
-      if (error) throw error;
-
-      // Atualiza painel interno (HRContext) para aparecer nos dashboards
-      try {
-        criarDenuncia({
-          empresaId: empresaId!,
-          identificado: formData.identificado,
-          nome: formData.identificado ? formData.nome : undefined,
-          email: formData.identificado ? formData.email : undefined,
-          relacao: formData.relacao as any,
-          tipo: formData.tipo as any,
-          setor: formData.setor || undefined,
-          conhecimentoFato: formData.conhecimentoFato as any,
-          envolvidosCientes: formData.envolvidosCientes,
-          descricao: formData.descricao,
-          evidenciasDescricao: formData.evidenciasDescricao || undefined,
-          sugestao: formData.sugestao || undefined,
-        });
-      } catch {}
-
-      setProtocolo((data as any).protocolo);
+      setProtocolo(denuncia.protocolo);
       setSubmitted(true);
-      
+
       toast({
         title: 'Denúncia registrada',
-        description: `Protocolo ${(data as any).protocolo} gerado com sucesso.`
+        description: `Protocolo ${denuncia.protocolo} gerado com sucesso.`
       });
     } catch (error) {
       console.error('Erro ao registrar denúncia:', error);

@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
 import { Colaborador, Empresa, FiltrosColaborador, DashboardStats, TemaMode } from '@/types/hr';
-import { Denuncia } from '@/types/denuncia';
-import { useSupabaseData, Colaborador as SupabaseColaborador, Empresa as SupabaseEmpresa } from '@/hooks/useSupabaseData';
+import { Denuncia, DenunciaStatus, Comentario } from '@/types/denuncia';
+import { useSupabaseData, Colaborador as SupabaseColaborador, Empresa as SupabaseEmpresa, Denuncia as SupabaseDenuncia, ComentarioDenuncia as SupabaseComentario } from '@/hooks/useSupabaseData';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface HRContextType {
   // Dados
@@ -31,11 +32,13 @@ interface HRContextType {
   setTemaMode: (mode: TemaMode) => void;
   selecionarEmpresa: (empresaId: string | null) => void;
   
-  // Denúncias
-  criarDenuncia: (denuncia: any) => void;
-  atualizarStatus: (id: string, status: string) => void;
-  adicionarComentario: (id: string, comentario: any) => void;
-  denunciasNaoTratadas: Denuncia[];
+    // Denúncias
+    criarDenuncia: (
+      denuncia: Omit<Denuncia, 'id' | 'protocolo' | 'status' | 'comentarios' | 'createdAt' | 'updatedAt'> & { status?: DenunciaStatus }
+    ) => Promise<Denuncia | null>;
+    atualizarStatus: (id: string, status: DenunciaStatus) => Promise<void>;
+    adicionarComentario: (id: string, comentario: { autor: string; mensagem: string }) => Promise<void>;
+    denunciasNaoTratadas: Denuncia[];
   
   // Computados
   colaboradoresFiltrados: Colaborador[];
@@ -189,32 +192,84 @@ const convertColaboradorToSupabase = (colaborador: Partial<Colaborador>): Partia
   foto_perfil: colaborador.foto_perfil
 });
 
-export function HRProvider({ children }: { children: React.ReactNode }) {
-  const { 
-    empresas: supabaseEmpresas, 
-    colaboradores: supabaseColaboradores, 
-    loading: supabaseLoading,
-    adicionarEmpresa: addEmpresaSupabase,
-    editarEmpresa: editEmpresaSupabase,
-    removerEmpresa: removeEmpresaSupabase,
-    adicionarColaborador: addColaboradorSupabase,
-    editarColaborador: editColaboradorSupabase,
-    removerColaborador: removeColaboradorSupabase
-  } = useSupabaseData();
+// Funções para converter denúncias
+const convertComentarioFromSupabase = (comentario: SupabaseComentario): Comentario => ({
+  id: comentario.id,
+  denunciaId: comentario.denuncia_id,
+  autor: comentario.autor,
+  mensagem: comentario.mensagem,
+  createdAt: comentario.created_at
+});
 
-  // Convert Supabase data to local format
-  const empresas = useMemo(() => 
-    supabaseEmpresas.map(convertEmpresaFromSupabase), 
-    [supabaseEmpresas]
-  );
-  
-  const colaboradores = useMemo(() => 
-    supabaseColaboradores.map(convertColaboradorFromSupabase), 
-    [supabaseColaboradores]
-  );
+const convertDenunciaFromSupabase = (denuncia: SupabaseDenuncia): Denuncia => ({
+  id: denuncia.id,
+  protocolo: denuncia.protocolo,
+  empresaId: denuncia.empresa_id,
+  identificado: denuncia.identificado,
+  nome: denuncia.nome || undefined,
+  email: denuncia.email || undefined,
+  relacao: denuncia.relacao as any,
+  tipo: denuncia.tipo as any,
+  setor: denuncia.setor || undefined,
+  conhecimentoFato: denuncia.conhecimento_fato as any,
+  envolvidosCientes: denuncia.envolvidos_cientes,
+  descricao: denuncia.descricao,
+  evidenciasDescricao: denuncia.evidencias_descricao || undefined,
+  sugestao: denuncia.sugestao || undefined,
+  anexos: denuncia.anexos || undefined,
+  status: denuncia.status as DenunciaStatus,
+  comentarios: (denuncia.comentarios_denuncia || []).map(convertComentarioFromSupabase),
+  createdAt: denuncia.created_at,
+  updatedAt: denuncia.updated_at
+});
 
-  // Mock denuncias data for now
-  const [denuncias, setDenuncias] = useState<Denuncia[]>([]);
+const convertDenunciaToSupabase = (denuncia: Partial<Denuncia>): Partial<SupabaseDenuncia> => ({
+  empresa_id: denuncia.empresaId,
+  identificado: denuncia.identificado,
+  nome: denuncia.nome,
+  email: denuncia.email,
+  relacao: denuncia.relacao as any,
+  tipo: denuncia.tipo as any,
+  setor: denuncia.setor,
+  conhecimento_fato: denuncia.conhecimentoFato as any,
+  envolvidos_cientes: denuncia.envolvidosCientes,
+  descricao: denuncia.descricao,
+  evidencias_descricao: denuncia.evidenciasDescricao,
+  sugestao: denuncia.sugestao,
+  anexos: denuncia.anexos,
+  status: (denuncia.status as any) || undefined
+});
+
+  export function HRProvider({ children }: { children: React.ReactNode }) {
+    const {
+      empresas: supabaseEmpresas,
+      colaboradores: supabaseColaboradores,
+      denuncias: supabaseDenuncias,
+      loading: supabaseLoading,
+      adicionarEmpresa: addEmpresaSupabase,
+      editarEmpresa: editEmpresaSupabase,
+      removerEmpresa: removeEmpresaSupabase,
+      adicionarColaborador: addColaboradorSupabase,
+      editarColaborador: editColaboradorSupabase,
+      removerColaborador: removeColaboradorSupabase,
+      refetchDenuncias
+    } = useSupabaseData();
+
+    // Convert Supabase data to local format
+    const empresas = useMemo(() =>
+      supabaseEmpresas.map(convertEmpresaFromSupabase),
+      [supabaseEmpresas]
+    );
+
+    const colaboradores = useMemo(() =>
+      supabaseColaboradores.map(convertColaboradorFromSupabase),
+      [supabaseColaboradores]
+    );
+
+    const denuncias = useMemo(() =>
+      supabaseDenuncias.map(convertDenunciaFromSupabase),
+      [supabaseDenuncias]
+    );
 
   // Local state
   const [filtros, setFiltrosState] = useState<FiltrosColaborador>({
@@ -374,18 +429,70 @@ export function HRProvider({ children }: { children: React.ReactNode }) {
     setFiltrosState(prev => ({ ...prev, ...novosFiltros }));
   };
 
-  // Mock denúncias functions for now
-  const criarDenuncia = (denuncia: any) => {
-    console.log('Mock criar denuncia:', denuncia);
-  };
+    // Denúncias
+    const criarDenuncia = async (
+      denunciaData: Omit<Denuncia, 'id' | 'protocolo' | 'status' | 'comentarios' | 'createdAt' | 'updatedAt'> & { status?: DenunciaStatus }
+    ): Promise<Denuncia | null> => {
+      try {
+        const supabaseData = convertDenunciaToSupabase({
+          ...denunciaData,
+          status: denunciaData.status || 'RECEBIDO'
+        });
 
-  const atualizarStatus = (id: string, status: string) => {
-    console.log('Mock atualizar status:', id, status);
-  };
+        const { data, error } = await supabase
+          .from('denuncias')
+          .insert(supabaseData)
+          .select('*, comentarios_denuncia(*)')
+          .single();
 
-  const adicionarComentario = (id: string, comentario: any) => {
-    console.log('Mock adicionar comentario:', id, comentario);
-  };
+        if (error) throw error;
+
+        await refetchDenuncias();
+        toast.success('Denúncia criada com sucesso!');
+        return convertDenunciaFromSupabase(data as any);
+      } catch (error) {
+        console.error('Erro ao criar denúncia:', error);
+        toast.error('Erro ao criar denúncia');
+        return null;
+      }
+    };
+
+    const atualizarStatus = async (id: string, status: DenunciaStatus) => {
+      try {
+        const { error } = await supabase
+          .from('denuncias')
+          .update({ status })
+          .eq('id', id);
+
+        if (error) throw error;
+
+        await refetchDenuncias();
+        toast.success('Status atualizado com sucesso!');
+      } catch (error) {
+        console.error('Erro ao atualizar status da denúncia:', error);
+        toast.error('Erro ao atualizar status da denúncia');
+      }
+    };
+
+    const adicionarComentario = async (id: string, comentario: { autor: string; mensagem: string }) => {
+      try {
+        const { error } = await supabase
+          .from('comentarios_denuncia')
+          .insert({
+            denuncia_id: id,
+            autor: comentario.autor,
+            mensagem: comentario.mensagem
+          });
+
+        if (error) throw error;
+
+        await refetchDenuncias();
+        toast.success('Comentário adicionado com sucesso!');
+      } catch (error) {
+        console.error('Erro ao adicionar comentário:', error);
+        toast.error('Erro ao adicionar comentário');
+      }
+    };
 
   // Computed values
   const denunciasNaoTratadas = useMemo(() => {

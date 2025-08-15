@@ -51,26 +51,26 @@ export default function DenunciasDashboard() {
     OUTRO: 'Outro'
   };
 
-  const handleAtualizarStatus = () => {
+  const handleAtualizarStatus = async () => {
     if (!selectedDenuncia) return;
-    
-    atualizarStatus(selectedDenuncia.id, novoStatus);
+
+    await atualizarStatus(selectedDenuncia.id, novoStatus);
     setSelectedDenuncia({ ...selectedDenuncia, status: novoStatus });
-    
+
     toast({
       title: 'Status atualizado',
       description: `Denúncia ${selectedDenuncia.protocolo} foi marcada como ${statusLabels[novoStatus].toLowerCase()}.`
     });
   };
 
-  const handleAdicionarComentario = () => {
+  const handleAdicionarComentario = async () => {
     if (!selectedDenuncia || !novoComentario.trim()) return;
-    
-    adicionarComentario(selectedDenuncia.id, { autor: 'Administrador', mensagem: novoComentario });
+
+    await adicionarComentario(selectedDenuncia.id, { autor: 'Administrador', mensagem: novoComentario });
     setNovoComentario('');
-    
-    const updatedDenuncia = { 
-      ...selectedDenuncia, 
+
+    const updatedDenuncia = {
+      ...selectedDenuncia,
       comentarios: [...selectedDenuncia.comentarios, {
         id: Date.now().toString(),
         denunciaId: selectedDenuncia.id,
@@ -80,7 +80,7 @@ export default function DenunciasDashboard() {
       }]
     };
     setSelectedDenuncia(updatedDenuncia);
-    
+
     toast({
       title: 'Comentário adicionado',
       description: 'Seu comentário foi registrado na denúncia.'
