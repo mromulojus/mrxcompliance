@@ -23,6 +23,7 @@ import Login from "@/pages/Login";
 import Empresas from "@/pages/Empresas";
 import DebtosDashboard from "@/pages/DebtosDashboard";
 import DevedorDetalhes from "./pages/DevedorDetalhes";
+import Homepage from "@/pages/Homepage";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               {/* Public routes */}
+              <Route path="/homepage" element={<Homepage />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/login" element={<Login />} />
               <Route path="/denuncia-publica/:empresaId" element={<DenunciaPublica />} />

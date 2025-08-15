@@ -246,3 +246,146 @@ All colors MUST be HSL.
 .animate-delay-1400 {
   animation-delay: 1.4s;
 }
+
+/* Hero Section Styles */
+.hero-container {
+  position: relative;
+  width: 100vw;
+  height: 300vh;
+  overflow: hidden;
+  background: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%);
+}
+
+.dark .hero-container {
+  background: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--card)) 100%);
+}
+
+.hero-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
+}
+
+.hero-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  z-index: 10;
+  color: hsl(var(--foreground));
+}
+
+.hero-title {
+  font-size: clamp(4rem, 12vw, 12rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 0.9;
+  margin-bottom: 2rem;
+  font-family: "Inter", sans-serif;
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent-foreground)) 50%, hsl(var(--muted-foreground)) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 50px hsl(var(--primary) / 0.3);
+}
+
+.hero-subtitle {
+  font-size: clamp(1.25rem, 3vw, 2rem);
+  font-weight: 400;
+  line-height: 1.4;
+  color: hsl(var(--muted-foreground));
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.subtitle-line {
+  margin: 0.5rem 0;
+}
+
+.scroll-progress {
+  position: fixed;
+  bottom: 4rem;
+  right: 4rem;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.scroll-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+.progress-track {
+  width: 2px;
+  height: 100px;
+  background: hsl(var(--border));
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(to bottom, hsl(var(--primary)), hsl(var(--accent-foreground)));
+  transition: width 0.3s ease;
+}
+
+.section-counter {
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: "Inter", monospace;
+}
+
+.scroll-sections {
+  position: relative;
+  z-index: 5;
+}
+
+.content-section {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 2rem;
+}
+
+.content-section .hero-title {
+  font-size: clamp(3rem, 10vw, 10rem);
+}
+
+.content-section .hero-subtitle {
+  font-size: clamp(1rem, 2.5vw, 1.5rem);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .scroll-progress {
+    bottom: 2rem;
+    right: 2rem;
+    scale: 0.8;
+  }
+  
+  .hero-content {
+    padding: 0 1rem;
+  }
+  
+  .hero-title {
+    font-size: clamp(2.5rem, 8vw, 6rem);
+  }
+  
+  .hero-subtitle {
+    font-size: clamp(1rem, 4vw, 1.5rem);
+  }
+}
