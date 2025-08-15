@@ -71,3 +71,12 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## Access control for denúncias
+
+The `denuncias` table in Supabase uses row-level security:
+
+- Anonymous users may submit new denúncias but cannot view, update or delete any entries.
+- Only authenticated users with the `administrador` role can read, update or delete existing denúncias.
+
+These policies ensure public reporting while keeping report data restricted to administrators.
