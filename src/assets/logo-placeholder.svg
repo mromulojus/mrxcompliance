@@ -1,8 +1,18 @@
-<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M15 20C15 11.7157 21.7157 5 30 5H40C44.4183 5 48 8.58172 48 13V87C48 91.4183 44.4183 95 40 95H30C21.7157 95 15 88.2843 15 80V20Z" fill="currentColor"/>
-  <path d="M70 20C70 11.7157 76.7157 5 85 5H95C95 5 95 95 95 95H85C76.7157 95 70 88.2843 70 80V20Z" fill="currentColor"/>
-  <path d="M32 35C40 30 50 25 60 35C65 40 65 45 55 50C50 55 45 60 40 65C35 55 25 45 32 35Z" fill="currentColor"/>
-  <text x="50" y="10" font-family="Arial, sans-serif" font-size="6" text-anchor="middle" fill="currentColor">PLAN</text>
-  <text x="20" y="50" font-family="Arial, sans-serif" font-size="6" text-anchor="middle" fill="currentColor">CHECK</text>
-  <text x="80" y="50" font-family="Arial, sans-serif" font-size="6" text-anchor="middle" fill="currentColor">CONTROL</text>
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" id="Layer_2" viewBox="0 0 775.19 876.96" width="775.1900024414062" height="876.9600219726562">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #cdae68;
+        fill-rule: evenodd;
+      }
+    </style>
+  </defs>
+  <g id="Layer_2-2" data-name="Layer_2">
+    <path class="cls-1" d="M775.19,8.15v664.66c0,58.45-3.13,88.1-33.79,100.53-44.74,18.15-84.14-28.74-111.68-59.16l-76.06-83.01c-36.49-124.05-108.1-205.07-162.81-194.2l63.17-67.55c54.26-11.7,123.34,56.25,168.17,167.13V171.73L775.19,8.15Z"/>
+    <path class="cls-1" d="M539.41,615.93c-34.07-64.72-69.48-97.55-102.74-109.85-46.4-17.16-88.62,5.61-117.23,37.49-52.75,58.81-227.14,251.45-301.44,333.39,96.82-80.39,412.49-358.5,521.41-261.03h0Z"/>
+    <path class="cls-1" d="M0,868.81V204.15c0-58.45,3.13-88.1,33.79-100.53,44.74-18.15,84.14,28.74,111.68,59.16l76.06,83.01c36.49,124.05,108.1,205.07,162.81,194.2l-63.17,67.55c-54.26,11.7-123.34-56.25-168.17-167.13v364.82L0,868.81Z"/>
+    <path class="cls-1" d="M235.78,261.03c34.07,64.72,69.48,97.55,102.74,109.85,46.4,17.16,88.62-5.61,117.23-37.49C508.5,274.58,682.89,81.94,757.19,0c-96.82,80.39-412.49,358.5-521.41,261.03h0Z"/>
+  </g>
 </svg>
