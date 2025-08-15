@@ -37,7 +37,7 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               {/* Public routes */}
-              <Route path="/homepage" element={<Homepage />} />
+              <Route path="/" element={<Homepage />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/login" element={<Login />} />
               <Route path="/denuncia-publica/:empresaId" element={<DenunciaPublica />} />
@@ -48,7 +48,7 @@ const App = () => (
                   <AppLayout />
                 </ProtectedRoute>
               }>
-                <Route path="/" element={<Index />} />
+                <Route path="/dashboard" element={<Index />} />
                 <Route path="/empresas" element={<Empresas />} />
                 <Route path="/empresa/:empresaId" element={<EmpresaDetalhes />} />
                 <Route path="/debto" element={<DebtosDashboard />} />

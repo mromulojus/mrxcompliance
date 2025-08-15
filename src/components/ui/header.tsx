@@ -24,8 +24,8 @@ export function Header() {
         </div>
         
         <nav className="hidden md:flex items-center space-x-8">
-          <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">
-            Início
+          <Link to="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
+            Dashboard
           </Link>
           <Link to="/sobre" className="text-muted-foreground hover:text-foreground transition-colors">
             Sobre
