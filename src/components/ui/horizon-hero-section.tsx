@@ -439,45 +439,40 @@ export const Component = () => {
   useEffect(() => {
     if (!isReady) return;
     
-    // Set initial states to prevent flash
-    gsap.set([menuRef.current, titleRef.current, subtitleRef.current, scrollProgressRef.current], {
-      visibility: 'visible'
-    });
-
-    const tl = gsap.timeline();
-
-    // Animate menu
-    if (menuRef.current) {
-      tl.from(menuRef.current, {
-        x: -100,
-        opacity: 0,
-        duration: 1,
-        ease: "power3.out"
+    // Create safe array of elements to animate, filtering out null values
+    const elementsToShow = [titleRef.current, subtitleRef.current, scrollProgressRef.current].filter(Boolean);
+    
+    // Set initial states to prevent flash - only for elements that exist
+    if (elementsToShow.length > 0) {
+      gsap.set(elementsToShow, {
+        visibility: 'visible'
       });
     }
 
-    // Animate title with split text
+    const tl = gsap.timeline();
+
+    // Animate title
     if (titleRef.current) {
-      const titleChars = titleRef.current.querySelectorAll('.title-char');
-      tl.from(titleChars, {
+      tl.from(titleRef.current, {
         y: 200,
         opacity: 0,
         duration: 1.5,
-        stagger: 0.05,
         ease: "power4.out"
-      }, "-=0.5");
+      });
     }
 
     // Animate subtitle lines
     if (subtitleRef.current) {
       const subtitleLines = subtitleRef.current.querySelectorAll('.subtitle-line');
-      tl.from(subtitleLines, {
-        y: 50,
-        opacity: 0,
-        duration: 1,
-        stagger: 0.2,
-        ease: "power3.out"
-      }, "-=0.8");
+      if (subtitleLines.length > 0) {
+        tl.from(subtitleLines, {
+          y: 50,
+          opacity: 0,
+          duration: 1,
+          stagger: 0.2,
+          ease: "power3.out"
+        }, "-=0.8");
+      }
     }
 
     // Animate scroll indicator
@@ -491,7 +486,9 @@ export const Component = () => {
     }
 
     return () => {
-      tl.kill();
+      if (tl) {
+        tl.kill();
+      }
     };
   }, [isReady]);
 
@@ -623,11 +620,11 @@ export const Component = () => {
           
           return (
             <section key={i} className="content-section">
-              <h1 ref={titleRef} className="hero-title">
+              <h1 className="hero-title">
                 {titles[i+1] || 'DEFAULT'}
               </h1>
           
-              <div ref={subtitleRef} className="hero-subtitle cosmos-subtitle">
+              <div className="hero-subtitle cosmos-subtitle">
                 <p className="subtitle-line">
                   {subtitles[i+1].line1}
                 </p>
