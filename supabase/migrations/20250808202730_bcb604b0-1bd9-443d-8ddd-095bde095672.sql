@@ -7,6 +7,7 @@ CREATE OR REPLACE FUNCTION public.authenticate_by_username(username_input text, 
 RETURNS TABLE(user_id uuid, email text)
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
   user_email text;

@@ -76,7 +76,7 @@ BEGIN
   RETURN COALESCE(NEW, OLD);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
-SET search_path = '';
+SET search_path = public;
 
 -- Create trigger for audit logging
 DROP TRIGGER IF EXISTS trigger_log_denuncia_access ON public.denuncias;

@@ -94,6 +94,7 @@ CREATE OR REPLACE FUNCTION public.user_can_access_empresa_data(empresa_uuid uuid
 RETURNS boolean
 LANGUAGE sql
 STABLE SECURITY DEFINER
+SET search_path = public
 AS $$
   SELECT 
     -- Superusers e administradores têm acesso total

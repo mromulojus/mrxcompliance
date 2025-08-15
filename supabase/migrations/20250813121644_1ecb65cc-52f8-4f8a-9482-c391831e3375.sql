@@ -65,6 +65,7 @@ CREATE OR REPLACE FUNCTION public.user_can_access_empresa(empresa_uuid uuid)
 RETURNS boolean
 LANGUAGE sql
 STABLE SECURITY DEFINER
+SET search_path = public
 AS $$
   SELECT 
     has_role(auth.uid(), 'superuser'::user_role) OR

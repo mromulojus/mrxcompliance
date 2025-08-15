@@ -251,19 +251,18 @@ USING (
 CREATE OR REPLACE FUNCTION public.user_can_access_empresa(empresa_id_param uuid)
 RETURNS boolean AS $$
 BEGIN
-  SET search_path = '';
   RETURN EXISTS (
     SELECT 1 FROM public.profiles
     WHERE user_id = auth.uid() 
     AND (role = 'administrador' OR role = 'superuser' OR public.profiles.empresa_id = empresa_id_param)
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
+$$ LANGUAGE plpgsql SECURITY DEFINER STABLE
+SET search_path = public;
 
 CREATE OR REPLACE FUNCTION public.user_can_access_empresa_data()
 RETURNS uuid AS $$
 BEGIN
-  SET search_path = '';
   RETURN (
     SELECT empresa_id FROM public.profiles
     WHERE user_id = auth.uid() 
@@ -272,33 +271,34 @@ BEGIN
     LIMIT 1
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
+$$ LANGUAGE plpgsql SECURITY DEFINER STABLE
+SET search_path = public;
 
 CREATE OR REPLACE FUNCTION public.get_user_role()
 RETURNS TEXT AS $$
 BEGIN
-  SET search_path = '';
   RETURN (SELECT role FROM public.profiles WHERE user_id = auth.uid());
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
+$$ LANGUAGE plpgsql SECURITY DEFINER STABLE
+SET search_path = public;
 
 CREATE OR REPLACE FUNCTION public.has_role(required_role TEXT)
 RETURNS boolean AS $$
 BEGIN
-  SET search_path = '';
   RETURN EXISTS (
     SELECT 1 FROM public.profiles 
     WHERE user_id = auth.uid() 
     AND role = required_role
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
+$$ LANGUAGE plpgsql SECURITY DEFINER STABLE
+SET search_path = public;
 
 CREATE OR REPLACE FUNCTION public.update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
-  SET search_path = '';
   NEW.updated_at = now();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public;
