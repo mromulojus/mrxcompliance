@@ -8,6 +8,7 @@ RETURNS BOOLEAN
 LANGUAGE SQL
 STABLE
 SECURITY DEFINER
+SET search_path = public
 AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.profiles
@@ -127,3 +128,4 @@ CREATE POLICY "Manage pagamentos with finance roles" ON public.pagamentos
       has_role(auth.uid(), 'financeiro_master'::user_role)
     )
   );
+

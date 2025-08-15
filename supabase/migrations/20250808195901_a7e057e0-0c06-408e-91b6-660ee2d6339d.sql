@@ -13,7 +13,7 @@ ADD COLUMN IF NOT EXISTS last_login timestamp with time zone;
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger
 LANGUAGE plpgsql
-SECURITY DEFINER SET search_path = ''
+SECURITY DEFINER SET search_path = public
 AS $$
 BEGIN
   INSERT INTO public.profiles (user_id, username, full_name, role)
@@ -64,6 +64,7 @@ CREATE OR REPLACE FUNCTION public.update_last_login()
 RETURNS void
 LANGUAGE sql
 SECURITY DEFINER
+SET search_path = public
 AS $$
   UPDATE public.profiles 
   SET last_login = now() 

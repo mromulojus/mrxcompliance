@@ -179,6 +179,7 @@ RETURNS public.user_role
 LANGUAGE SQL
 STABLE
 SECURITY DEFINER
+SET search_path = public
 AS $$
   SELECT role FROM public.profiles WHERE user_id = user_uuid;
 $$;
@@ -189,6 +190,7 @@ RETURNS BOOLEAN
 LANGUAGE SQL
 STABLE
 SECURITY DEFINER
+SET search_path = public
 AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.profiles 
@@ -322,7 +324,7 @@ CREATE TRIGGER update_denuncias_updated_at
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
 LANGUAGE plpgsql
-SECURITY DEFINER SET search_path = ''
+SECURITY DEFINER SET search_path = public
 AS $$
 BEGIN
   INSERT INTO public.profiles (user_id, username, role)
