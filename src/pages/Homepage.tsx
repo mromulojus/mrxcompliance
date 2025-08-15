@@ -11,10 +11,10 @@ import { SplashCursor } from "@/components/ui/splash-cursor";
 
 export default function Homepage() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       <SplashCursor />
       <CorporateHeader />
-      <main>
+      <main className="bg-gradient-to-b from-background via-secondary/5 to-background">
         <HeroSection />
         <TrustBar />
         <MethodologySection />

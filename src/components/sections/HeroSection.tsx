@@ -28,8 +28,8 @@ export function HeroSection() {
 
   return (
     <AuroraBackground className="relative min-h-screen flex items-center justify-center">
-      {/* Background Video Effect */}
-      <div className="absolute inset-0 bg-gradient-to-br from-background/95 via-background/90 to-background/95 z-10" />
+      {/* Solid Background Override */}
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-secondary/10 to-background z-10" />
       
       <div className="container mx-auto px-4 relative z-20">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -103,7 +103,7 @@ export function HeroSection() {
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="bg-card/50 backdrop-blur-md border border-border/50 rounded-2xl p-8 space-y-6"
+            className="bg-card border border-border rounded-2xl p-8 space-y-6 shadow-lg"
           >
             <div className="text-center space-y-2">
               <h3 className="text-2xl font-bold">Consultoria Gratuita</h3>
@@ -129,7 +129,7 @@ export function HeroSection() {
                   placeholder="Seu nome completo"
                   value={formData.nome}
                   onChange={(e) => setFormData({...formData, nome: e.target.value})}
-                  className="w-full px-4 py-3 rounded-lg border border-border bg-background/50 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
               <div>
@@ -138,7 +138,7 @@ export function HeroSection() {
                   placeholder="Seu e-mail empresarial"
                   value={formData.email}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  className="w-full px-4 py-3 rounded-lg border border-border bg-background/50 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
               <div>
@@ -147,7 +147,7 @@ export function HeroSection() {
                   placeholder="Telefone/WhatsApp"
                   value={formData.telefone}
                   onChange={(e) => setFormData({...formData, telefone: e.target.value})}
-                  className="w-full px-4 py-3 rounded-lg border border-border bg-background/50 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
               

@@ -39,7 +39,12 @@ export function CorporateHeader() {
               (63) 99999-9999
             </a>
           </Button>
-          <Button size="sm">
+          <Button size="sm" asChild>
+            <Link to="/auth">
+              Login Plataforma
+            </Link>
+          </Button>
+          <Button size="sm" variant="secondary">
             Agende Diagnóstico
           </Button>
         </div>
@@ -79,7 +84,12 @@ export function CorporateHeader() {
             >
               Serviços
             </Link>
-            <Button className="w-full">
+            <Button className="w-full" asChild>
+              <Link to="/auth">
+                Login Plataforma
+              </Link>
+            </Button>
+            <Button className="w-full" variant="secondary">
               Agende Diagnóstico
             </Button>
           </nav>
