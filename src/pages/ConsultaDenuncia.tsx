@@ -33,7 +33,7 @@ export default function ConsultaDenuncia() {
 
     try {
       const { data, error } = await supabase
-        .from('denuncia_status')
+        .from('denuncias')
         .select('protocolo, status, created_at, updated_at')
         .eq('protocolo', protocolo.trim())
         .maybeSingle();

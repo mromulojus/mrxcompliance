@@ -441,7 +441,7 @@ const convertDenunciaToSupabase = (denuncia: Partial<Denuncia>): Partial<Supabas
 
         const { data, error } = await supabase
           .from('denuncias')
-          .insert(supabaseData)
+          .insert(supabaseData as any)
           .select('*, comentarios_denuncia(*)')
           .single();
 

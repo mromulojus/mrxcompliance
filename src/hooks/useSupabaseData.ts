@@ -155,7 +155,7 @@ export const useSupabaseData = () => {
           .order('created_at', { ascending: false });
 
         if (error) throw error;
-        setDenuncias(data || []);
+        setDenuncias((data || []) as any);
       } catch (error) {
         console.error('Error fetching denuncias:', error);
         toast({

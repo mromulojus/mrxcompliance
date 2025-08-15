@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { AlertCircle, User, Mail, Lock, Eye, EyeOff, Shield, Building2, Users, TrendingUp, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { SplashCursor } from '@/components/ui/splash-cursor';
 export default function Auth() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -119,6 +120,9 @@ export default function Auth() {
       </div>;
   }
   return <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 relative overflow-hidden">
+      {/* Splash Cursor Animation */}
+      <SplashCursor />
+      
       {/* Background elements */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
       <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-l from-primary/10 to-transparent rounded-full blur-3xl" />
