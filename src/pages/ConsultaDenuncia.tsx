@@ -28,21 +28,13 @@ export default function ConsultaDenuncia() {
     CONCLUIDO: 'bg-green-100 text-green-800'
   };
 
-  const tipoLabels = {
-    DISCRIMINACAO: 'Discriminação',
-    ASSEDIO_MORAL: 'Assédio Moral',
-    CORRUPCAO: 'Corrupção',
-    VIOLACAO_TRABALHISTA: 'Violação Trabalhista',
-    OUTRO: 'Outro'
-  };
-
   const handlePesquisar = async () => {
     if (!protocolo.trim()) return;
 
     try {
       const { data, error } = await supabase
-        .from('denuncias')
-        .select('id, protocolo, tipo, status, created_at, updated_at')
+        .from('denuncia_status')
+        .select('protocolo, status, created_at, updated_at')
         .eq('protocolo', protocolo.trim())
         .maybeSingle();
 
@@ -51,16 +43,13 @@ export default function ConsultaDenuncia() {
       if (!data) {
         setDenunciaEncontrada(null);
       } else {
-        const mapped = {
-          id: (data as any).id,
+        setDenunciaEncontrada({
           protocolo: (data as any).protocolo,
-          tipo: (data as any).tipo,
           status: (data as any).status,
           createdAt: (data as any).created_at,
           updatedAt: (data as any).updated_at,
           comentarios: [] as any[],
-        };
-        setDenunciaEncontrada(mapped);
+        });
       }
     } catch (e) {
       console.error('Erro ao buscar denúncia por protocolo:', e);
@@ -152,16 +141,12 @@ export default function ConsultaDenuncia() {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label>Tipo:</Label>
-                      <div className="text-lg">{tipoLabels[denunciaEncontrada.tipo]}</div>
-                    </div>
-                    <div className="space-y-2">
                       <Label>Data de Registro:</Label>
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
-                        {formatDistanceToNow(new Date(denunciaEncontrada.createdAt), { 
-                          addSuffix: true, 
-                          locale: ptBR 
+                        {formatDistanceToNow(new Date(denunciaEncontrada.createdAt), {
+                          addSuffix: true,
+                          locale: ptBR
                         })}
                       </div>
                     </div>
@@ -169,9 +154,9 @@ export default function ConsultaDenuncia() {
                       <Label>Última Atualização:</Label>
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
-                        {formatDistanceToNow(new Date(denunciaEncontrada.updatedAt), { 
-                          addSuffix: true, 
-                          locale: ptBR 
+                        {formatDistanceToNow(new Date(denunciaEncontrada.updatedAt), {
+                          addSuffix: true,
+                          locale: ptBR
                         })}
                       </div>
                     </div>
