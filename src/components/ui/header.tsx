@@ -19,7 +19,7 @@ export function Header() {
             className="h-8 w-8 hidden dark:block"
           />
           <span className="text-xl font-bold text-foreground">
-            ManagementPro
+            PLAN>CHECK>CONTROL
           </span>
         </div>
         
