@@ -1,29 +1,49 @@
-import { CorporateHeader } from "@/components/ui/corporate-header";
-import { HeroSection } from "@/components/sections/HeroSection";
-import { TrustBar } from "@/components/sections/TrustBar";
-import { MethodologySection } from "@/components/sections/MethodologySection";
-import { ServicesSection } from "@/components/sections/ServicesSection";
-import { ROICalculator } from "@/components/sections/ROICalculator";
-import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
-import { FloatingCTA } from "@/components/sections/FloatingCTA";
+import { Header } from "@/components/ui/header";
+import { HeroSection } from "@/components/ui/hero-section";
+import { FeatureSteps } from "@/components/ui/feature-section";
+import { TestimonialsSection } from "@/components/ui/testimonials-section";
+import { StatsSection } from "@/components/ui/stats-section";
 import { Footer } from "@/components/ui/footer";
-import { SplashCursor } from "@/components/ui/splash-cursor";
+
+const features = [
+  { 
+    step: 'PLAN', 
+    title: 'Planejamento Estratégico',
+    content: 'Defina objetivos claros e estratégias eficazes para o crescimento da sua empresa com ferramentas avançadas de planejamento.', 
+    image: 'https://images.unsplash.com/photo-1553877522-43269d4ea984?q=80&w=2070&auto=format&fit=crop' 
+  },
+  { 
+    step: 'CHECK',
+    title: 'Monitoramento Contínuo',
+    content: 'Acompanhe o progresso em tempo real com dashboards intuitivos e relatórios detalhados para tomada de decisões informadas.',
+    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop'
+  },
+  { 
+    step: 'CONTROL',
+    title: 'Controle Total',
+    content: 'Mantenha controle absoluto sobre todos os aspectos do seu negócio com ferramentas de gestão integradas e automação inteligente.',
+    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2070&auto=format&fit=crop'
+  },
+];
 
 export default function Homepage() {
   return (
-    <div className="min-h-screen bg-background">
-      <SplashCursor />
-      <CorporateHeader />
-      <main className="bg-gradient-to-b from-background via-secondary/5 to-background">
+    <div className="min-h-screen">
+      <Header />
+      <main>
         <HeroSection />
-        <TrustBar />
-        <MethodologySection />
-        <ServicesSection />
-        <ROICalculator />
+        <StatsSection />
+        <div id="features">
+          <FeatureSteps 
+            features={features}
+            title="Metodologia PLAN • CHECK • CONTROL"
+            autoPlayInterval={4000}
+            imageHeight="h-[500px]"
+          />
+        </div>
         <TestimonialsSection />
       </main>
       <Footer />
-      <FloatingCTA />
     </div>
   );
 }

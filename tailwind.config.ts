@@ -85,30 +85,11 @@ export default {
 					to: {
 						height: '0'
 					}
-				},
-				aurora: {
-					from: {
-						backgroundPosition: "50% 50%, 50% 50%",
-					},
-					to: {
-						backgroundPosition: "350% 50%, 350% 50%",
-					},
-				},
-				"float": {
-					"0%, 100%": { transform: "translateY(0px)" },
-					"50%": { transform: "translateY(-10px)" },
-				},
-				"pulse-slow": {
-					"0%, 100%": { opacity: "1" },
-					"50%": { opacity: "0.5" },
-				},
+				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out',
-				aurora: "aurora 60s linear infinite",
-				"float": "float 6s ease-in-out infinite",
-				"pulse-slow": "pulse-slow 4s ease-in-out infinite",
+				'accordion-up': 'accordion-up 0.2s ease-out'
 			}
 		}
 	},
