@@ -16,7 +16,7 @@ const testimonials: Testimonial[] = [
     name: "Carlos Silva",
     role: "CEO",
     company: "TechCorp",
-    content: "O ManagementPro revolucionou nossa gestão empresarial. A facilidade de controle e o planejamento estratégico nos permitiram crescer 40% em apenas 6 meses.",
+    content: "A MRx COMPLIANCE revolucionou nossa gestão empresarial. A facilidade de controle e o planejamento estratégico nos permitiram crescer 40% em apenas 6 meses.",
     rating: 5
   },
   {
