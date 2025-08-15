@@ -124,12 +124,9 @@ const SystemData: React.FC = () => {
         evidencias_descricao: 'Evidências de exemplo.',
         sugestao: 'Tomar providências cabíveis.'
       }));
-      const { error: denErr } = await supabase.from('denuncias').insert(denunciasPayload);
-      if (denErr) throw denErr;
 
-      // Atualizar dashboards locais
-      denunciasPayload.forEach(d => {
-        criarDenuncia({
+      for (const d of denunciasPayload) {
+        await criarDenuncia({
           empresaId: (empresa as any).id,
           identificado: d.identificado,
           nome: d.nome,
@@ -141,9 +138,9 @@ const SystemData: React.FC = () => {
           envolvidosCientes: d.envolvidos_cientes,
           descricao: d.descricao,
           evidenciasDescricao: d.evidencias_descricao,
-          sugestao: d.sugestao
+          sugestao: d.sugestao,
         });
-      });
+      }
 
       // 4) Auditoria (localStorage)
       const itens = Array.from({ length: 12 }).map((_, i) => ({

@@ -89,6 +89,16 @@ export type Denuncia = {
   status: 'RECEBIDO' | 'EM_ANALISE' | 'INVESTIGACAO' | 'CONCLUIDO';
   created_at: string;
   updated_at: string;
+  comentarios_denuncia?: ComentarioDenuncia[];
+};
+
+export type ComentarioDenuncia = {
+  id: string;
+  denuncia_id: string;
+  autor: string;
+  mensagem: string;
+  created_at: string;
+  updated_at: string;
 };
 
 export const useSupabaseData = () => {
@@ -137,25 +147,24 @@ export const useSupabaseData = () => {
     }
   };
 
-  const fetchDenuncias = async () => {
-    
-    try {
-      const { data, error } = await supabase
-        .from('denuncias')
-        .select('*')
-        .order('created_at', { ascending: false });
+    const fetchDenuncias = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('denuncias')
+          .select('*, comentarios_denuncia(*)')
+          .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setDenuncias(data || []);
-    } catch (error) {
-      console.error('Error fetching denuncias:', error);
-      toast({
-        title: "Erro ao carregar denúncias",
-        description: "Não foi possível carregar a lista de denúncias.",
-        variant: "destructive"
-      });
-    }
-  };
+        if (error) throw error;
+        setDenuncias(data || []);
+      } catch (error) {
+        console.error('Error fetching denuncias:', error);
+        toast({
+          title: "Erro ao carregar denúncias",
+          description: "Não foi possível carregar a lista de denúncias.",
+          variant: "destructive"
+        });
+      }
+    };
 
   // CRUD operations for empresas
   const adicionarEmpresa = async (empresa: Omit<Empresa, 'id' | 'created_at' | 'updated_at' | 'created_by'>) => {
