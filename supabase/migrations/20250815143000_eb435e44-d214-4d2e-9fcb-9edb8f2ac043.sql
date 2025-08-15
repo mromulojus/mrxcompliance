@@ -13,7 +13,7 @@ CREATE POLICY "Public can insert denuncias" ON public.denuncias
 -- Restrict viewing to administrators
 CREATE POLICY "Admin can view denuncias" ON public.denuncias
   FOR SELECT TO authenticated
-  USING (public.has_role(auth.uid(), 'administrador'));
+  USING (public.has_role(auth.uid(), 'administrador') OR public.has_role(auth.uid(), 'empresarial'));
 
 -- Restrict updates to administrators
 CREATE POLICY "Admin can update denuncias" ON public.denuncias

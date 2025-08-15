@@ -9,7 +9,7 @@ DROP POLICY IF EXISTS "Open access to delete denuncias" ON public.denuncias;
 -- Restore restricted policies for denuncias
 CREATE POLICY "Admin can view denuncias" ON public.denuncias
   FOR SELECT TO authenticated
-  USING (public.has_role(auth.uid(), 'administrador'));
+  USING (public.has_role(auth.uid(), 'administrador') OR public.has_role(auth.uid(), 'empresarial'));
 
 CREATE POLICY "Anyone can insert denuncias" ON public.denuncias
   FOR INSERT TO anon, authenticated
