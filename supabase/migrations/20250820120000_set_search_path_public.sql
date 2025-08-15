@@ -94,7 +94,7 @@ AS $$
         SELECT 1
         FROM public.colaboradores
         WHERE empresa_id = empresa_uuid
-        AND (created_by = auth.uid() OR updated_at IS NOT NULL)
+        AND created_by = auth.uid()
       )
     );
 $$;
