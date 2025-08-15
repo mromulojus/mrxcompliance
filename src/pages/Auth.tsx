@@ -5,9 +5,9 @@ import { SplashCursor } from '@/components/ui/splash-cursor';
 import { SignInPage, type Testimonial } from '@/components/ui/sign-in';
 const testimonials: Testimonial[] = [
   {
-    avatarSrc: "https://avatars.githubusercontent.com/u/99661785?s=200&v=4",
-    name: "Italo Lima",
-    handle: "@Hustapp",
+    avatarSrc: "https://images.unsplash.com/photo-1494790108755-2616b612b5aa?w=400&h=400&fit=crop&crop=face",
+    name: "Maria Silva",
+    handle: "@maria_compliance",
     text: "A plataforma transformou nossa gestão de conformidade. Interface intuitiva e recursos poderosos."
   },
   {
@@ -109,7 +109,7 @@ export default function Auth() {
           </span>
         }
         description="Gestão completa e inteligente de conformidade empresarial"
-        heroImageSrc="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=1920&h=1080&fit=crop"
+        heroImageSrc="https://storage.hustapp.com/midias/true_556399451408@c.us_3EB04FFB6665F2F8669FAD"
         testimonials={testimonials}
         onSignIn={handleSignIn}
         onGoogleSignIn={handleGoogleSignIn}
