@@ -35,7 +35,8 @@ CREATE POLICY "Document owner or HR can view documents" ON public.documentos_col
 
 CREATE POLICY "HR can manage documents" ON public.documentos_colaborador
   FOR ALL TO authenticated
-  USING (public.has_role(auth.uid(), 'administrador'));
+  USING (public.has_role(auth.uid(), 'administrador'))
+  WITH CHECK (public.has_role(auth.uid(), 'administrador'));
 
 -- Historico_colaborador: restrict visibility
 DROP POLICY IF EXISTS "Users can view history" ON public.historico_colaborador;
