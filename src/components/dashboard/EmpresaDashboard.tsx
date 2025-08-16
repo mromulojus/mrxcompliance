@@ -12,7 +12,7 @@ import {
   BarChart3,
   PieChart 
 } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
 import { useSupabaseData } from "@/hooks/useSupabaseData";
 import { useDebtoData } from "@/hooks/useDebtoData";
 
@@ -159,12 +159,19 @@ export function EmpresaDashboard({ empresaId }: EmpresaDashboardProps) {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={200}>
-              <RechartsPieChart>
-                <RechartsPieChart data={statusData} dataKey="value" cx="50%" cy="50%" outerRadius={80}>
+              <RechartsPieChart data={statusData}>
+                <Pie 
+                  data={statusData} 
+                  dataKey="value" 
+                  cx="50%" 
+                  cy="50%" 
+                  outerRadius={80}
+                  label
+                >
                   {statusData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
-                </RechartsPieChart>
+                </Pie>
                 <Tooltip formatter={(value) => [value, 'Colaboradores']} />
               </RechartsPieChart>
             </ResponsiveContainer>
