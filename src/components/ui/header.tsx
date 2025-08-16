@@ -26,12 +26,12 @@ export function Header() {
         </div>
         
         <nav className="hidden md:flex items-center space-x-8">
-          {user && (
+          {!user && (
             <Link
-              to="/dashboard"
+              to="/auth"
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
-              Dashboard
+              Login
             </Link>
           )}
           <Link
@@ -55,8 +55,8 @@ export function Header() {
         </nav>
 
         <Button asChild variant="default">
-          <Link to="/auth">
-            Login
+          <Link to="/dashboard">
+            Dashboard
           </Link>
         </Button>
       </div>
