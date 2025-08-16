@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Users, Building2, TrendingUp, PieChart, BarChart3, DollarSign, UserPlus, FileSpreadsheet, FileText, CheckSquare, AlertTriangle, Search, LayoutDashboard } from 'lucide-react';
+import { ArrowLeft, Users, Building2, TrendingUp, PieChart, BarChart3, DollarSign, UserPlus, FileSpreadsheet, FileText, CheckSquare, AlertTriangle, Search, LayoutDashboard, Scale } from 'lucide-react';
 import { useSupabaseData } from '@/hooks/useSupabaseData';
 import { useHR } from '@/context/HRContext';
 import { ColaboradorCard } from '@/components/hr/ColaboradorCard';
@@ -17,6 +17,7 @@ import { VisualizacaoColaborador } from '@/components/hr/VisualizacaoColaborador
 import { AuditoriaEmpresa } from '@/components/hr/AuditoriaEmpresa';
 import { DenunciasEmpresa } from '@/components/hr/DenunciasEmpresa';
 import { DebtoEmpresa } from '@/components/debto/DebtoEmpresa';
+import { ProcessosJudiciaisDashboard } from '@/components/processos/ProcessosJudiciaisDashboard';
 import { ExportPdf } from '@/components/hr/ExportPdf';
 import { PainelAvisos } from '@/components/hr/PainelAvisos';
 import { Logo } from '@/components/ui/logo';
@@ -149,7 +150,7 @@ export default function EmpresaDetalhes() {
       <main className="container mx-auto px-4 py-8 space-y-8">
         {/* Tabs de Navegação */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <LayoutDashboard className="h-4 w-4" />
               Dashboard
@@ -157,6 +158,10 @@ export default function EmpresaDetalhes() {
             <TabsTrigger value="colaboradores" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Colaboradores & Analytics
+            </TabsTrigger>
+            <TabsTrigger value="processos" className="flex items-center gap-2">
+              <Scale className="h-4 w-4" />
+              Processos Judiciais
             </TabsTrigger>
             <TabsTrigger value="cobrancas" className="flex items-center gap-2">
               <DollarSign className="h-4 w-4" />
@@ -738,6 +743,10 @@ export default function EmpresaDetalhes() {
 
         <TabsContent value="cobrancas" className="space-y-8">
           <DebtoEmpresa empresaId={empresaId!} />
+        </TabsContent>
+
+        <TabsContent value="processos" className="space-y-8">
+          <ProcessosJudiciaisDashboard empresaId={empresaId!} />
         </TabsContent>
 
         <TabsContent value="denuncias" className="space-y-8">
