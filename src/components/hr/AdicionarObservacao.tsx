@@ -6,7 +6,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { MessageCircle, Upload, X, Image } from 'lucide-react';
+import { MessageCircle, X, Image } from 'lucide-react';
+import { saveObservacao } from './saveObservacao';
 
 interface AdicionarObservacaoProps {
   colaboradorId: string;
@@ -52,25 +53,7 @@ export function AdicionarObservacao({ colaboradorId, onObservacaoAdicionada }: A
     setIsLoading(true);
 
     try {
-      // Simular upload de arquivos (você pode implementar upload real aqui)
-      const anexosUrls = anexos.map((file, index) => ({
-        nome: file.name,
-        url: URL.createObjectURL(file), // Em produção, usar URL real do upload
-        tipo: 'image'
-      }));
-
-      const novaObservacao = {
-        id: Date.now().toString(),
-        observacao: observacao,
-        data: new Date().toISOString(),
-        usuario: 'Usuário Atual', // Pegar do contexto de auth
-        anexos: anexosUrls,
-        created_at: new Date().toISOString()
-      };
-
-      // Aqui você salvaria no banco de dados
-      // await saveObservacao(colaboradorId, novaObservacao);
-
+      const novaObservacao = await saveObservacao(colaboradorId, observacao, anexos);
       onObservacaoAdicionada(novaObservacao);
       
       toast({

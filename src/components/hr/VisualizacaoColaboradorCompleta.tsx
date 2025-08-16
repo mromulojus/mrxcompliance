@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,9 +30,10 @@ import {
   Image,
   AlertTriangle
 } from 'lucide-react';
-import { Colaborador } from '@/types/hr';
+import { Colaborador, HistoricoColaborador } from '@/types/hr';
 import { ExportPdf } from './ExportPdf';
 import { calcularRescisaoColaborador, calcularValorPrevisto } from '@/lib/rescisao';
+import { supabase } from '@/integrations/supabase/client';
 
 interface VisualizacaoColaboradorCompletaProps {
   colaborador: Colaborador;
@@ -41,7 +42,7 @@ interface VisualizacaoColaboradorCompletaProps {
 }
 
 export function VisualizacaoColaboradorCompleta({ colaborador, onClose, onEdit }: VisualizacaoColaboradorCompletaProps) {
-  const [historico, setHistorico] = useState(colaborador.historico || []);
+  const [historico, setHistorico] = useState<HistoricoColaborador[]>([]);
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'ATIVO':
@@ -70,6 +71,28 @@ export function VisualizacaoColaboradorCompleta({ colaborador, onClose, onEdit }
   const handleObservacaoAdicionada = (novaObservacao: any) => {
     setHistorico(prev => [novaObservacao, ...prev]);
   };
+
+  useEffect(() => {
+    const loadHistorico = async () => {
+      const { data, error } = await supabase
+        .from('historico_colaborador')
+        .select('id, observacao, created_at, created_by, historico_anexos(nome, url, tipo)')
+        .eq('colaborador_id', colaborador.id)
+        .order('created_at', { ascending: false });
+      if (!error) {
+        const formatted: HistoricoColaborador[] = (data || []).map((h: any) => ({
+          id: h.id,
+          observacao: h.observacao,
+          data: h.created_at,
+          usuario: h.created_by,
+          anexos: h.historico_anexos || [],
+          created_at: h.created_at,
+        }));
+        setHistorico(formatted);
+      }
+    };
+    loadHistorico();
+  }, [colaborador.id]);
 
   return (
     <div className="max-w-6xl mx-auto p-6">

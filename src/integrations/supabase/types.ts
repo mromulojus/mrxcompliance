@@ -911,6 +911,38 @@ export type Database = {
           },
         ]
       }
+      historico_anexos: {
+        Row: {
+          id: string
+          historico_id: string
+          nome: string
+          url: string
+          tipo: string
+        }
+        Insert: {
+          id?: string
+          historico_id: string
+          nome: string
+          url: string
+          tipo: string
+        }
+        Update: {
+          id?: string
+          historico_id?: string
+          nome?: string
+          url?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historico_anexos_historico_id_fkey"
+            columns: ["historico_id"]
+            isOneToOne: false
+            referencedRelation: "historico_colaborador"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       pagamentos: {
         Row: {
           acordo_id: string | null

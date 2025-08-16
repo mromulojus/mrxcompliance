@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -25,12 +25,13 @@ import {
   TrendingUp,
   Image
 } from 'lucide-react';
-import { Colaborador } from '@/types/hr';
+import { Colaborador, HistoricoColaborador } from '@/types/hr';
 import { ExportPdf } from './ExportPdf';
 import { AdicionarObservacao } from './AdicionarObservacao';
 import { AdicionarObservacaoInline } from './AdicionarObservacaoInline';
 import { Logo } from '@/components/ui/logo';
 import { calcularRescisaoColaborador, calcularValorPrevisto } from '@/lib/rescisao';
+import { supabase } from '@/integrations/supabase/client';
 
 interface VisualizacaoColaboradorProps {
   colaborador: Colaborador;
@@ -146,7 +147,7 @@ function RescisaoContent({ colaborador }: { colaborador: Colaborador }) {
 
 export function VisualizacaoColaborador({ colaborador, onClose, onEdit }: VisualizacaoColaboradorProps) {
   const [activeTab, setActiveTab] = useState('pessoais');
-  const [historico, setHistorico] = useState(colaborador.historico || []);
+  const [historico, setHistorico] = useState<HistoricoColaborador[]>([]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -172,6 +173,28 @@ export function VisualizacaoColaborador({ colaborador, onClose, onEdit }: Visual
   const handleObservacaoAdicionada = (novaObservacao: any) => {
     setHistorico(prev => [novaObservacao, ...prev]);
   };
+
+  useEffect(() => {
+    const loadHistorico = async () => {
+      const { data, error } = await supabase
+        .from('historico_colaborador')
+        .select('id, observacao, created_at, created_by, historico_anexos(nome, url, tipo)')
+        .eq('colaborador_id', colaborador.id)
+        .order('created_at', { ascending: false });
+      if (!error) {
+        const formatted: HistoricoColaborador[] = (data || []).map((h: any) => ({
+          id: h.id,
+          observacao: h.observacao,
+          data: h.created_at,
+          usuario: h.created_by,
+          anexos: h.historico_anexos || [],
+          created_at: h.created_at,
+        }));
+        setHistorico(formatted);
+      }
+    };
+    loadHistorico();
+  }, [colaborador.id]);
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">

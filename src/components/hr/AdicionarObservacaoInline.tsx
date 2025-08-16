@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Plus } from 'lucide-react';
+import { saveObservacao } from './saveObservacao';
 
 interface AdicionarObservacaoInlineProps {
   colaboradorId: string;
@@ -27,17 +28,7 @@ export function AdicionarObservacaoInline({ colaboradorId, onObservacaoAdicionad
     setIsLoading(true);
 
     try {
-      const novaObservacao = {
-        id: Date.now().toString(),
-        observacao: observacao,
-        data: new Date().toISOString(),
-        usuario: 'Usuário Atual', // Pegar do contexto de auth
-        created_at: new Date().toISOString()
-      };
-
-      // Aqui você salvaria no banco de dados
-      // await saveObservacao(colaboradorId, novaObservacao);
-
+      const novaObservacao = await saveObservacao(colaboradorId, observacao);
       onObservacaoAdicionada(novaObservacao);
       
       toast({
