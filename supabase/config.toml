@@ -6,3 +6,11 @@ hibp_api_key = { env = "HIBP_API_KEY" }
 
 [auth.otp]
 expiry_duration = "60s"  # valor conforme política interna
+
+[[webhooks]]
+name = "access-log-alerts"
+url = "http://localhost:54321/functions/v1/alert-unusual-access"
+secret = { env = "ALERT_WEBHOOK_SECRET" }
+schema = "audit"
+table = "access_logs"
+event = "INSERT"
