@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { HRProvider } from "@/context/HRContext";
+import { AuditEventsProvider } from "@/hooks/useAuditEvents";
 import AppLayout from "@/layouts/AppLayout";
 import Index from "./pages/Index";
 import EmpresaDetalhes from "./pages/EmpresaDetalhes";
@@ -31,60 +32,62 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <HRProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
+        <AuditEventsProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
               {/* Public routes */}
-              <Route path="/" element={<Homepage />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/denuncia-publica/:empresaId" element={<DenunciaPublica />} />
-              
-              {/* Protected routes */}
-              <Route element={
-                <ProtectedRoute>
-                  <AppLayout />
-                </ProtectedRoute>
-              }>
-                <Route path="/dashboard" element={<Index />} />
-                <Route path="/empresas" element={<Empresas />} />
-                <Route path="/empresa/:empresaId" element={<EmpresaDetalhes />} />
-                <Route path="/debto" element={<DebtosDashboard />} />
-                <Route path="/devedor/:devedorId" element={<DevedorDetalhes />} />
-                <Route path="/denuncias/dashboard" element={<DenunciasDashboard />} />
-                <Route path="/denuncias/consulta" element={<ConsultaDenuncia />} />
-                
-                {/* Admin only routes */}
-                <Route path="/admin/activity-log" element={
-                  <ProtectedRoute requiredRole="administrador">
-                    <ActivityLog />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/system-data" element={
-                  <ProtectedRoute allowedRoles={['superuser', 'administrador']}>
-                    <SystemData />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/structure" element={
-                  <ProtectedRoute requiredRole="superuser">
-                    <Structure />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/users" element={
-                  <ProtectedRoute allowedRoles={['superuser', 'administrador']}>
-                    <UsersPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/docs" element={<Docs />} />
-              </Route>
+                <Route path="/" element={<Homepage />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/denuncia-publica/:empresaId" element={<DenunciaPublica />} />
 
-              {/* 404 */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
+                {/* Protected routes */}
+                <Route element={
+                  <ProtectedRoute>
+                    <AppLayout />
+                  </ProtectedRoute>
+                }>
+                  <Route path="/dashboard" element={<Index />} />
+                  <Route path="/empresas" element={<Empresas />} />
+                  <Route path="/empresa/:empresaId" element={<EmpresaDetalhes />} />
+                  <Route path="/debto" element={<DebtosDashboard />} />
+                  <Route path="/devedor/:devedorId" element={<DevedorDetalhes />} />
+                  <Route path="/denuncias/dashboard" element={<DenunciasDashboard />} />
+                  <Route path="/denuncias/consulta" element={<ConsultaDenuncia />} />
+
+                  {/* Admin only routes */}
+                  <Route path="/admin/activity-log" element={
+                    <ProtectedRoute requiredRole="administrador">
+                      <ActivityLog />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/system-data" element={
+                    <ProtectedRoute allowedRoles={['superuser', 'administrador']}>
+                      <SystemData />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/structure" element={
+                    <ProtectedRoute requiredRole="superuser">
+                      <Structure />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/users" element={
+                    <ProtectedRoute allowedRoles={['superuser', 'administrador']}>
+                      <UsersPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/docs" element={<Docs />} />
+                </Route>
+
+                {/* 404 */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </AuditEventsProvider>
       </HRProvider>
     </AuthProvider>
   </QueryClientProvider>

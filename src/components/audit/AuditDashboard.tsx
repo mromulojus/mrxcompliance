@@ -5,30 +5,24 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
-import { Activity, FileText, CheckCircle2, AlertTriangle, Clock, Calendar as CalendarIcon, Users, TrendingUp, RefreshCw } from "lucide-react";
+import { Activity, FileText, CheckCircle2, AlertTriangle, Clock, Calendar as CalendarIcon, Users, TrendingUp, RefreshCw, Pencil } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-
-interface AuditEvent {
-  id: string;
-  title: string;
-  type: "document" | "training" | "visit" | "meeting";
-  date: Date;
-  status: "scheduled" | "completed" | "overdue";
-  responsible: string;
-}
+import { useAuditEvents, AuditEvent } from "@/hooks/useAuditEvents";
 
 export function AuditDashboard() {
+  const { events: auditEvents, addEvent, updateEvent, syncWithGoogleCalendar } = useAuditEvents();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [newEvent, setNewEvent] = useState({
+  const [newEvent, setNewEvent] = useState<Omit<AuditEvent, "id" | "status">>({
     title: "",
-    type: "document" as const,
+    type: "document",
     date: new Date(),
-    responsible: ""
+    responsible: "",
   });
+  const [editingEvent, setEditingEvent] = useState<AuditEvent | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   // Mock data para os gráficos
   const logsByType = [
@@ -82,38 +76,19 @@ export function AuditDashboard() {
     }
   ];
 
-  const auditEvents: AuditEvent[] = [
-    {
-      id: "1",
-      title: "Vencimento ISO 9001",
-      type: "document",
-      date: new Date(2024, 1, 20),
-      status: "scheduled",
-      responsible: "João Silva"
-    },
-    {
-      id: "2",
-      title: "Treinamento LGPD",
-      type: "training", 
-      date: new Date(2024, 1, 25),
-      status: "scheduled",
-      responsible: "Maria Santos"
+
+
+  const handleSaveEvent = () => {
+    if (editingEvent) {
+      updateEvent(editingEvent.id, { ...newEvent, status: editingEvent.status });
+      toast.success("Evento atualizado");
+    } else {
+      addEvent({ ...newEvent, status: "scheduled" });
+      toast.success("Evento adicionado ao calendário");
     }
-  ];
-
-  const syncWithGoogleCalendar = async () => {
-    toast.success("Sincronização com Google Calendar iniciada");
-    // Aqui seria implementada a integração real com Google Calendar API
-  };
-
-  const addEvent = () => {
-    toast.success("Evento adicionado ao calendário");
-    setNewEvent({
-      title: "",
-      type: "document",
-      date: new Date(),
-      responsible: ""
-    });
+    setDialogOpen(false);
+    setEditingEvent(null);
+    setNewEvent({ title: "", type: "document", date: new Date(), responsible: "" });
   };
 
   const getEventTypeIcon = (type: string) => {
@@ -265,32 +240,39 @@ export function AuditDashboard() {
                   <RefreshCw className="h-4 w-4" />
                   Sincronizar
                 </Button>
-                <Dialog>
+                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button size="sm" className="gap-2">
+                    <Button
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => {
+                        setEditingEvent(null);
+                        setNewEvent({ title: "", type: "document", date: selectedDate || new Date(), responsible: "" });
+                      }}
+                    >
                       <CalendarIcon className="h-4 w-4" />
                       Novo Evento
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Adicionar Evento de Auditoria</DialogTitle>
+                      <DialogTitle>{editingEvent ? "Editar Evento de Auditoria" : "Adicionar Evento de Auditoria"}</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4">
                       <div>
                         <Label>Título</Label>
                         <Input
                           value={newEvent.title}
-                          onChange={(e) => setNewEvent({...newEvent, title: e.target.value})}
+                          onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
                           placeholder="Título do evento"
                         />
                       </div>
                       <div>
                         <Label>Tipo</Label>
-                        <select 
+                        <select
                           className="w-full p-2 border rounded"
                           value={newEvent.type}
-                          onChange={(e) => setNewEvent({...newEvent, type: e.target.value as any})}
+                          onChange={(e) => setNewEvent({ ...newEvent, type: e.target.value as AuditEvent["type"] })}
                         >
                           <option value="document">Documento</option>
                           <option value="training">Treinamento</option>
@@ -302,12 +284,20 @@ export function AuditDashboard() {
                         <Label>Responsável</Label>
                         <Input
                           value={newEvent.responsible}
-                          onChange={(e) => setNewEvent({...newEvent, responsible: e.target.value})}
+                          onChange={(e) => setNewEvent({ ...newEvent, responsible: e.target.value })}
                           placeholder="Nome do responsável"
                         />
                       </div>
-                      <Button onClick={addEvent} className="w-full">
-                        Adicionar Evento
+                      <div>
+                        <Label>Data</Label>
+                        <Input
+                          type="date"
+                          value={newEvent.date.toISOString().split("T")[0]}
+                          onChange={(e) => setNewEvent({ ...newEvent, date: new Date(e.target.value) })}
+                        />
+                      </div>
+                      <Button onClick={handleSaveEvent} className="w-full">
+                        {editingEvent ? "Salvar Evento" : "Adicionar Evento"}
                       </Button>
                     </div>
                   </DialogContent>
@@ -321,6 +311,8 @@ export function AuditDashboard() {
               selected={selectedDate}
               onSelect={setSelectedDate}
               className="rounded-md border pointer-events-auto"
+              modifiers={{ event: auditEvents.map(e => e.date) }}
+              modifiersClassNames={{ event: "bg-blue-200 text-blue-900 rounded-full" }}
             />
           </CardContent>
         </Card>
@@ -384,7 +376,21 @@ export function AuditDashboard() {
                     </p>
                   </div>
                 </div>
-                {getStatusBadge(event.status)}
+                <div className="flex items-center gap-2">
+                  {getStatusBadge(event.status)}
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => {
+                      setEditingEvent(event);
+                      setSelectedDate(event.date);
+                      setNewEvent({ title: event.title, type: event.type, date: event.date, responsible: event.responsible });
+                      setDialogOpen(true);
+                    }}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
