@@ -2,19 +2,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Calendar,
-  DollarSign,
-  FileText,
+import { 
+  Calendar, 
+  DollarSign, 
+  FileText, 
   TrendingUp,
   Clock,
   Edit,
   Eye,
-  MoreVertical,
-  Gavel
+  MoreVertical
 } from "lucide-react";
-import { Divida, useDebtoData } from "@/hooks/useDebtoData";
-import { Link } from "react-router-dom";
+import { Divida } from "@/hooks/useDebtoData";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AcordoManager } from "./AcordoManager";
 import { useAuth } from "@/context/AuthContext";
@@ -27,8 +25,6 @@ interface DividaCardProps {
 
 export function DividaCard({ divida, compact = false, onUpdate }: DividaCardProps) {
   const { hasRole } = useAuth();
-  const { processos } = useDebtoData();
-  const processo = processos.find(p => p.id === divida.processo_id);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -188,8 +184,8 @@ export function DividaCard({ divida, compact = false, onUpdate }: DividaCardProp
               )}
             </div>
 
-            {/* Documentos e Processo */}
-            {(divida.numero_contrato || divida.numero_nf || divida.processo_id) && (
+            {/* Documentos */}
+            {(divida.numero_contrato || divida.numero_nf) && (
               <div className="space-y-1 text-sm">
                 {divida.numero_contrato && (
                   <div className="flex items-center gap-2">
@@ -201,14 +197,6 @@ export function DividaCard({ divida, compact = false, onUpdate }: DividaCardProp
                   <div className="flex items-center gap-2">
                     <FileText className="w-4 h-4 text-muted-foreground" />
                     <span>NF: {divida.numero_nf}</span>
-                  </div>
-                )}
-                {divida.processo_id && (
-                  <div className="flex items-center gap-2">
-                    <Gavel className="w-4 h-4 text-muted-foreground" />
-                    <Link to={`/processos/${divida.processo_id}`} className="text-blue-600 hover:underline">
-                      {processo ? `Processo: ${processo.numero}` : 'Ver processo'}
-                    </Link>
                   </div>
                 )}
               </div>
@@ -234,9 +222,9 @@ export function DividaCard({ divida, compact = false, onUpdate }: DividaCardProp
                 <Eye className="w-3 h-3 mr-1" />
                 Detalhes
               </Button>
-              <Button
-                size="sm"
-                variant="outline"
+              <Button 
+                size="sm" 
+                variant="outline" 
                 className="flex-1 text-xs"
                 onClick={() => {
                   const tabsElement = document.querySelector('[data-tabs-value="acordo"]');
@@ -246,7 +234,7 @@ export function DividaCard({ divida, compact = false, onUpdate }: DividaCardProp
                 }}
               >
                 <DollarSign className="w-3 h-3 mr-1" />
-                Fazer acordo
+                Acordo
               </Button>
             </div>
           </TabsContent>

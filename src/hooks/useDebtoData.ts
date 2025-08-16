@@ -45,18 +45,7 @@ export interface Divida {
   estagio: 'vencimento_proximo' | 'vencido' | 'negociacao' | 'formal' | 'judicial';
   data_negativacao?: string;
   data_protesto?: string;
-  processo_id?: string;
   urgency_score: number;
-  created_at: string;
-  updated_at: string;
-  created_by?: string;
-}
-
-export interface Processo {
-  id: string;
-  devedor_id: string;
-  numero: string;
-  descricao?: string;
   created_at: string;
   updated_at: string;
   created_by?: string;
@@ -96,7 +85,6 @@ export function useDebtoData() {
   const [dividas, setDividas] = useState<Divida[]>([]);
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [historico, setHistorico] = useState<HistoricoCobranca[]>([]);
-  const [processos, setProcessos] = useState<Processo[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchEmpresas = async () => {
@@ -141,21 +129,6 @@ export function useDebtoData() {
     } catch (error) {
       console.error('Erro ao buscar dívidas:', error);
       toast.error('Erro ao carregar dívidas');
-    }
-  };
-
-  const fetchProcessos = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('processos')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setProcessos((data || []) as Processo[]);
-    } catch (error) {
-      console.error('Erro ao buscar processos:', error);
-      toast.error('Erro ao carregar processos');
     }
   };
 
@@ -205,7 +178,7 @@ export function useDebtoData() {
   const adicionarDivida = async (dividaData: Partial<Divida>) => {
     try {
       const { data: user } = await supabase.auth.getUser();
-
+      
       const { data, error } = await supabase
         .from('dividas')
         .insert(dividaData as any)
@@ -220,28 +193,6 @@ export function useDebtoData() {
     } catch (error) {
       console.error('Erro ao adicionar dívida:', error);
       toast.error('Erro ao cadastrar dívida');
-      throw error;
-    }
-  };
-
-  const adicionarProcesso = async (processoData: Partial<Processo>) => {
-    try {
-      const { data: user } = await supabase.auth.getUser();
-
-      const { data, error } = await supabase
-        .from('processos')
-        .insert(processoData as any)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setProcessos(prev => [data as Processo, ...prev]);
-      toast.success('Processo cadastrado com sucesso!');
-      return data;
-    } catch (error) {
-      console.error('Erro ao adicionar processo:', error);
-      toast.error('Erro ao cadastrar processo');
       throw error;
     }
   };
@@ -314,8 +265,7 @@ export function useDebtoData() {
         await Promise.all([
           fetchEmpresas(),
           fetchDevedores(),
-          fetchDividas(),
-          fetchProcessos()
+          fetchDividas()
         ]);
       } finally {
         setLoading(false);
@@ -329,16 +279,13 @@ export function useDebtoData() {
     devedores,
     dividas,
     empresas,
-    processos,
     historico,
     loading,
     fetchDevedores,
     fetchDividas,
-    fetchProcessos,
     fetchHistorico,
     adicionarDevedor,
     adicionarDivida,
-    adicionarProcesso,
     adicionarHistorico,
     atualizarDivida
   };

@@ -1,7 +1,4 @@
 project_id = "pxpscjyeqmqqxzbttbep"
 
 [auth.otp]
-expiry_duration = "600s"  # OTP expires after 10 minutes
-
-[auth.password]
-hibp_enabled = true  # enable breached-password protection
+expiry_duration = "60s"  # valor conforme política interna

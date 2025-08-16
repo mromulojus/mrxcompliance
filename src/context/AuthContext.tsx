@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -48,16 +48,12 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
-
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const sessionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [failedAttempts, setFailedAttempts] = useState(0);
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -85,34 +81,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } catch (error) {
       console.error('Error updating last login:', error);
     }
-  };
-
-  const logLoginAttempt = async (
-    action: 'login_success' | 'login_failure',
-    meta?: Record<string, any>
-  ) => {
-    try {
-      await supabase.from('activity_logs').insert({
-        action,
-        by_user: meta?.username || user?.email || 'unknown',
-        meta: meta ? JSON.stringify(meta) : null
-      });
-    } catch (error) {
-      console.error('Error logging login attempt:', error);
-    }
-  };
-
-  const resetSessionTimeout = () => {
-    if (sessionTimeoutRef.current) {
-      clearTimeout(sessionTimeoutRef.current);
-    }
-    sessionTimeoutRef.current = setTimeout(async () => {
-      await supabase.auth.signOut();
-      toast({
-        title: 'Sessão expirada',
-        description: 'Faça login novamente.'
-      });
-    }, SESSION_TIMEOUT);
   };
 
   const refreshProfile = async () => {
@@ -166,24 +134,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  useEffect(() => {
-    if (session) {
-      const events = ['mousemove', 'keydown', 'click'];
-      events.forEach((e) => window.addEventListener(e, resetSessionTimeout));
-      resetSessionTimeout();
-      return () => {
-        events.forEach((e) => window.removeEventListener(e, resetSessionTimeout));
-        if (sessionTimeoutRef.current) {
-          clearTimeout(sessionTimeoutRef.current);
-        }
-      };
-    }
-  }, [session]);
-
   const signIn = async (username: string, password: string) => {
     try {
       setLoading(true);
-
+      
+      // Get email from username
       const { data: authData, error: authError } = await supabase.rpc('authenticate_by_username', {
         username_input: username,
         password_input: password
@@ -196,23 +151,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           description: errorMessage.includes('not found') ? 'Usuário não encontrado ou inativo' : 'Usuário ou senha incorretos',
           variant: 'destructive'
         });
-        await logLoginAttempt('login_failure', { username, reason: errorMessage });
-        setFailedAttempts((prev) => {
-          const count = prev + 1;
-          if (count >= 5) {
-            toast({
-              title: 'Alerta de segurança',
-              description: 'Múltiplas tentativas de login falharam',
-              variant: 'destructive'
-            });
-          }
-          return count;
-        });
         return { error: authError || new Error('Usuário não encontrado') };
       }
 
       const userEmail = authData[0].email;
-
+      
+      // Now authenticate with Supabase using the email
       const { error } = await supabase.auth.signInWithPassword({
         email: userEmail,
         password,
@@ -221,26 +165,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       if (error) {
         toast({
           title: 'Erro no login',
-          description: error.message === 'Invalid login credentials'
-            ? 'Usuário ou senha incorretos'
+          description: error.message === 'Invalid login credentials' 
+            ? 'Usuário ou senha incorretos' 
             : error.message,
           variant: 'destructive'
         });
-        await logLoginAttempt('login_failure', { username, reason: error.message });
-        setFailedAttempts((prev) => {
-          const count = prev + 1;
-          if (count >= 5) {
-            toast({
-              title: 'Alerta de segurança',
-              description: 'Múltiplas tentativas de login falharam',
-              variant: 'destructive'
-            });
-          }
-          return count;
-        });
-      } else {
-        await logLoginAttempt('login_success', { username });
-        setFailedAttempts(0);
       }
 
       return { error };
@@ -249,18 +178,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         title: 'Erro no login',
         description: 'Ocorreu um erro inesperado. Tente novamente.',
         variant: 'destructive'
-      });
-      await logLoginAttempt('login_failure', { username, reason: 'unexpected_error' });
-      setFailedAttempts((prev) => {
-        const count = prev + 1;
-        if (count >= 5) {
-          toast({
-            title: 'Alerta de segurança',
-            description: 'Múltiplas tentativas de login falharam',
-            variant: 'destructive'
-          });
-        }
-        return count;
       });
       return { error };
     } finally {

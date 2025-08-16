@@ -12,7 +12,6 @@ import { Shield, AlertTriangle, CheckCircle, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useHR } from '@/context/HRContext';
-import { enviarEmail } from '@/lib/email';
 
 export default function DenunciaPublica() {
   const { empresaId } = useParams();
@@ -36,7 +35,7 @@ export default function DenunciaPublica() {
   const [submitted, setSubmitted] = useState(false);
   const [protocolo, setProtocolo] = useState('');
   
-  const [empresa, setEmpresa] = useState<{ id: string; nome: string; email: string } | null>(null);
+  const [empresa, setEmpresa] = useState<{ id: string; nome: string } | null>(null);
   const [loadingEmpresa, setLoadingEmpresa] = useState(true);
 
   useEffect(() => {
@@ -45,7 +44,7 @@ export default function DenunciaPublica() {
       try {
         const { data, error } = await supabase
           .from('empresas')
-          .select('id, nome, email')
+          .select('id, nome')
           .eq('id', empresaId)
           .limit(1);
         if (error) throw error;
@@ -122,37 +121,12 @@ export default function DenunciaPublica() {
 
       if (!denuncia) throw new Error('Falha ao criar denúncia');
 
-      const emailDepartamento =
-        empresa?.email && formData.setor
-          ? `${formData.setor.toLowerCase().replace(/\s+/g, '')}@${empresa.email.split('@')[1]}`
-          : null;
-
-      const recipients = [empresa?.email, emailDepartamento].filter(Boolean) as string[];
-
-      const emailResults = await Promise.all(
-        recipients.map((to) =>
-          enviarEmail({
-            to,
-            subject: `Nova denúncia - Protocolo ${denuncia.protocolo}`,
-            html: `<p>Uma nova denúncia foi registrada.</p><p>Protocolo: ${denuncia.protocolo}</p>`
-          })
-        )
-      );
-
-      const failed = emailResults.filter((r) => !r.success);
-      if (failed.length) {
-        console.error('Falha ao enviar notificações por email:', failed.map(f => f.error));
-      }
-
       setProtocolo(denuncia.protocolo);
       setSubmitted(true);
 
       toast({
         title: 'Denúncia registrada',
-        description: failed.length
-          ? `Protocolo ${denuncia.protocolo} gerado, mas houve falha no envio de notificações por email.`
-          : `Protocolo ${denuncia.protocolo} gerado com sucesso.`,
-        variant: failed.length ? 'destructive' : undefined
+        description: `Protocolo ${denuncia.protocolo} gerado com sucesso.`
       });
     } catch (error) {
       console.error('Erro ao registrar denúncia:', error);

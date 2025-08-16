@@ -66,49 +66,36 @@ const ChartContainer = React.forwardRef<
 ChartContainer.displayName = "Chart"
 
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
-  const sanitizeKey = (key: string) => key.replace(/[^a-zA-Z0-9_-]/g, "")
-  const sanitizeValue = (value: string) =>
-    /^#[0-9a-fA-F]{3,8}$/.test(value) ||
-    /^rgb(a)?\([\d\s.,%]+\)$/.test(value) ||
-    /^[a-zA-Z]+$/.test(value)
-      ? value
-      : ""
-
   const colorConfig = Object.entries(config).filter(
-    ([_, item]) => item.theme || item.color
+    ([_, config]) => config.theme || config.color
   )
 
   if (!colorConfig.length) {
     return null
   }
 
-  const cssText = Object.entries(THEMES)
-    .map(([theme, prefix]) => {
-      const variables = colorConfig
-        .map(([key, itemConfig]) => {
-          const color =
-            itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
-            itemConfig.color
-          const sanitizedColor = color ? sanitizeValue(color) : ""
-          const sanitizedKey = sanitizeKey(key)
-          return sanitizedColor
-            ? `  --color-${sanitizedKey}: ${sanitizedColor};`
-            : null
-        })
-        .filter(Boolean)
-        .join("\n")
-      return variables
-        ? `${prefix} [data-chart='${sanitizeKey(id)}'] {\n${variables}\n}`
-        : null
-    })
-    .filter(Boolean)
-    .join("\n")
-
-  if (!cssText) {
-    return null
-  }
-
-  return <style>{cssText}</style>
+  return (
+    <style
+      dangerouslySetInnerHTML={{
+        __html: Object.entries(THEMES)
+          .map(
+            ([theme, prefix]) => `
+${prefix} [data-chart=${id}] {
+${colorConfig
+  .map(([key, itemConfig]) => {
+    const color =
+      itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
+      itemConfig.color
+    return color ? `  --color-${key}: ${color};` : null
+  })
+  .join("\n")}
+}
+`
+          )
+          .join("\n"),
+      }}
+    />
+  )
 }
 
 const ChartTooltip = RechartsPrimitive.Tooltip

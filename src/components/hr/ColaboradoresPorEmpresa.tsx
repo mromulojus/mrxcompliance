@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Search, ChevronLeft, ChevronRight, User, Mail, Phone } from "lucide-react";
 import { useSupabaseData } from "@/hooks/useSupabaseData";
-import { ExportPdf } from "./ExportPdf";
 
 interface ColaboradoresPorEmpresaProps {
   empresaId: string;
@@ -88,19 +87,6 @@ export function ColaboradoresPorEmpresa({ empresaId, empresaNome }: Colaboradore
             {filteredColaboradores.length} colaboradores encontrados
           </p>
         </div>
-        <ExportPdf
-          type="empresa"
-          data={{
-            id: empresaId,
-            nome: empresaNome,
-            cnpj: "",
-            endereco: "",
-            responsavel: "",
-            email: "",
-            telefone: "",
-          }}
-          colaboradores={filteredColaboradores}
-        />
       </div>
 
       {/* Campo de Busca com Autocomplete */}
