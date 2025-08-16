@@ -4,6 +4,7 @@ import { Denuncia, DenunciaStatus, Comentario } from '@/types/denuncia';
 import { useSupabaseData, Colaborador as SupabaseColaborador, Empresa as SupabaseEmpresa, Denuncia as SupabaseDenuncia, ComentarioDenuncia as SupabaseComentario } from '@/hooks/useSupabaseData';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { saveObservacao } from '@/lib/historico';
 
 interface HRContextType {
   // Dados
@@ -309,17 +310,13 @@ const convertDenunciaToSupabase = (denuncia: Partial<Denuncia>): Partial<Supabas
       
       const novoColaborador = await addColaboradorSupabase(supabaseData as any);
       
-      // Adicionar entrada no histórico se possível
+      // Registra a criação do colaborador no histórico utilizando utilitário padronizado
       if (novoColaborador?.id) {
         try {
-          const { supabase } = await import('@/integrations/supabase/client');
-          await supabase
-            .from('historico_colaborador')
-            .insert({
-              colaborador_id: novoColaborador.id,
-              observacao: `Colaborador criado: ${colaboradorData.nome}`,
-              created_by: (await supabase.auth.getUser()).data.user?.id
-            });
+          await saveObservacao(
+            novoColaborador.id,
+            `Colaborador criado: ${colaboradorData.nome}`
+          );
         } catch (histError) {
           console.log('Erro ao criar histórico:', histError);
         }
@@ -343,16 +340,9 @@ const convertDenunciaToSupabase = (denuncia: Partial<Denuncia>): Partial<Supabas
       const supabaseData = convertColaboradorToSupabase(dadosAtualizados as Colaborador);
       await editColaboradorSupabase(id, supabaseData);
       
-      // Adicionar entrada no histórico
+      // Registra atualização do colaborador no histórico usando utilitário compartilhado
       try {
-        const { supabase } = await import('@/integrations/supabase/client');
-        await supabase
-          .from('historico_colaborador')
-          .insert({
-            colaborador_id: id,
-            observacao: `Colaborador atualizado`,
-            created_by: (await supabase.auth.getUser()).data.user?.id
-          });
+        await saveObservacao(id, 'Colaborador atualizado');
       } catch (histError) {
         console.log('Erro ao criar histórico:', histError);
       }

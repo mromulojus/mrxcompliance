@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Upload, FileText, X, Download, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { saveObservacao } from '@/lib/historico';
 import { toast } from 'sonner';
 
 interface Document {
@@ -147,14 +148,11 @@ export function DocumentsManager({ colaboradorId, onDocumentChange }: DocumentsM
         throw new Error(`Erro ao salvar documento: ${docError.message}`);
       }
 
-      // Add to history
-      await supabase
-        .from('historico_colaborador')
-        .insert({
-          colaborador_id: colaboradorId,
-          observacao: `Documento adicionado: ${selectedFile.name} (${documentType})`,
-          created_by: (await supabase.auth.getUser()).data.user?.id
-        });
+      // Registra o envio no histórico utilizando utilitário compartilhado
+      await saveObservacao(
+        colaboradorId,
+        `Documento adicionado: ${selectedFile.name} (${documentType})`
+      );
 
       toast.success('Documento enviado com sucesso!');
       
@@ -196,15 +194,12 @@ export function DocumentsManager({ colaboradorId, onDocumentChange }: DocumentsM
 
       if (error) throw error;
 
-      // Add to history  
+      // Registra a remoção no histórico através do utilitário padronizado
       const document = documents.find(d => d.id === docId);
-      await supabase
-        .from('historico_colaborador')
-        .insert({
-          colaborador_id: colaboradorId,
-          observacao: `Documento removido: ${document?.nome || 'Documento'}`,
-          created_by: (await supabase.auth.getUser()).data.user?.id
-        });
+      await saveObservacao(
+        colaboradorId,
+        `Documento removido: ${document?.nome || 'Documento'}`
+      );
 
       toast.success('Documento removido com sucesso!');
       await loadDocuments();
