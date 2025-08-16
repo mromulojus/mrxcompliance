@@ -80,3 +80,18 @@ The `denuncias` table in Supabase uses row-level security:
 - Only authenticated users with the `administrador` role can read, update or delete existing denúncias.
 
 These policies ensure public reporting while keeping report data restricted to administrators.
+
+## Security Incident Response
+
+The application records activity for sensitive HR tables in `public.activity_logs`.
+An automated monitor scans these logs hourly and flags anomalous access patterns.
+
+If a potential security incident is detected:
+
+1. **Contain** – revoke suspicious credentials and isolate affected services.
+2. **Eradicate** – patch vulnerabilities and remove malicious artifacts.
+3. **Recover** – restore from clean backups and verify system integrity.
+4. **Review** – document the incident and update policies and monitoring rules.
+
+Scheduled GitHub Actions also perform weekly dependency audits to surface
+vulnerabilities early.
