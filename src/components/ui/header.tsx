@@ -28,7 +28,7 @@ export function Header() {
             </Link>
           )}
           <Link
-            to="/sobre"
+            to="/dashboard"
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
             Login
