@@ -28,13 +28,25 @@ export function ComplianceAuditDashboard({ empresaId }: ComplianceAuditDashboard
     // Carregar dados reais da auditoria do localStorage
     const dados = localStorage.getItem(`auditoria-${empresaId}`);
     if (dados) {
-      setAuditoriaData(JSON.parse(dados));
+      try {
+        const parsed = JSON.parse(dados);
+        if (parsed && Array.isArray(parsed.itens)) {
+          setAuditoriaData(parsed);
+        } else {
+          console.warn('Dados de auditoria malformados para empresa', empresaId);
+        }
+      } catch (error) {
+        console.warn('Erro ao analisar dados de auditoria', error);
+      }
+    } else {
+      console.warn('Nenhum dado de auditoria encontrado para empresa', empresaId);
     }
   }, [empresaId]);
 
   // Calcular estatísticas reais baseadas nos dados de auditoria
   const calcularEstatisticas = () => {
-    if (!auditoriaData?.itens) {
+    if (!auditoriaData || !Array.isArray(auditoriaData.itens)) {
+      console.warn('Dados de auditoria ausentes ou inválidos para cálculo de estatísticas');
       return {
         total: 0,
         entregues: 0,
@@ -74,12 +86,19 @@ export function ComplianceAuditDashboard({ empresaId }: ComplianceAuditDashboard
 
   // Calcular conformidade por categoria
   const calcularConformidadePorCategoria = () => {
-    if (!auditoriaData?.itens) return [];
+    if (!auditoriaData || !Array.isArray(auditoriaData.itens)) {
+      console.warn('Dados de auditoria ausentes ou inválidos para cálculo por categoria');
+      return [];
+    }
 
     const categorias = new Map<string, { total: number; entregues: number }>();
-    
-    auditoriaData.itens.forEach(item => {
-      if (item.categoria && item.categoria.trim() !== '' && item.documento && item.documento.trim() !== '') {
+
+    const itensValidos = auditoriaData.itens.filter(
+      (item) => item.status && item.documento && item.documento.trim() !== ''
+    );
+
+    itensValidos.forEach((item) => {
+      if (item.categoria && item.categoria.trim() !== '') {
         if (!categorias.has(item.categoria)) {
           categorias.set(item.categoria, { total: 0, entregues: 0 });
         }
@@ -91,17 +110,22 @@ export function ComplianceAuditDashboard({ empresaId }: ComplianceAuditDashboard
       }
     });
 
-    return Array.from(categorias.entries()).map(([categoria, dados]) => ({
-      categoria: categoria.replace(/^[IVX]+\.\s*/, ''), // Remove numeração romana
-      score: dados.total > 0 ? Math.round((dados.entregues / dados.total) * 100) : 0,
-      total: dados.total,
-      conformes: dados.entregues
-    }));
+    return Array.from(categorias.entries())
+      .filter(([, dados]) => dados.total > 0)
+      .map(([categoria, dados]) => ({
+        categoria: categoria.replace(/^[IVX]+\.\s*/, ''), // Remove numeração romana
+        score: Math.round((dados.entregues / dados.total) * 100),
+        total: dados.total,
+        conformes: dados.entregues
+      }));
   };
 
   // Calcular próximos vencimentos
   const calcularProximosVencimentos = () => {
-    if (!auditoriaData?.itens) return [];
+    if (!auditoriaData || !Array.isArray(auditoriaData.itens)) {
+      console.warn('Dados de auditoria ausentes ou inválidos para cálculo de vencimentos');
+      return [];
+    }
 
     const hoje = new Date();
     const em30Dias = new Date();
