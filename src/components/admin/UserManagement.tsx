@@ -11,6 +11,7 @@ import { UserRole } from "@/context/AuthContext";
 
 type DatabaseRole = UserRole;
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Label } from "@/components/ui/label";
 
 type UserFormData = {
   username: string;
@@ -18,6 +19,7 @@ type UserFormData = {
   password: string;
   full_name: string;
   role: DatabaseRole;
+  empresa_ids: string[];
 };
 
 type User = {
@@ -28,6 +30,7 @@ type User = {
   role: DatabaseRole;
   is_active: boolean;
   created_at: string;
+  empresa_ids: string[];
 };
 
 type UserManagementProps = {
@@ -48,7 +51,19 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [changingPasswordUser, setChangingPasswordUser] = useState<User | null>(null);
+  const [empresas, setEmpresas] = useState<Array<{id: string; nome: string}>>([]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchEmpresas = async () => {
+      const { data } = await supabase
+        .from('empresas')
+        .select('id, nome')
+        .order('nome');
+      if (data) setEmpresas(data);
+    };
+    fetchEmpresas();
+  }, []);
 
   const createForm = useForm<UserFormData>({
     defaultValues: {
@@ -56,7 +71,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({
       email: "",
       password: "",
       full_name: "",
-      role: "operacional"
+      role: "operacional",
+      empresa_ids: []
     }
   });
 
@@ -65,7 +81,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({
       username: "",
       email: "",
       full_name: "",
-      role: "operacional"
+      role: "operacional",
+      empresa_ids: []
     }
   });
 
@@ -117,6 +134,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
           full_name: data.full_name,
           role: data.role as DatabaseRole,
           is_active: true,
+          empresa_ids: data.empresa_ids,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', authData.user.id);
@@ -154,6 +172,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
           username: data.username,
           full_name: data.full_name,
           role: data.role as DatabaseRole,
+          empresa_ids: data.empresa_ids,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', editingUser.id);
@@ -225,7 +244,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({
       username: user.username,
       email: user.email,
       full_name: user.full_name,
-      role: user.role
+      role: user.role,
+      empresa_ids: user.empresa_ids || []
     });
     setIsEditOpen(true);
   };
@@ -383,6 +403,40 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                   </FormItem>
                 )}
               />
+              
+              {(createForm.watch("role") === "empresarial" || createForm.watch("role") === "operacional") && (
+                <FormField
+                  control={createForm.control}
+                  name="empresa_ids"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Empresas Vinculadas</FormLabel>
+                      <div className="space-y-2 max-h-32 overflow-y-auto">
+                        {empresas.map((empresa) => (
+                          <div key={empresa.id} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id={`empresa-${empresa.id}`}
+                              checked={field.value.includes(empresa.id)}
+                              onChange={(e) => {
+                                const newValue = e.target.checked
+                                  ? [...field.value, empresa.id]
+                                  : field.value.filter(id => id !== empresa.id);
+                                field.onChange(newValue);
+                              }}
+                            />
+                            <Label htmlFor={`empresa-${empresa.id}`} className="text-sm">
+                              {empresa.nome}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              
               <div className="flex justify-end space-x-2">
                 <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
                   Cancelar
@@ -512,6 +566,40 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                   </FormItem>
                 )}
               />
+              
+              {(editForm.watch("role") === "empresarial" || editForm.watch("role") === "operacional") && (
+                <FormField
+                  control={editForm.control}
+                  name="empresa_ids"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Empresas Vinculadas</FormLabel>
+                      <div className="space-y-2 max-h-32 overflow-y-auto">
+                        {empresas.map((empresa) => (
+                          <div key={empresa.id} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id={`edit-empresa-${empresa.id}`}
+                              checked={field.value.includes(empresa.id)}
+                              onChange={(e) => {
+                                const newValue = e.target.checked
+                                  ? [...field.value, empresa.id]
+                                  : field.value.filter(id => id !== empresa.id);
+                                field.onChange(newValue);
+                              }}
+                            />
+                            <Label htmlFor={`edit-empresa-${empresa.id}`} className="text-sm">
+                              {empresa.nome}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              
               <div className="flex justify-end space-x-2">
                 <Button type="button" variant="outline" onClick={() => setIsEditOpen(false)}>
                   Cancelar

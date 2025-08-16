@@ -1,7 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import logoGold from "@/assets/logo-gold.png";
-import logoDark from "@/assets/logo-dark.png";
 import { useAuth } from "@/context/AuthContext";
 
 export function Header() {
@@ -11,14 +9,9 @@ export function Header() {
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <img 
-            src={logoGold} 
+            src="/lovable-uploads/cbe050ae-bdf6-4931-86b4-d8e69e8995af.png" 
             alt="Logo" 
-            className="h-8 w-8 dark:hidden"
-          />
-          <img 
-            src={logoDark} 
-            alt="Logo" 
-            className="h-8 w-8 hidden dark:block"
+            className="h-8 w-8"
           />
           <span className="text-xl font-bold text-foreground">
             MRxCOMPLIANCE

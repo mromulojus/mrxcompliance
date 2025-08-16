@@ -16,6 +16,7 @@ type User = {
   role: DatabaseRole;
   is_active: boolean;
   created_at: string;
+  empresa_ids: string[];
 };
 
 const UsersPage: React.FC = () => {
@@ -45,7 +46,8 @@ const UsersPage: React.FC = () => {
           full_name,
           role,
           is_active,
-          created_at
+          created_at,
+          empresa_ids
         `)
         .eq('is_active', true)
         .order('created_at', { ascending: false });
@@ -68,7 +70,8 @@ const UsersPage: React.FC = () => {
         full_name: profile.full_name || '',
         role: profile.role as DatabaseRole,
         is_active: profile.is_active,
-        created_at: profile.created_at
+        created_at: profile.created_at,
+        empresa_ids: profile.empresa_ids || []
       }));
 
       setUsers(usersWithEmails);

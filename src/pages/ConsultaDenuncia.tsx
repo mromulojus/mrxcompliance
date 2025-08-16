@@ -71,8 +71,12 @@ export default function ConsultaDenuncia() {
         {/* Header */}
         <Card className="mb-6">
           <CardHeader className="text-center">
-            <div className="mx-auto mb-4 w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-              <Search className="h-6 w-6 text-primary" />
+            <div className="mx-auto mb-4 w-16 h-16 flex items-center justify-center">
+              <img 
+                src="/lovable-uploads/cbe050ae-bdf6-4931-86b4-d8e69e8995af.png" 
+                alt="Logo" 
+                className="h-12 w-12"
+              />
             </div>
             <CardTitle className="text-2xl">Consultar Denúncia</CardTitle>
             <p className="text-muted-foreground">
