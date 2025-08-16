@@ -12,6 +12,8 @@ import { CalendarIcon, Plus, FileText, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import jsPDF from "jspdf";
 
 interface Parcela {
   numero: number;
@@ -24,6 +26,43 @@ interface AcordoManagerProps {
   dividaId: string;
   valorOriginal: number;
   onAcordoCriado?: () => void;
+}
+
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  }).format(value);
+};
+
+export async function gerarDocumentoAcordo(
+  dividaId: string,
+  acordo: any,
+  parcelas: Parcela[]
+) {
+  const doc = new jsPDF();
+  doc.setFontSize(16);
+  doc.text('Termo de Acordo', 10, 10);
+  doc.setFontSize(12);
+  doc.text(`Dívida: ${dividaId}`, 10, 20);
+  doc.text(`Valor total: ${formatCurrency(acordo.valor_total)}`, 10, 30);
+  doc.text(`Entrada: ${formatCurrency(acordo.valor_entrada)}`, 10, 40);
+  doc.text(`Parcelas: ${acordo.numero_parcelas}`, 10, 50);
+
+  let y = 60;
+  parcelas.forEach((p) => {
+    doc.text(
+      `${p.numero}ª parcela - ${formatCurrency(p.valor)} - ${format(
+        p.data_vencimento,
+        'dd/MM/yyyy'
+      )}`,
+      10,
+      y
+    );
+    y += 10;
+  });
+
+  doc.save(`acordo_${dividaId}.pdf`);
 }
 
 export function AcordoManager({ dividaId, valorOriginal, onAcordoCriado }: AcordoManagerProps) {
@@ -90,45 +129,63 @@ export function AcordoManager({ dividaId, valorOriginal, onAcordoCriado }: Acord
 
   const salvarAcordo = async () => {
     try {
-      // Validações
       if (acordo.valor_total <= 0) {
         toast.error("Valor total do acordo deve ser maior que zero");
         return;
       }
-      
+
       if (parcelas.length === 0) {
         toast.error("Adicione pelo menos uma parcela ao acordo");
         return;
       }
 
-      // Simular salvamento no banco
+      const parcelasData = parcelas.map(p => ({
+        numero: p.numero,
+        valor: p.valor,
+        data_vencimento: p.data_vencimento.toISOString(),
+        status: p.status
+      }));
+
       const acordoData = {
         divida_id: dividaId,
         valor_acordo: acordo.valor_total,
         valor_entrada: acordo.valor_entrada,
-        data_vencimento_entrada: acordo.data_entrada,
-        parcelas: acordo.numero_parcelas,
+        data_vencimento_entrada: acordo.data_entrada.toISOString(),
+        numero_parcelas: acordo.numero_parcelas,
+        juros_mensal: acordo.juros_mensal,
+        multa_atraso: acordo.multa_atraso,
+        correcao_mensal: acordo.correcao_mensal,
         forma_pagamento: acordo.forma_pagamento,
         observacoes: acordo.observacoes,
-        status: "ativo"
+        parcelas: parcelasData,
+        status: "ativo",
+        created_at: new Date().toISOString()
       };
 
-      console.log("Salvando acordo:", acordoData);
-      
+      const { error } = await supabase
+        .from('historico_acordos')
+        .insert(acordoData);
+      if (error) throw error;
+
+      const { error: updateError } = await supabase
+        .from('dividas')
+        .update({
+          status: 'acordado',
+          valor_atualizado: acordo.valor_total,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', dividaId);
+      if (updateError) throw updateError;
+
+      await gerarDocumentoAcordo(dividaId, acordo, parcelas);
+
       toast.success("Acordo criado com sucesso!");
       onAcordoCriado?.();
-      
+
     } catch (error) {
       console.error("Erro ao salvar acordo:", error);
       toast.error("Erro ao criar acordo");
     }
-  };
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value);
   };
 
   return (

@@ -222,9 +222,9 @@ export function DividaCard({ divida, compact = false, onUpdate }: DividaCardProp
                 <Eye className="w-3 h-3 mr-1" />
                 Detalhes
               </Button>
-              <Button 
-                size="sm" 
-                variant="outline" 
+              <Button
+                size="sm"
+                variant="outline"
                 className="flex-1 text-xs"
                 onClick={() => {
                   const tabsElement = document.querySelector('[data-tabs-value="acordo"]');
@@ -234,7 +234,7 @@ export function DividaCard({ divida, compact = false, onUpdate }: DividaCardProp
                 }}
               >
                 <DollarSign className="w-3 h-3 mr-1" />
-                Acordo
+                Fazer acordo
               </Button>
             </div>
           </TabsContent>
