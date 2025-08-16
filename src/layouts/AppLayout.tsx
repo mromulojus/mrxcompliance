@@ -14,13 +14,11 @@ const AppLayout: React.FC = () => {
     const titles: Record<string, string> = {
       "/": "MRx Compliance - Painel",
       "/denuncias/dashboard": "Denúncias - Dashboard",
-      "/denuncias/consulta": "Consultar Denúncia",
       "/auth": "Entrar - MRx Compliance",
     };
     const descriptions: Record<string, string> = {
       "/": "Painel de compliance e RH com visão geral e métricas.",
       "/denuncias/dashboard": "Acompanhe denúncias: abertas, em andamento e concluídas.",
-      "/denuncias/consulta": "Consultar denúncia por protocolo de forma segura.",
       "/auth": "Acesse sua conta no MRx Compliance com segurança.",
     };
 

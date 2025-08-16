@@ -41,7 +41,8 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/login" element={<Login />} />
               <Route path="/denuncia-publica/:empresaId" element={<DenunciaPublica />} />
-              
+              <Route path="/denuncias/consulta" element={<ConsultaDenuncia />} />
+
               {/* Protected routes */}
               <Route element={
                 <ProtectedRoute>
@@ -54,7 +55,6 @@ const App = () => (
                 <Route path="/debto" element={<DebtosDashboard />} />
                 <Route path="/devedor/:devedorId" element={<DevedorDetalhes />} />
                 <Route path="/denuncias/dashboard" element={<DenunciasDashboard />} />
-                <Route path="/denuncias/consulta" element={<ConsultaDenuncia />} />
                 
                 {/* Admin only routes */}
                 <Route path="/admin/activity-log" element={
