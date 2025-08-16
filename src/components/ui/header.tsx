@@ -31,10 +31,10 @@ export function Header() {
             to="/sobre"
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
-            Sobre
+            Login
           </Link>
           <Link
-            to="/servicos"
+            to="/dashboard"
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
             Serviços
