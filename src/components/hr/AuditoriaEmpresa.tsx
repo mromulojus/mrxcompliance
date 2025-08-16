@@ -272,7 +272,7 @@ export function AuditoriaEmpresa({ empresaId, nomeEmpresa }: AuditoriaEmpresaPro
   const categoriasDisponiveis = Object.keys(categorias);
 
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto p-4 space-y-6">
       {/* Header com estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
@@ -313,8 +313,8 @@ export function AuditoriaEmpresa({ empresaId, nomeEmpresa }: AuditoriaEmpresaPro
       </div>
 
       {/* Tabs por categoria */}
-      <Tabs defaultValue={Object.keys(categorias)[0]} className="w-full">
-        <div className="flex items-center justify-between mb-4">
+      <Tabs defaultValue={Object.keys(categorias)[0]} className="w-full space-y-4">
+        <div className="flex items-center justify-between gap-4">
           <TabsList className="grid grid-cols-5 w-full max-w-4xl">
             {Object.keys(categorias).map((categoria) => (
               <TabsTrigger key={categoria} value={categoria} className="text-xs">
