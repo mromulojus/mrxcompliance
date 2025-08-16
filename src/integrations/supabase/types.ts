@@ -1353,7 +1353,7 @@ export type Database = {
         | "LAUDO"
         | "CONTRATO"
         | "OUTROS"
-      user_role: "superuser" | "administrador" | "empresarial" | "operacional"
+      user_role: "superuser" | "administrador" | "empresarial" | "operacional" | "compliance"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1559,7 +1559,7 @@ export const Constants = {
         "CONTRATO",
         "OUTROS",
       ],
-      user_role: ["superuser", "administrador", "empresarial", "operacional"],
+      user_role: ["superuser", "administrador", "empresarial", "operacional", "compliance"],
     },
   },
 } as const
