@@ -23,6 +23,7 @@ import Login from "@/pages/Login";
 import Empresas from "@/pages/Empresas";
 import DebtosDashboard from "@/pages/DebtosDashboard";
 import DevedorDetalhes from "./pages/DevedorDetalhes";
+import DividaDetalhes from "./pages/DividaDetalhes";
 import Homepage from "@/pages/Homepage";
 
 const queryClient = new QueryClient();
