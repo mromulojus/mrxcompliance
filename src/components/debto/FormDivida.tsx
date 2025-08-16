@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -14,6 +14,7 @@ import { toast } from "sonner";
 const dividaSchema = z.object({
   empresa_id: z.string().min(1, "Empresa é obrigatória"),
   devedor_id: z.string().min(1, "Devedor é obrigatório"),
+  processo_id: z.string().optional(),
   origem_divida: z.string().min(1, "Origem da dívida é obrigatória"),
   numero_contrato: z.string().optional(),
   numero_nf: z.string().optional(),
@@ -40,7 +41,8 @@ interface FormDividaProps {
 
 export function FormDivida({ onSuccess }: FormDividaProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { empresas, devedores, adicionarDivida } = useDebtoData();
+  const [novoProcesso, setNovoProcesso] = useState("");
+  const { empresas, devedores, processos, adicionarDivida, adicionarProcesso } = useDebtoData();
 
   const {
     register,
@@ -56,7 +58,12 @@ export function FormDivida({ onSuccess }: FormDividaProps) {
     }
   });
 
+  useEffect(() => {
+    register('processo_id');
+  }, [register]);
+
   const selectedEmpresa = watch('empresa_id');
+  const selectedDevedor = watch('devedor_id');
   const valorOriginal = watch('valor_original');
   const multaPersonalizada = watch('multa_personalizada');
   const jurosPersonalizado = watch('juros_personalizado');
@@ -67,6 +74,23 @@ export function FormDivida({ onSuccess }: FormDividaProps) {
 
   // Filtrar devedores pela empresa selecionada
   const devedoresFiltrados = devedores.filter(d => d.empresa_id === selectedEmpresa);
+  const processosFiltrados = processos.filter(p => p.devedor_id === selectedDevedor);
+
+  const handleAddProcesso = async () => {
+    if (!novoProcesso || !selectedDevedor) return;
+    try {
+      const processo = await adicionarProcesso({
+        devedor_id: selectedDevedor,
+        numero: novoProcesso
+      });
+      setValue('processo_id', processo.id);
+      setNovoProcesso('');
+      toast.success('Processo criado com sucesso');
+    } catch (error) {
+      console.error('Erro ao criar processo:', error);
+      toast.error('Erro ao criar processo');
+    }
+  };
 
   const calcularValorAtualizado = (
     valorOriginal: number, 
@@ -229,16 +253,46 @@ export function FormDivida({ onSuccess }: FormDividaProps) {
                   ))}
                 </SelectContent>
               </Select>
-              {errors.devedor_id && (
-                <p className="text-sm text-red-600">{errors.devedor_id.message}</p>
-              )}
-            </div>
+            {errors.devedor_id && (
+              <p className="text-sm text-red-600">{errors.devedor_id.message}</p>
+            )}
           </div>
+        </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="origem_divida">Origem da Dívida *</Label>
-            <Input {...register('origem_divida')} placeholder="Ex: Prestação de Serviços, Venda de Produtos..." />
-            {errors.origem_divida && (
+        <div className="space-y-2">
+          <Label htmlFor="processo_id">Processo</Label>
+          <Select
+            onValueChange={(value) => setValue('processo_id', value)}
+            disabled={!selectedDevedor}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={!selectedDevedor ? "Selecione um devedor primeiro" : "Selecione o processo"} />
+            </SelectTrigger>
+            <SelectContent>
+              {processosFiltrados.map((processo) => (
+                <SelectItem key={processo.id} value={processo.id}>
+                  {processo.numero}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="flex gap-2 pt-2">
+            <Input
+              value={novoProcesso}
+              onChange={(e) => setNovoProcesso(e.target.value)}
+              placeholder="Novo processo"
+              disabled={!selectedDevedor}
+            />
+            <Button type="button" onClick={handleAddProcesso} disabled={!novoProcesso || !selectedDevedor}>
+              Criar
+            </Button>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="origem_divida">Origem da Dívida *</Label>
+          <Input {...register('origem_divida')} placeholder="Ex: Prestação de Serviços, Venda de Produtos..." />
+          {errors.origem_divida && (
               <p className="text-sm text-red-600">{errors.origem_divida.message}</p>
             )}
           </div>
