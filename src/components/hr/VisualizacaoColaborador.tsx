@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,7 @@ import { AdicionarObservacao } from './AdicionarObservacao';
 import { AdicionarObservacaoInline } from './AdicionarObservacaoInline';
 import { Logo } from '@/components/ui/logo';
 import { calcularRescisaoColaborador, calcularValorPrevisto } from '@/lib/rescisao';
+import { supabase } from '@/integrations/supabase/client';
 
 interface VisualizacaoColaboradorProps {
   colaborador: Colaborador;
@@ -146,7 +147,23 @@ function RescisaoContent({ colaborador }: { colaborador: Colaborador }) {
 
 export function VisualizacaoColaborador({ colaborador, onClose, onEdit }: VisualizacaoColaboradorProps) {
   const [activeTab, setActiveTab] = useState('pessoais');
-  const [historico, setHistorico] = useState(colaborador.historico || []);
+  const [historico, setHistorico] = useState<any[]>(colaborador.historico || []);
+
+  const fetchHistorico = async () => {
+    const { data } = await supabase
+      .from('historico_colaborador')
+      .select('id, colaborador_id, observacao, created_at, created_by, profiles(full_name)')
+      .eq('colaborador_id', colaborador.id)
+      .order('created_at', { ascending: false });
+
+    if (data) {
+      setHistorico(data);
+    }
+  };
+
+  useEffect(() => {
+    fetchHistorico();
+  }, [colaborador.id]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -169,8 +186,9 @@ export function VisualizacaoColaborador({ colaborador, onClose, onEdit }: Visual
     return new Date(data).toLocaleDateString('pt-BR');
   };
 
-  const handleObservacaoAdicionada = (novaObservacao: any) => {
+  const handleObservacaoAdicionada = async (novaObservacao: any) => {
     setHistorico(prev => [novaObservacao, ...prev]);
+    await fetchHistorico();
   };
 
   return (
@@ -607,7 +625,7 @@ export function VisualizacaoColaborador({ colaborador, onClose, onEdit }: Visual
                           <div className="flex justify-between items-start mb-2">
                             <h4 className="font-semibold">{entrada.observacao}</h4>
                             <span className="text-sm text-muted-foreground">
-                              {formatarData(entrada.data || entrada.created_at)}
+                              {formatarData(entrada.created_at)}
                             </span>
                           </div>
                           
@@ -636,7 +654,7 @@ export function VisualizacaoColaborador({ colaborador, onClose, onEdit }: Visual
                           )}
                           
                           <p className="text-xs text-muted-foreground mt-2">
-                            Por: {entrada.usuario || 'Sistema'}
+                            Por: {entrada.profiles?.full_name || entrada.created_by || 'Sistema'}
                           </p>
                         </div>
                       ))}

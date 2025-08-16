@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -59,13 +60,14 @@ export function AdicionarObservacao({ colaboradorId, onObservacaoAdicionada }: A
         tipo: 'image'
       }));
 
+      const user = (await supabase.auth.getUser()).data.user;
       const novaObservacao = {
         id: Date.now().toString(),
+        colaborador_id: colaboradorId,
         observacao: observacao,
-        data: new Date().toISOString(),
-        usuario: 'Usuário Atual', // Pegar do contexto de auth
-        anexos: anexosUrls,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        created_by: user?.id || 'usuario_atual',
+        anexos: anexosUrls
       };
 
       // Aqui você salvaria no banco de dados

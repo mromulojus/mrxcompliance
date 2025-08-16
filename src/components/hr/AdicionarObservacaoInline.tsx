@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -27,12 +28,13 @@ export function AdicionarObservacaoInline({ colaboradorId, onObservacaoAdicionad
     setIsLoading(true);
 
     try {
+      const user = (await supabase.auth.getUser()).data.user;
       const novaObservacao = {
         id: Date.now().toString(),
+        colaborador_id: colaboradorId,
         observacao: observacao,
-        data: new Date().toISOString(),
-        usuario: 'Usuário Atual', // Pegar do contexto de auth
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        created_by: user?.id || 'usuario_atual'
       };
 
       // Aqui você salvaria no banco de dados

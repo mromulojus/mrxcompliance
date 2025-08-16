@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -33,6 +33,7 @@ import {
 import { Colaborador } from '@/types/hr';
 import { ExportPdf } from './ExportPdf';
 import { calcularRescisaoColaborador, calcularValorPrevisto } from '@/lib/rescisao';
+import { supabase } from '@/integrations/supabase/client';
 
 interface VisualizacaoColaboradorCompletaProps {
   colaborador: Colaborador;
@@ -41,7 +42,23 @@ interface VisualizacaoColaboradorCompletaProps {
 }
 
 export function VisualizacaoColaboradorCompleta({ colaborador, onClose, onEdit }: VisualizacaoColaboradorCompletaProps) {
-  const [historico, setHistorico] = useState(colaborador.historico || []);
+  const [historico, setHistorico] = useState<any[]>(colaborador.historico || []);
+
+  const fetchHistorico = async () => {
+    const { data } = await supabase
+      .from('historico_colaborador')
+      .select('id, colaborador_id, observacao, created_at, created_by, profiles(full_name)')
+      .eq('colaborador_id', colaborador.id)
+      .order('created_at', { ascending: false });
+
+    if (data) {
+      setHistorico(data);
+    }
+  };
+
+  useEffect(() => {
+    fetchHistorico();
+  }, [colaborador.id]);
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'ATIVO':
@@ -67,8 +84,9 @@ export function VisualizacaoColaboradorCompleta({ colaborador, onClose, onEdit }
   const valorRescisao = 'totalEstimado' in rescisao ? parseFloat(rescisao.totalEstimado) : 0;
   const valorPrevisto = calcularValorPrevisto(valorRescisao);
 
-  const handleObservacaoAdicionada = (novaObservacao: any) => {
+  const handleObservacaoAdicionada = async (novaObservacao: any) => {
     setHistorico(prev => [novaObservacao, ...prev]);
+    await fetchHistorico();
   };
 
   return (
@@ -640,7 +658,7 @@ export function VisualizacaoColaboradorCompleta({ colaborador, onClose, onEdit }
                           <div key={index} className="p-3 border rounded-lg bg-muted/50">
                             <div className="flex justify-between items-start mb-2">
                               <Badge variant="outline" className="text-xs">
-                                {formatarData(obs.data || obs.created_at)} - {obs.usuario}
+                                {formatarData(obs.created_at)} - {obs.profiles?.full_name || obs.created_by}
                               </Badge>
                             </div>
                             <p className="text-sm">{obs.observacao}</p>

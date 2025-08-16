@@ -8,15 +8,10 @@ export interface DocumentoColaborador {
 
 export interface HistoricoColaborador {
   id: string;
-  data: string;
+  colaborador_id: string;
   observacao: string;
-  usuario: string;
-  created_at?: string;
-  anexos?: Array<{
-    nome: string;
-    url: string;
-    tipo: string;
-  }>;
+  created_at: string;
+  created_by: string;
 }
 
 export interface Colaborador {
