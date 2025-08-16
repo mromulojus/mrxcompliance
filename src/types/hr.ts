@@ -11,6 +11,12 @@ export interface HistoricoColaborador {
   data: string;
   observacao: string;
   usuario: string;
+  created_at?: string;
+  anexos?: Array<{
+    nome: string;
+    url: string;
+    tipo: string;
+  }>;
 }
 
 export interface Colaborador {
