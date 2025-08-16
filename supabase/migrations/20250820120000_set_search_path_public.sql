@@ -3,7 +3,7 @@
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger
 LANGUAGE plpgsql
-SECURITY DEFINER SET search_path = public
+SECURITY DEFINER SET search_path = ''
 AS $$
 BEGIN
   INSERT INTO public.profiles (user_id, username, full_name, role)
@@ -33,19 +33,19 @@ BEGIN
   RETURN COALESCE(NEW, OLD);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
-SET search_path = public;
+SET search_path = '';
 
 CREATE OR REPLACE FUNCTION public.user_can_access_empresa(empresa_uuid uuid)
 RETURNS boolean
 LANGUAGE sql
 STABLE SECURITY DEFINER
-SET search_path = public
+SET search_path = ''
 AS $$
   SELECT
-    has_role(auth.uid(), 'superuser'::user_role) OR
-    has_role(auth.uid(), 'administrador'::user_role) OR
+    public.has_role(auth.uid(), 'superuser'::public.user_role) OR
+    public.has_role(auth.uid(), 'administrador'::public.user_role) OR
     (
-      has_role(auth.uid(), 'operacional'::user_role) AND
+      public.has_role(auth.uid(), 'operacional'::public.user_role) AND
       empresa_uuid = ANY (
         SELECT unnest(empresa_ids)
         FROM public.profiles
@@ -66,21 +66,21 @@ BEGIN
   );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER STABLE
-SET search_path = public;
+SET search_path = '';
 
 CREATE OR REPLACE FUNCTION public.user_can_access_empresa_data(empresa_uuid uuid)
 RETURNS boolean
 LANGUAGE sql
 STABLE SECURITY DEFINER
-SET search_path = public
+SET search_path = ''
 AS $$
   SELECT
     -- Superusers e administradores têm acesso total
-    has_role(auth.uid(), 'superuser'::user_role) OR
-    has_role(auth.uid(), 'administrador'::user_role) OR
+    public.has_role(auth.uid(), 'superuser'::public.user_role) OR
+    public.has_role(auth.uid(), 'administrador'::public.user_role) OR
     -- Usuários empresariais só acessam suas empresas
     (
-      has_role(auth.uid(), 'empresarial'::user_role) AND
+      public.has_role(auth.uid(), 'empresarial'::public.user_role) AND
       empresa_uuid = ANY(
         SELECT unnest(empresa_ids)
         FROM public.profiles
@@ -89,7 +89,7 @@ AS $$
     ) OR
     -- Usuários operacionais acessam empresas onde trabalham
     (
-      has_role(auth.uid(), 'operacional'::user_role) AND
+      public.has_role(auth.uid(), 'operacional'::public.user_role) AND
       EXISTS (
         SELECT 1
         FROM public.colaboradores
@@ -105,7 +105,7 @@ BEGIN
   RETURN (SELECT role FROM public.profiles WHERE user_id = auth.uid());
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER STABLE
-SET search_path = public;
+SET search_path = '';
 
 CREATE OR REPLACE FUNCTION public.has_role(required_role TEXT)
 RETURNS boolean AS $$
@@ -117,13 +117,13 @@ BEGIN
   );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER STABLE
-SET search_path = public;
+SET search_path = '';
 
 CREATE OR REPLACE FUNCTION public.has_role(user_uuid UUID, required_role public.user_role)
 RETURNS BOOLEAN
 LANGUAGE SQL
 STABLE SECURITY DEFINER
-SET search_path = public
+SET search_path = ''
 AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.profiles
@@ -145,13 +145,13 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
-SET search_path = public;
+SET search_path = '';
 
 CREATE OR REPLACE FUNCTION public.update_last_login()
 RETURNS void
 LANGUAGE sql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = ''
 AS $$
   UPDATE public.profiles
   SET last_login = now()
@@ -162,7 +162,7 @@ CREATE OR REPLACE FUNCTION public.authenticate_by_username(username_input text, 
 RETURNS TABLE(user_id uuid, email text)
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = ''
 AS $$
 DECLARE
   user_email text;
