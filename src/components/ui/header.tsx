@@ -48,8 +48,8 @@ export function Header() {
         </nav>
 
         <Button asChild variant="default">
-          <Link to="/dashboard">
-            Login
+          <Link to="/denuncias/consulta">
+            Consultar Denúncia
           </Link>
         </Button>
       </div>
