@@ -721,7 +721,7 @@ export default function EmpresaDetalhes() {
 
         </TabsContent>
 
-          <TabsContent value="auditoria" className="space-y-8">
+          <TabsContent value="auditoria" className="space-y-6">
             <Tabs defaultValue="dashboard" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
