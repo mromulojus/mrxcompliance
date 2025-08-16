@@ -7,7 +7,8 @@ import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Users, Building2, TrendingUp, PieChart, BarChart3, DollarSign, UserPlus, FileSpreadsheet, FileText, CheckSquare, AlertTriangle, Search, LayoutDashboard, Scale } from 'lucide-react';
+import { ArrowLeft, Users, Building2, TrendingUp, PieChart, BarChart3, DollarSign, UserPlus, FileSpreadsheet, FileText, CheckSquare, AlertTriangle, Search, LayoutDashboard, Scale, Copy } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
 import { useSupabaseData } from '@/hooks/useSupabaseData';
 import { useHR } from '@/context/HRContext';
 import { ColaboradorCard } from '@/components/hr/ColaboradorCard';
@@ -42,6 +43,7 @@ export default function EmpresaDetalhes() {
   const [colaboradorEditando, setColaboradorEditando] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [searchColaboradores, setSearchColaboradores] = useState('');
+  const { toast } = useToast();
   const empresa = empresas.find(e => e.id === empresaId);
   // Usar apenas colaboradores do Supabase para evitar duplicação
   const colaboradoresEmpresa = colaboradores.filter(c => c.empresa_id === empresaId);
@@ -122,6 +124,15 @@ export default function EmpresaDetalhes() {
     }
   };
   const complianceRate = getComplianceRateFromAuditoria(empresa.id);
+
+  const copyToClipboard = (text: string, description: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      toast({
+        title: "Copiado!",
+        description: `${description} copiado para a área de transferência.`,
+      });
+    });
+  };
   return <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b bg-card">
@@ -136,6 +147,20 @@ export default function EmpresaDetalhes() {
                 <div>
                   <h1 className="text-2xl font-bold">{empresa.nome}</h1>
                   <p className="text-muted-foreground">CNPJ: {empresa.cnpj}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <code className="text-sm bg-muted px-3 py-1 rounded font-mono text-muted-foreground">
+                      ID: {empresa.id}
+                    </code>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0"
+                      onClick={() => copyToClipboard(empresa.id, "ID da empresa")}
+                      title="Copiar ID da empresa"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>

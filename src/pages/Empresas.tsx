@@ -5,7 +5,8 @@ import { useDebtoData } from "@/hooks/useDebtoData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Building2, Eye, Search, Trash2, AlertTriangle, FileText, TrendingUp, Zap, Plus, Upload, BarChart3 } from "lucide-react";
+import { Building2, Eye, Search, Trash2, AlertTriangle, FileText, TrendingUp, Zap, Plus, Upload, BarChart3, Copy } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { useHR } from "@/context/HRContext";
 import { 
   AlertDialog,
@@ -25,6 +26,7 @@ const Empresas = () => {
   const { removerEmpresa } = useHR();
   const navigate = useNavigate();
   const [q, setQ] = useState("");
+  const { toast } = useToast();
 
   useEffect(() => {
     document.title = "Empresas - MRx Compliance";
@@ -98,6 +100,15 @@ const Empresas = () => {
       style: 'currency',
       currency: 'BRL',
     }).format(value);
+  };
+
+  const copyToClipboard = (text: string, description: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      toast({
+        title: "Copiado!",
+        description: `${description} copiado para a área de transferência.`,
+      });
+    });
   };
 
   return (
@@ -297,6 +308,20 @@ const Empresas = () => {
                   <div>
                     <CardTitle className="text-lg">{empresa.nome}</CardTitle>
                     <p className="text-sm text-muted-foreground">CNPJ: {empresa.cnpj}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <code className="text-xs bg-muted px-2 py-1 rounded font-mono">
+                        ID: {empresa.id}
+                      </code>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0"
+                        onClick={() => copyToClipboard(empresa.id, "ID da empresa")}
+                        title="Copiar ID da empresa"
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
                 <div className="flex gap-2">
