@@ -718,6 +718,57 @@ export type Database = {
         }
         Relationships: []
       }
+      eventos: {
+        Row: {
+          created_at: string
+          created_by: string
+          data_fim: string | null
+          data_inicio: string
+          descricao: string | null
+          divida_id: string | null
+          empresa_id: string
+          id: string
+          local: string | null
+          participantes: string[] | null
+          processo_id: string | null
+          tipo: Database["public"]["Enums"]["evento_tipo"]
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          data_fim?: string | null
+          data_inicio: string
+          descricao?: string | null
+          divida_id?: string | null
+          empresa_id: string
+          id?: string
+          local?: string | null
+          participantes?: string[] | null
+          processo_id?: string | null
+          tipo?: Database["public"]["Enums"]["evento_tipo"]
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          data_fim?: string | null
+          data_inicio?: string
+          descricao?: string | null
+          divida_id?: string | null
+          empresa_id?: string
+          id?: string
+          local?: string | null
+          participantes?: string[] | null
+          processo_id?: string | null
+          tipo?: Database["public"]["Enums"]["evento_tipo"]
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       historico_cobrancas: {
         Row: {
           anexos: string[] | null
@@ -867,6 +918,216 @@ export type Database = {
           },
         ]
       }
+      processos_documentos: {
+        Row: {
+          data_upload: string
+          id: string
+          mime_type: string | null
+          nome_documento: string
+          observacoes: string | null
+          processo_id: string
+          tags: string[] | null
+          tamanho_arquivo: number | null
+          tipo: Database["public"]["Enums"]["documento_processo_tipo"]
+          uploaded_by: string
+          url_arquivo: string
+        }
+        Insert: {
+          data_upload?: string
+          id?: string
+          mime_type?: string | null
+          nome_documento: string
+          observacoes?: string | null
+          processo_id: string
+          tags?: string[] | null
+          tamanho_arquivo?: number | null
+          tipo: Database["public"]["Enums"]["documento_processo_tipo"]
+          uploaded_by: string
+          url_arquivo: string
+        }
+        Update: {
+          data_upload?: string
+          id?: string
+          mime_type?: string | null
+          nome_documento?: string
+          observacoes?: string | null
+          processo_id?: string
+          tags?: string[] | null
+          tamanho_arquivo?: number | null
+          tipo?: Database["public"]["Enums"]["documento_processo_tipo"]
+          uploaded_by?: string
+          url_arquivo?: string
+        }
+        Relationships: []
+      }
+      processos_historico: {
+        Row: {
+          created_at: string
+          created_by: string
+          data_evento: string
+          descricao: string
+          detalhes: string | null
+          id: string
+          processo_id: string
+          tipo_evento: string
+          urgente: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          data_evento: string
+          descricao: string
+          detalhes?: string | null
+          id?: string
+          processo_id: string
+          tipo_evento: string
+          urgente?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          data_evento?: string
+          descricao?: string
+          detalhes?: string | null
+          id?: string
+          processo_id?: string
+          tipo_evento?: string
+          urgente?: boolean | null
+        }
+        Relationships: []
+      }
+      processos_judiciais: {
+        Row: {
+          acao: string
+          advogado_responsavel: string | null
+          autor: string
+          created_at: string
+          created_by: string
+          data_cadastro: string
+          data_distribuicao: string | null
+          divida_id: string | null
+          empresa_id: string
+          id: string
+          juizo: string | null
+          link_tribunal: string | null
+          numero_processo: string
+          observacoes: string | null
+          parte_contraria: string | null
+          reu: string
+          reu_contratado: string | null
+          status: Database["public"]["Enums"]["processo_status"]
+          titulo: string
+          tribunal: string | null
+          updated_at: string
+          valor_causa: number | null
+          valor_compra: number | null
+          valor_origem: number | null
+          valor_pensao: number | null
+          vara: string | null
+        }
+        Insert: {
+          acao: string
+          advogado_responsavel?: string | null
+          autor: string
+          created_at?: string
+          created_by: string
+          data_cadastro?: string
+          data_distribuicao?: string | null
+          divida_id?: string | null
+          empresa_id: string
+          id?: string
+          juizo?: string | null
+          link_tribunal?: string | null
+          numero_processo: string
+          observacoes?: string | null
+          parte_contraria?: string | null
+          reu: string
+          reu_contratado?: string | null
+          status?: Database["public"]["Enums"]["processo_status"]
+          titulo: string
+          tribunal?: string | null
+          updated_at?: string
+          valor_causa?: number | null
+          valor_compra?: number | null
+          valor_origem?: number | null
+          valor_pensao?: number | null
+          vara?: string | null
+        }
+        Update: {
+          acao?: string
+          advogado_responsavel?: string | null
+          autor?: string
+          created_at?: string
+          created_by?: string
+          data_cadastro?: string
+          data_distribuicao?: string | null
+          divida_id?: string | null
+          empresa_id?: string
+          id?: string
+          juizo?: string | null
+          link_tribunal?: string | null
+          numero_processo?: string
+          observacoes?: string | null
+          parte_contraria?: string | null
+          reu?: string
+          reu_contratado?: string | null
+          status?: Database["public"]["Enums"]["processo_status"]
+          titulo?: string
+          tribunal?: string | null
+          updated_at?: string
+          valor_causa?: number | null
+          valor_compra?: number | null
+          valor_origem?: number | null
+          valor_pensao?: number | null
+          vara?: string | null
+        }
+        Relationships: []
+      }
+      processos_valores: {
+        Row: {
+          created_at: string
+          created_by: string
+          data_pagamento: string | null
+          data_vencimento: string | null
+          descricao: string
+          forma_pagamento: string | null
+          id: string
+          observacoes: string | null
+          pago: boolean | null
+          processo_id: string
+          tipo: string
+          valor: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          data_pagamento?: string | null
+          data_vencimento?: string | null
+          descricao: string
+          forma_pagamento?: string | null
+          id?: string
+          observacoes?: string | null
+          pago?: boolean | null
+          processo_id: string
+          tipo: string
+          valor: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          data_pagamento?: string | null
+          data_vencimento?: string | null
+          descricao?: string
+          forma_pagamento?: string | null
+          id?: string
+          observacoes?: string | null
+          pago?: boolean | null
+          processo_id?: string
+          tipo?: string
+          valor?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -983,6 +1244,15 @@ export type Database = {
         | "COLEGA_TRABALHO"
         | "OUTRO"
       denuncia_status: "RECEBIDO" | "EM_ANALISE" | "INVESTIGACAO" | "CONCLUIDO"
+      documento_processo_tipo:
+        | "inicial"
+        | "contestacao"
+        | "sentenca"
+        | "recurso"
+        | "acordo"
+        | "comprovante"
+        | "procuracao"
+        | "outro"
       escolaridade:
         | "FUNDAMENTAL"
         | "MEDIO"
@@ -996,6 +1266,21 @@ export type Database = {
         | "DIVORCIADO"
         | "VIUVO"
         | "UNIAO_ESTAVEL"
+      evento_tipo:
+        | "audiencia"
+        | "prazo"
+        | "reuniao"
+        | "vencimento"
+        | "intimacao"
+        | "peticao"
+        | "decisao"
+        | "outro"
+      processo_status:
+        | "ativo"
+        | "suspenso"
+        | "arquivado"
+        | "transitado_julgado"
+        | "baixado"
       relacao_empresa:
         | "COLABORADOR"
         | "EX_COLABORADOR"
@@ -1157,6 +1442,16 @@ export const Constants = {
         "OUTRO",
       ],
       denuncia_status: ["RECEBIDO", "EM_ANALISE", "INVESTIGACAO", "CONCLUIDO"],
+      documento_processo_tipo: [
+        "inicial",
+        "contestacao",
+        "sentenca",
+        "recurso",
+        "acordo",
+        "comprovante",
+        "procuracao",
+        "outro",
+      ],
       escolaridade: [
         "FUNDAMENTAL",
         "MEDIO",
@@ -1171,6 +1466,23 @@ export const Constants = {
         "DIVORCIADO",
         "VIUVO",
         "UNIAO_ESTAVEL",
+      ],
+      evento_tipo: [
+        "audiencia",
+        "prazo",
+        "reuniao",
+        "vencimento",
+        "intimacao",
+        "peticao",
+        "decisao",
+        "outro",
+      ],
+      processo_status: [
+        "ativo",
+        "suspenso",
+        "arquivado",
+        "transitado_julgado",
+        "baixado",
       ],
       relacao_empresa: [
         "COLABORADOR",
