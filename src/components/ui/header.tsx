@@ -56,7 +56,7 @@ export function Header() {
 
         <Button asChild variant="default">
           <Link to="/dashboard">
-            Dashboard
+            Login
           </Link>
         </Button>
       </div>
