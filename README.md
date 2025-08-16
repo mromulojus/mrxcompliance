@@ -83,9 +83,20 @@ These policies ensure public reporting while keeping report data restricted to a
 
 ## Authentication OTP Expiry
 
-Supabase one-time passwords (OTPs) expire **60 seconds** after issuance as configured in
-`supabase/config.toml`. This complies with the organization policy requiring tokens to
-expire in 60 seconds or less.
+Supabase one-time passwords (OTPs) expire **5 minutes** after issuance as configured in
+`supabase/config.toml`. This aligns with the organization policy balancing security and
+usability by allowing a short window for entry while limiting exposure.
+
+## Password Complexity Requirements
+
+User passwords must meet the following minimum requirements:
+
+- At least **12 characters** in length
+- Include at least **one uppercase** and **one lowercase** letter
+- Include at least **one number** and **one special character**
+
+These requirements are enforced through Supabase Auth configuration to ensure strong
+credentials across the platform.
 
 ## Security Incident Response
 
