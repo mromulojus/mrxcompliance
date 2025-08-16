@@ -234,12 +234,12 @@ export function useDebtoData() {
       return data;
     } catch (error) {
       console.error('Erro ao adicionar histórico:', error);
-      toast.error('Erro ao adicionar histórico');
+      toast.error(`Erro ao adicionar histórico: ${error.message}`);
       throw error;
     }
   };
 
-  const atualizarDivida = async (dividaId: string, updates: Partial<Divida>) => {
+  const atualizarDivida = async (dividaId: string, updates: Partial<Divida>, criarHistorico = true) => {
     try {
       const { data, error } = await supabase
         .from('dividas')
@@ -251,6 +251,30 @@ export function useDebtoData() {
       if (error) throw error;
       
       setDividas(prev => prev.map(d => d.id === dividaId ? data as Divida : d));
+      
+      // Criar histórico automático para mudanças importantes
+      if (criarHistorico) {
+        const divida = data as Divida;
+        let descricaoHistorico = 'Dívida atualizada';
+        
+        if (updates.status) {
+          descricaoHistorico = `Status alterado para: ${updates.status}`;
+        }
+        
+        try {
+          await adicionarHistorico({
+            divida_id: dividaId,
+            devedor_id: divida.devedor_id,
+            tipo_acao: 'atualizacao',
+            canal: 'sistema',
+            descricao: descricaoHistorico,
+            resultado: 'sucesso'
+          });
+        } catch (histError) {
+          console.error('Erro ao criar histórico automático:', histError);
+        }
+      }
+      
       toast.success('Dívida atualizada com sucesso!');
       return data;
     } catch (error) {
@@ -277,6 +301,27 @@ export function useDebtoData() {
     fetchData();
   }, []);
 
+  const atualizarDevedor = async (devedorId: string, updates: Partial<Devedor>) => {
+    try {
+      const { data, error } = await supabase
+        .from('devedores')
+        .update(updates as any)
+        .eq('id', devedorId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      setDevedores(prev => prev.map(d => d.id === devedorId ? data as Devedor : d));
+      toast.success('Devedor atualizado com sucesso!');
+      return data;
+    } catch (error) {
+      console.error('Erro ao atualizar devedor:', error);
+      toast.error('Erro ao atualizar devedor');
+      throw error;
+    }
+  };
+
   return {
     devedores,
     dividas,
@@ -289,6 +334,7 @@ export function useDebtoData() {
     adicionarDevedor,
     adicionarDivida,
     adicionarHistorico,
-    atualizarDivida
+    atualizarDivida,
+    atualizarDevedor
   };
 }

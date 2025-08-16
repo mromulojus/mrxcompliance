@@ -12,6 +12,7 @@ import { CalendarIcon, Plus, FileText, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useDebtoData } from "@/hooks/useDebtoData";
 
 interface Parcela {
   numero: number;
@@ -22,11 +23,13 @@ interface Parcela {
 
 interface AcordoManagerProps {
   dividaId: string;
+  devedorId: string;
   valorOriginal: number;
   onAcordoCriado?: () => void;
 }
 
-export function AcordoManager({ dividaId, valorOriginal, onAcordoCriado }: AcordoManagerProps) {
+export function AcordoManager({ dividaId, devedorId, valorOriginal, onAcordoCriado }: AcordoManagerProps) {
+  const { adicionarHistorico, atualizarDivida } = useDebtoData();
   const [acordo, setAcordo] = useState({
     valor_total: valorOriginal,
     numero_parcelas: 1,
@@ -114,6 +117,21 @@ export function AcordoManager({ dividaId, valorOriginal, onAcordoCriado }: Acord
       };
 
       console.log("Salvando acordo:", acordoData);
+      
+      // Atualizar status da dívida para "acordado"
+      await atualizarDivida(dividaId, { status: 'acordado' }, false);
+      
+      // Criar histórico automático do acordo
+      await adicionarHistorico({
+        divida_id: dividaId,
+        devedor_id: devedorId,
+        tipo_acao: 'acordo',
+        canal: 'sistema',
+        descricao: `Acordo criado: ${formatCurrency(acordo.valor_total)} em ${acordo.numero_parcelas} parcelas`,
+        resultado: 'sucesso',
+        valor_negociado: acordo.valor_total,
+        observacoes: `Forma de pagamento: ${acordo.forma_pagamento}. ${acordo.observacoes || ''}`
+      });
       
       toast.success("Acordo criado com sucesso!");
       onAcordoCriado?.();

@@ -319,8 +319,9 @@ export default function DividaDetalhes() {
 
         <TabsContent value="acordo" className="space-y-6">
           <AcordoManager 
-            dividaId={divida.id} 
-            valorOriginal={divida.valor_original}
+            dividaId={dividaId!} 
+            devedorId={divida.devedor_id}
+            valorOriginal={divida.valor_atualizado}
             onAcordoCriado={() => {
               toast.success('Acordo criado e registrado no histórico!');
               window.location.reload();

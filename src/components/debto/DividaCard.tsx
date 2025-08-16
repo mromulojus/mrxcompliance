@@ -250,7 +250,7 @@ export function DividaCard({ divida, compact = false, onUpdate }: DividaCardProp
           </TabsContent>
 
           <TabsContent value="acordo" className="mt-4">
-            <AcordoManager dividaId={divida.id} valorOriginal={divida.valor_original} />
+            <AcordoManager dividaId={divida.id} devedorId={divida.devedor_id} valorOriginal={divida.valor_original} />
           </TabsContent>
 
           <TabsContent value="historico" className="mt-4">
