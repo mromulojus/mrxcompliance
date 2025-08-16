@@ -11,7 +11,7 @@ export function Header() {
           <img 
             src="/lovable-uploads/cbe050ae-bdf6-4931-86b4-d8e69e8995af.png" 
             alt="Logo" 
-            className="h-8 w-8"
+            className="h-10 w-auto object-contain"
           />
           <span className="text-xl font-bold text-foreground">
             MRxCOMPLIANCE
