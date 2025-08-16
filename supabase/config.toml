@@ -3,6 +3,11 @@ project_id = "pxpscjyeqmqqxzbttbep"
 [auth.password]
 hibp_enabled = true
 hibp_api_key = { env = "HIBP_API_KEY" }
+min_length = 12
+min_uppercase = 1
+min_lowercase = 1
+min_number = 1
+min_special = 1
 
 [auth.otp]
-expiry_duration = "60s"  # valor conforme política interna
+expiry_duration = "300s"  # 5 minutos conforme política interna
