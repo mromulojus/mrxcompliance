@@ -28,13 +28,13 @@ export function Header() {
             </Link>
           )}
           <Link
-            to="/dashboard"
+            to="/"
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
-            Login
+            Dashboard
           </Link>
           <Link
-            to="/dashboard"
+            to="/home#features"
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
             Serviços

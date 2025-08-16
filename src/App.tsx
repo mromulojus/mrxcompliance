@@ -36,12 +36,12 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-              {/* Public routes */}
-              <Route path="/" element={<Homepage />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/denuncia-publica/:empresaId" element={<DenunciaPublica />} />
-              <Route path="/denuncias/consulta" element={<ConsultaDenuncia />} />
+          {/* Public routes */}
+          <Route path="/home" element={<Homepage />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/denuncia-publica/:empresaId" element={<DenunciaPublica />} />
+          <Route path="/denuncias/consulta" element={<ConsultaDenuncia />} />
               
               {/* Protected routes */}
               <Route element={
@@ -49,6 +49,7 @@ const App = () => (
                   <AppLayout />
                 </ProtectedRoute>
               }>
+                <Route path="/" element={<Index />} />
                 <Route path="/dashboard" element={<Index />} />
                 <Route path="/empresas" element={<Empresas />} />
                 <Route path="/empresa/:empresaId" element={<EmpresaDetalhes />} />
