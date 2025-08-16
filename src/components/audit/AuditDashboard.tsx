@@ -12,7 +12,7 @@ import { Activity, FileText, CheckCircle2, AlertTriangle, Clock, Calendar as Cal
 import { useState } from "react";
 import { toast } from "sonner";
 
-interface AuditEvent {
+export interface AuditEvent {
   id: string;
   title: string;
   type: "document" | "training" | "visit" | "meeting";
@@ -20,6 +20,25 @@ interface AuditEvent {
   status: "scheduled" | "completed" | "overdue";
   responsible: string;
 }
+
+export const auditEvents: AuditEvent[] = [
+  {
+    id: "1",
+    title: "Vencimento ISO 9001",
+    type: "document",
+    date: new Date(2024, 1, 20),
+    status: "scheduled",
+    responsible: "João Silva",
+  },
+  {
+    id: "2",
+    title: "Treinamento LGPD",
+    type: "training",
+    date: new Date(2024, 1, 25),
+    status: "scheduled",
+    responsible: "Maria Santos",
+  },
+];
 
 export function AuditDashboard() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
@@ -79,25 +98,6 @@ export function AuditDashboard() {
       type: "Visita",
       result: "Aprovado",
       responseTime: "45min"
-    }
-  ];
-
-  const auditEvents: AuditEvent[] = [
-    {
-      id: "1",
-      title: "Vencimento ISO 9001",
-      type: "document",
-      date: new Date(2024, 1, 20),
-      status: "scheduled",
-      responsible: "João Silva"
-    },
-    {
-      id: "2",
-      title: "Treinamento LGPD",
-      type: "training", 
-      date: new Date(2024, 1, 25),
-      status: "scheduled",
-      responsible: "Maria Santos"
     }
   ];
 
