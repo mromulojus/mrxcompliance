@@ -81,6 +81,12 @@ The `denuncias` table in Supabase uses row-level security:
 
 These policies ensure public reporting while keeping report data restricted to administrators.
 
+## Authentication OTP Expiry
+
+Supabase one-time passwords (OTPs) expire **60 seconds** after issuance as configured in
+`supabase/config.toml`. This complies with the organization policy requiring tokens to
+expire in 60 seconds or less.
+
 ## Security Incident Response
 
 The application records activity for sensitive HR tables in `public.activity_logs`.
