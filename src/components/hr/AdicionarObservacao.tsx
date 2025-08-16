@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { MessageCircle, Upload, X, Image } from 'lucide-react';
+import { saveObservacao } from '@/lib/historico';
 
 interface AdicionarObservacaoProps {
   colaboradorId: string;
@@ -52,41 +53,29 @@ export function AdicionarObservacao({ colaboradorId, onObservacaoAdicionada }: A
     setIsLoading(true);
 
     try {
-      // Simular upload de arquivos (você pode implementar upload real aqui)
-      const anexosUrls = anexos.map((file, index) => ({
+      const anexosUrls = anexos.map((file) => ({
         nome: file.name,
-        url: URL.createObjectURL(file), // Em produção, usar URL real do upload
+        url: URL.createObjectURL(file),
         tipo: 'image'
       }));
 
-      const novaObservacao = {
-        id: Date.now().toString(),
-        observacao: observacao,
-        data: new Date().toISOString(),
-        usuario: 'Usuário Atual', // Pegar do contexto de auth
-        anexos: anexosUrls,
-        created_at: new Date().toISOString()
-      };
+      const novaObservacao = await saveObservacao(colaboradorId, observacao);
 
-      // Aqui você salvaria no banco de dados
-      // await saveObservacao(colaboradorId, novaObservacao);
+      onObservacaoAdicionada({ ...novaObservacao, anexos: anexosUrls });
 
-      onObservacaoAdicionada(novaObservacao);
-      
       toast({
         title: "Observação adicionada",
         description: "A observação foi registrada com sucesso."
       });
 
-      // Reset form
       setObservacao('');
       setAnexos([]);
       setIsOpen(false);
-      
-    } catch (error) {
+
+    } catch (error: any) {
       toast({
         title: "Erro ao salvar",
-        description: "Não foi possível salvar a observação.",
+        description: error.message || "Não foi possível salvar a observação.",
         variant: "destructive"
       });
     } finally {
