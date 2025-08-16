@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, FileText, Calendar, TrendingUp } from "lucide-react";
-import { useDebtoData } from "@/hooks/useDebtoData";
+import { useDebtoData, Divida } from "@/hooks/useDebtoData";
+import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 import { toast } from "sonner";
 
 const dividaSchema = z.object({
@@ -36,11 +37,13 @@ type DividaFormData = z.infer<typeof dividaSchema>;
 
 interface FormDividaProps {
   onSuccess?: () => void;
+  divida?: Divida;
 }
 
-export function FormDivida({ onSuccess }: FormDividaProps) {
+export function FormDivida({ onSuccess, divida }: FormDividaProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { empresas, devedores, adicionarDivida } = useDebtoData();
+  const { empresas, devedores, adicionarDivida, atualizarDivida } = useDebtoData();
+  const { adicionarEvento } = useCalendarEvents();
 
   const {
     register,
@@ -50,10 +53,22 @@ export function FormDivida({ onSuccess }: FormDividaProps) {
     formState: { errors }
   } = useForm<DividaFormData>({
     resolver: zodResolver(dividaSchema),
-    defaultValues: {
-      status: 'pendente',
-      estagio: 'vencimento_proximo'
-    }
+    defaultValues: divida
+      ? {
+          empresa_id: divida.empresa_id,
+          devedor_id: divida.devedor_id,
+          origem_divida: divida.origem_divida,
+          numero_contrato: divida.numero_contrato || "",
+          numero_nf: divida.numero_nf || "",
+          data_vencimento: divida.data_vencimento,
+          valor_original: divida.valor_original,
+          status: divida.status,
+          estagio: divida.estagio,
+        }
+      : {
+          status: 'pendente',
+          estagio: 'vencimento_proximo'
+        }
   });
 
   const selectedEmpresa = watch('empresa_id');
@@ -143,7 +158,7 @@ export function FormDivida({ onSuccess }: FormDividaProps) {
     setIsSubmitting(true);
     try {
       const valorAtualizado = calcularValorAtualizado(
-        data.valor_original, 
+        data.valor_original,
         data.data_vencimento,
         data.multa_personalizada,
         data.juros_personalizado,
@@ -153,14 +168,34 @@ export function FormDivida({ onSuccess }: FormDividaProps) {
       );
       const urgencyScore = calcularUrgencyScore(data.data_vencimento, data.valor_original);
 
-      await adicionarDivida({
-        ...data,
-        valor_atualizado: valorAtualizado,
-        valor_multa: 0, // Será calculado por trigger no banco
-        valor_juros: 0,
-        valor_correcao: 0,
-        urgency_score: urgencyScore
-      });
+      if (divida) {
+        await atualizarDivida(divida.id, {
+          ...data,
+          valor_atualizado: valorAtualizado,
+          valor_multa: 0,
+          valor_juros: 0,
+          valor_correcao: 0,
+          urgency_score: urgencyScore
+        });
+      } else {
+        const novaDivida = await adicionarDivida({
+          ...data,
+          valor_atualizado: valorAtualizado,
+          valor_multa: 0, // Será calculado por trigger no banco
+          valor_juros: 0,
+          valor_correcao: 0,
+          urgency_score: urgencyScore
+        });
+        const devedor = devedores.find(d => d.id === data.devedor_id);
+        await adicionarEvento({
+          divida_id: novaDivida.id,
+          title: `Vencimento: ${data.origem_divida}`,
+          date: data.data_vencimento,
+          email: devedor?.email_principal || null,
+          status: 'pendente',
+          reminder_sent: false
+        });
+      }
       onSuccess?.();
     } catch (error) {
       console.error('Erro ao cadastrar dívida:', error);
@@ -180,7 +215,7 @@ export function FormDivida({ onSuccess }: FormDividaProps) {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="flex items-center gap-2 mb-6">
         <DollarSign className="w-6 h-6 text-primary" />
-        <h2 className="text-2xl font-bold">Cadastrar Dívida</h2>
+        <h2 className="text-2xl font-bold">{divida ? 'Editar Dívida' : 'Cadastrar Dívida'}</h2>
       </div>
 
       {/* Informações Básicas */}
@@ -470,7 +505,9 @@ export function FormDivida({ onSuccess }: FormDividaProps) {
           Cancelar
         </Button>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Cadastrando...' : 'Cadastrar Dívida'}
+          {isSubmitting
+            ? divida ? 'Salvando...' : 'Cadastrando...'
+            : divida ? 'Salvar Alterações' : 'Cadastrar Dívida'}
         </Button>
       </div>
     </form>

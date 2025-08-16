@@ -813,6 +813,44 @@ export type Database = {
           },
         ]
       }
+      calendar_events: {
+        Row: {
+          id: string
+          divida_id: string | null
+          title: string
+          date: string
+          email: string | null
+          status: string | null
+          reminder_sent: boolean | null
+        }
+        Insert: {
+          id?: string
+          divida_id?: string | null
+          title: string
+          date: string
+          email?: string | null
+          status?: string | null
+          reminder_sent?: boolean | null
+        }
+        Update: {
+          id?: string
+          divida_id?: string | null
+          title?: string
+          date?: string
+          email?: string | null
+          status?: string | null
+          reminder_sent?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_divida_id_fkey",
+            columns: ["divida_id"],
+            isOneToOne: false,
+            referencedRelation: "dividas",
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pagamentos: {
         Row: {
           acordo_id: string | null

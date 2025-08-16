@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 
 export interface Devedor {
   id: string;
@@ -86,6 +87,7 @@ export function useDebtoData() {
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [historico, setHistorico] = useState<HistoricoCobranca[]>([]);
   const [loading, setLoading] = useState(true);
+  const { atualizarEvento } = useCalendarEvents();
 
   const fetchEmpresas = async () => {
     try {
@@ -247,8 +249,18 @@ export function useDebtoData() {
         .single();
 
       if (error) throw error;
-      
+
       setDividas(prev => prev.map(d => d.id === dividaId ? data as Divida : d));
+      try {
+        const eventUpdates: any = {};
+        if (updates.data_vencimento) eventUpdates.date = updates.data_vencimento;
+        if (updates.status) eventUpdates.status = updates.status;
+        if (Object.keys(eventUpdates).length > 0) {
+          await atualizarEvento(dividaId, eventUpdates);
+        }
+      } catch (e) {
+        console.error('Erro ao atualizar evento do calendário:', e);
+      }
       toast.success('Dívida atualizada com sucesso!');
       return data;
     } catch (error) {

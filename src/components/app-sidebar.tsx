@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { Activity, BookText, Building2, Home, ListTree, Settings2, Shield, Users, LogOut, DollarSign } from "lucide-react";
+import { Activity, BookText, Building2, Home, ListTree, Settings2, Shield, Users, LogOut, DollarSign, Calendar } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import {
   Sidebar,
@@ -26,6 +26,7 @@ export function AppSidebar() {
     { title: "Painel", url: "/", icon: Home, show: true },
     { title: "Empresas", url: "/empresas", icon: Building2, show: true },
     { title: "Debto - Cobranças", url: "/debto", icon: DollarSign, show: true },
+    { title: "Calendário", url: "/calendario", icon: Calendar, show: true },
     { title: "Dashboard Denúncias", url: "/denuncias/dashboard", icon: Shield, show: true },
     { title: "Consultar Denúncia", url: "/denuncias/consulta", icon: Activity, show: true },
     { title: "Log de Atividades", url: "/admin/activity-log", icon: Activity, show: true },
