@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { DocumentsManager } from './DocumentsManager';
+import { AdicionarObservacaoInline } from './AdicionarObservacaoInline';
 import {
   User,
   Mail,
@@ -24,7 +25,8 @@ import {
   Edit,
   TrendingUp,
   Home,
-  DollarSign
+  DollarSign,
+  Image
 } from 'lucide-react';
 import { Colaborador } from '@/types/hr';
 import { ExportPdf } from './ExportPdf';
@@ -37,6 +39,7 @@ interface VisualizacaoColaboradorCompletaProps {
 }
 
 export function VisualizacaoColaboradorCompleta({ colaborador, onClose, onEdit }: VisualizacaoColaboradorCompletaProps) {
+  const [historico, setHistorico] = useState(colaborador.historico || []);
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'ATIVO':
@@ -61,6 +64,10 @@ export function VisualizacaoColaboradorCompleta({ colaborador, onClose, onEdit }
   const rescisao = calcularRescisaoColaborador(colaborador);
   const valorRescisao = 'totalEstimado' in rescisao ? parseFloat(rescisao.totalEstimado) : 0;
   const valorPrevisto = calcularValorPrevisto(valorRescisao);
+
+  const handleObservacaoAdicionada = (novaObservacao: any) => {
+    setHistorico(prev => [novaObservacao, ...prev]);
+  };
 
   return (
     <div className="max-w-6xl mx-auto p-6">
@@ -524,27 +531,61 @@ export function VisualizacaoColaboradorCompleta({ colaborador, onClose, onEdit }
                   Histórico de Observações
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-40">
-                  {colaborador.historico?.length ? (
-                    <div className="space-y-2">
-                      {colaborador.historico.map((obs, index) => (
-                        <div key={index} className="p-3 border rounded-lg bg-muted/50">
-                          <div className="flex justify-between items-start mb-2">
-                            <Badge variant="outline" className="text-xs">
-                              {formatarData(obs.data)} - {obs.usuario}
-                            </Badge>
+              <CardContent className="space-y-6">
+                {/* Nova Observação Inline */}
+                <AdicionarObservacaoInline 
+                  colaboradorId={colaborador.id}
+                  onObservacaoAdicionada={handleObservacaoAdicionada}
+                />
+
+                {/* Histórico */}
+                <div>
+                  <h4 className="font-semibold mb-3">Histórico</h4>
+                  <ScrollArea className="h-40">
+                    {historico?.length ? (
+                      <div className="space-y-2">
+                        {historico.map((obs, index) => (
+                          <div key={index} className="p-3 border rounded-lg bg-muted/50">
+                            <div className="flex justify-between items-start mb-2">
+                              <Badge variant="outline" className="text-xs">
+                                {formatarData(obs.data || obs.created_at)} - {obs.usuario}
+                              </Badge>
+                            </div>
+                            <p className="text-sm">{obs.observacao}</p>
+                            
+                            {/* Anexos/Imagens */}
+                            {obs.anexos && obs.anexos.length > 0 && (
+                              <div className="mt-2">
+                                <div className="grid grid-cols-3 gap-1">
+                                  {obs.anexos.map((anexo: any, anexoIndex: number) => (
+                                    <div key={anexoIndex} className="relative">
+                                      <img
+                                        src={anexo.url}
+                                        alt={anexo.nome}
+                                        className="w-full h-12 object-cover rounded border cursor-pointer hover:opacity-80"
+                                        onClick={() => window.open(anexo.url, '_blank')}
+                                      />
+                                      <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs p-1 rounded-b">
+                                        <div className="flex items-center gap-1">
+                                          <Image className="h-2 w-2" />
+                                          <span className="truncate text-xs">{anexo.nome}</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
-                          <p className="text-sm">{obs.observacao}</p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-center text-muted-foreground py-8">
-                      Nenhuma observação registrada
-                    </p>
-                  )}
-                </ScrollArea>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-center text-muted-foreground py-8">
+                        Nenhuma observação registrada
+                      </p>
+                    )}
+                  </ScrollArea>
+                </div>
               </CardContent>
             </Card>
           </div>
