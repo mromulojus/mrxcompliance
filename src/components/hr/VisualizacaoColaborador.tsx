@@ -28,6 +28,7 @@ import {
 import { Colaborador } from '@/types/hr';
 import { ExportPdf } from './ExportPdf';
 import { AdicionarObservacao } from './AdicionarObservacao';
+import { AdicionarObservacaoInline } from './AdicionarObservacaoInline';
 import { Logo } from '@/components/ui/logo';
 import { calcularRescisaoColaborador, calcularValorPrevisto } from '@/lib/rescisao';
 
@@ -583,66 +584,70 @@ export function VisualizacaoColaborador({ colaborador, onClose, onEdit }: Visual
         <TabsContent value="historico">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <History className="h-5 w-5" />
-                  Histórico e Observações
-                </CardTitle>
-                <AdicionarObservacao 
-                  colaboradorId={colaborador.id}
-                  onObservacaoAdicionada={handleObservacaoAdicionada}
-                />
-              </div>
+              <CardTitle className="flex items-center gap-2">
+                <History className="h-5 w-5" />
+                Histórico e Observações
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-96">
-                {historico?.length ? (
-                  <div className="space-y-4">
-                    {historico.map((entrada, index) => (
-                      <div key={index} className="p-4 border-l-4 border-primary/20 bg-muted/20 rounded-r-lg">
-                        <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-semibold">{entrada.observacao}</h4>
-                          <span className="text-sm text-muted-foreground">
-                            {formatarData(entrada.data || entrada.created_at)}
-                          </span>
-                        </div>
-                        
-                        {/* Anexos/Imagens */}
-                        {entrada.anexos && entrada.anexos.length > 0 && (
-                          <div className="mt-3 mb-3">
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                              {entrada.anexos.map((anexo: any, anexoIndex: number) => (
-                                <div key={anexoIndex} className="relative">
-                                  <img
-                                    src={anexo.url}
-                                    alt={anexo.nome}
-                                    className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80"
-                                    onClick={() => window.open(anexo.url, '_blank')}
-                                  />
-                                  <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs p-1 rounded-b">
-                                    <div className="flex items-center gap-1">
-                                      <Image className="h-3 w-3" />
-                                      <span className="truncate">{anexo.nome}</span>
+            <CardContent className="space-y-6">
+              {/* Nova Observação Inline */}
+              <AdicionarObservacaoInline 
+                colaboradorId={colaborador.id}
+                onObservacaoAdicionada={handleObservacaoAdicionada}
+              />
+
+              {/* Histórico */}
+              <div>
+                <h4 className="font-semibold mb-3">Histórico</h4>
+                <ScrollArea className="h-96">
+                  {historico?.length ? (
+                    <div className="space-y-4">
+                      {historico.map((entrada, index) => (
+                        <div key={index} className="p-4 border-l-4 border-primary/20 bg-muted/20 rounded-r-lg">
+                          <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-semibold">{entrada.observacao}</h4>
+                            <span className="text-sm text-muted-foreground">
+                              {formatarData(entrada.data || entrada.created_at)}
+                            </span>
+                          </div>
+                          
+                          {/* Anexos/Imagens */}
+                          {entrada.anexos && entrada.anexos.length > 0 && (
+                            <div className="mt-3 mb-3">
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                {entrada.anexos.map((anexo: any, anexoIndex: number) => (
+                                  <div key={anexoIndex} className="relative">
+                                    <img
+                                      src={anexo.url}
+                                      alt={anexo.nome}
+                                      className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80"
+                                      onClick={() => window.open(anexo.url, '_blank')}
+                                    />
+                                    <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs p-1 rounded-b">
+                                      <div className="flex items-center gap-1">
+                                        <Image className="h-3 w-3" />
+                                        <span className="truncate">{anexo.nome}</span>
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                              ))}
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        )}
-                        
-                        <p className="text-xs text-muted-foreground mt-2">
-                          Por: {entrada.usuario || 'Sistema'}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-center text-muted-foreground py-8">
-                    Nenhum histórico registrado
-                  </p>
-                )}
-              </ScrollArea>
+                          )}
+                          
+                          <p className="text-xs text-muted-foreground mt-2">
+                            Por: {entrada.usuario || 'Sistema'}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-center text-muted-foreground py-8">
+                      Nenhuma observação registrada
+                    </p>
+                  )}
+                </ScrollArea>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
