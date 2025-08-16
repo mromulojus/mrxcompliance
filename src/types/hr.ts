@@ -42,6 +42,22 @@ export interface Colaborador {
   escolaridade: 'FUNDAMENTAL' | 'MEDIO' | 'SUPERIOR' | 'POS_GRADUACAO' | 'MESTRADO' | 'DOUTORADO';
   nome_mae: string;
   nome_pai: string;
+  // Novas etiquetas
+  etiquetas?: {
+    tipo_contrato_detalhado?: 'CLT' | 'PJ' | 'ESTAGIO';
+    status_detalhado?: 'ATIVO' | 'DESLIGADO' | 'EM_CONTRATACAO';
+    due_diligence?: boolean; // AGD DUE DILIGENCE
+    data_due_diligence?: string;
+  };
+  // Perfil comportamental
+  perfil_comportamental?: {
+    tipo_perfil?: 'DOMINANTE' | 'INFLUENTE' | 'ESTAVEL' | 'CONSCIENCIOSO' | 'ANALITICO' | 'EXPRESSIVO' | 'MOTIVADOR' | 'FACILITADOR' | '';
+    descricao?: string;
+    pontos_fortes?: string[];
+    areas_desenvolvimento?: string[];
+    data_avaliacao?: string;
+    avaliador?: string;
+  };
   contato_emergencia: {
     nome: string;
     telefone: string;

@@ -7,6 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { DocumentsManager } from './DocumentsManager';
 import { AdicionarObservacaoInline } from './AdicionarObservacaoInline';
+import { EtiquetasColaborador } from './EtiquetasColaborador';
 import {
   User,
   Mail,
@@ -26,7 +27,8 @@ import {
   TrendingUp,
   Home,
   DollarSign,
-  Image
+  Image,
+  AlertTriangle
 } from 'lucide-react';
 import { Colaborador } from '@/types/hr';
 import { ExportPdf } from './ExportPdf';
@@ -132,6 +134,19 @@ export function VisualizacaoColaboradorCompleta({ colaborador, onClose, onEdit }
 
           {/* Grid com todas as informações */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            {/* Etiquetas */}
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Badge className="h-5 w-5" />
+                  Etiquetas e Status
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <EtiquetasColaborador colaborador={colaborador} size="md" />
+              </CardContent>
+            </Card>
             
             {/* Dados Pessoais */}
             <Card>
@@ -522,6 +537,83 @@ export function VisualizacaoColaboradorCompleta({ colaborador, onClose, onEdit }
                 </CardContent>
               </Card>
             )}
+
+            {/* Perfil Comportamental */}
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5" />
+                  🧠 Perfil Comportamental
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {colaborador.perfil_comportamental?.tipo_perfil ? (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Tipo de Perfil</label>
+                        <Badge className="mt-1 bg-indigo-100 text-indigo-800 border-indigo-200">
+                          {colaborador.perfil_comportamental.tipo_perfil}
+                        </Badge>
+                      </div>
+                      {colaborador.perfil_comportamental.data_avaliacao && (
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Data da Avaliação</label>
+                          <p className="font-semibold">{formatarData(colaborador.perfil_comportamental.data_avaliacao)}</p>
+                        </div>
+                      )}
+                      {colaborador.perfil_comportamental.avaliador && (
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Avaliador</label>
+                          <p className="font-semibold">{colaborador.perfil_comportamental.avaliador}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {colaborador.perfil_comportamental.descricao && (
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Descrição</label>
+                        <p className="text-sm mt-1">{colaborador.perfil_comportamental.descricao}</p>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Pontos Fortes */}
+                      {colaborador.perfil_comportamental.pontos_fortes && colaborador.perfil_comportamental.pontos_fortes.length > 0 && (
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Pontos Fortes</label>
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {colaborador.perfil_comportamental.pontos_fortes.map((ponto, index) => (
+                              <Badge key={index} variant="outline" className="bg-green-50 text-green-800 border-green-200">
+                                {ponto}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Áreas de Desenvolvimento */}
+                      {colaborador.perfil_comportamental.areas_desenvolvimento && colaborador.perfil_comportamental.areas_desenvolvimento.length > 0 && (
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Áreas de Desenvolvimento</label>
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {colaborador.perfil_comportamental.areas_desenvolvimento.map((area, index) => (
+                              <Badge key={index} variant="outline" className="bg-orange-50 text-orange-800 border-orange-200">
+                                {area}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-center text-muted-foreground py-8">
+                    Perfil comportamental não avaliado
+                  </p>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Histórico */}
             <Card className="lg:col-span-2">

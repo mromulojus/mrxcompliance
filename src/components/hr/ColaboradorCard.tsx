@@ -9,6 +9,7 @@ import { Colaborador } from '@/types/hr';
 import { useHR } from '@/context/HRContext';
 import { calcularRescisaoColaborador, calcularValorPrevisto } from '@/lib/rescisao';
 import { VisualizacaoColaboradorCompleta } from './VisualizacaoColaboradorCompleta';
+import { EtiquetasColaborador } from './EtiquetasColaborador';
 import { useState } from 'react';
 
 interface ColaboradorCardProps {
@@ -96,6 +97,9 @@ export function ColaboradorCard({ colaborador, onEdit, onView }: ColaboradorCard
       </CardHeader>
       
       <CardContent className="space-y-3">
+        {/* Etiquetas */}
+        <EtiquetasColaborador colaborador={colaborador} size="sm" />
+        
         <div className="flex items-center justify-between">
           <Badge className={getStatusColor(colaborador.status)}>
             {colaborador.status}
