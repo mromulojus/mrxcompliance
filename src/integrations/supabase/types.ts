@@ -560,7 +560,7 @@ export type Database = {
           id: string
           nome: string
           tipo: Database["public"]["Enums"]["tipo_documento"]
-          uploaded_by: string | null
+          uploaded_by: string
           url: string
         }
         Insert: {
@@ -569,7 +569,7 @@ export type Database = {
           id?: string
           nome: string
           tipo: Database["public"]["Enums"]["tipo_documento"]
-          uploaded_by?: string | null
+          uploaded_by?: string
           url: string
         }
         Update: {
@@ -578,7 +578,7 @@ export type Database = {
           id?: string
           nome?: string
           tipo?: Database["public"]["Enums"]["tipo_documento"]
-          uploaded_by?: string | null
+          uploaded_by?: string
           url?: string
         }
         Relationships: [
@@ -611,7 +611,7 @@ export type Database = {
           nome_arquivo: string
           tamanho_arquivo?: number | null
           tipo_documento: string
-          uploaded_by: string
+          uploaded_by?: string
           url_arquivo: string
         }
         Update: {
