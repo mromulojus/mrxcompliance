@@ -77,9 +77,9 @@ Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-trick
 The `denuncias` table in Supabase uses row-level security:
 
 - Anonymous users may submit new denúncias but cannot view, update or delete any entries.
-- Only authenticated users with the `administrador` role can read, update or delete existing denúncias.
+- Only authenticated users with the `compliance` role or superusers can read, update or delete existing denúncias.
 
-These policies ensure public reporting while keeping report data restricted to administrators.
+These policies ensure public reporting while keeping report data restricted to the compliance team.
 
 ## Authentication OTP Expiry
 
@@ -101,3 +101,7 @@ If a potential security incident is detected:
 
 Scheduled GitHub Actions also perform weekly dependency audits to surface
 vulnerabilities early.
+
+## Compliance
+
+See [docs/compliance_credentials_rotation.md](docs/compliance_credentials_rotation.md) for the credential rotation procedure for the compliance team.
