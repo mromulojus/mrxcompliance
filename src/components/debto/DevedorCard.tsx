@@ -16,6 +16,8 @@ import {
 import { Devedor, useDebtoData } from "@/hooks/useDebtoData";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/context/AuthContext";
+import { EmpresaTag } from "./EmpresaTag";
+import { EtiquetasDisplay } from "./EtiquetasDisplay";
 
 interface DevedorCardProps {
   devedor: Devedor;
@@ -149,6 +151,7 @@ export function DevedorCard({ devedor, compact = false, onUpdate }: DevedorCardP
             <div className="flex-1">
               <CardTitle className="text-lg leading-tight">{devedor.nome}</CardTitle>
               <div className="flex items-center gap-2 mt-1">
+                <EmpresaTag empresaId={devedor.empresa_id} />
                 <Badge variant="outline" className="text-xs">
                   {devedor.tipo_pessoa === 'FISICA' ? 'CPF' : 'CNPJ'}
                 </Badge>
@@ -180,6 +183,13 @@ export function DevedorCard({ devedor, compact = false, onUpdate }: DevedorCardP
       </CardHeader>
       
       <CardContent className="space-y-4">
+        {/* Etiquetas */}
+        {devedor.etiquetas && devedor.etiquetas.length > 0 && (
+          <div>
+            <EtiquetasDisplay etiquetaIds={devedor.etiquetas} maxDisplay={2} />
+          </div>
+        )}
+
         {/* Valor da Dívida Atualizada */}
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">Valor da Dívida Atualizada</span>
@@ -289,20 +299,11 @@ export function DevedorCard({ devedor, compact = false, onUpdate }: DevedorCardP
           <Button 
             size="sm" 
             variant="outline" 
-            className="flex-1 text-xs"
-            onClick={() => handleContact(devedor.canal_preferencial as 'phone' | 'whatsapp' | 'email')}
-          >
-            {getCanalIcon(devedor.canal_preferencial)}
-            <span className="ml-1">Contatar</span>
-          </Button>
-          <Button 
-            size="sm" 
-            variant="outline" 
-            className="flex-1 text-xs"
+            className="w-full text-xs"
             onClick={() => window.location.href = `/devedor/${devedor.id}`}
           >
             <Eye className="w-3 h-3 mr-1" />
-            Dívidas
+            Ver Dívidas
           </Button>
         </div>
       </CardContent>

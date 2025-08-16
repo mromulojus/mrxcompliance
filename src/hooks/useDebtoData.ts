@@ -23,6 +23,7 @@ export interface Devedor {
   score_recuperabilidade: number;
   canal_preferencial: 'whatsapp' | 'telefone' | 'email' | 'sms';
   observacoes?: string;
+  etiquetas?: string[];
   created_at: string;
   updated_at: string;
   created_by?: string;
@@ -46,6 +47,7 @@ export interface Divida {
   data_negativacao?: string;
   data_protesto?: string;
   urgency_score: number;
+  etiquetas?: string[];
   created_at: string;
   updated_at: string;
   created_by?: string;

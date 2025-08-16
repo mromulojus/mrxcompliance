@@ -398,6 +398,7 @@ export type Database = {
           empresa_id: string
           endereco_completo: string | null
           estado: string | null
+          etiquetas: Json | null
           id: string
           local_trabalho: string | null
           nome: string
@@ -423,6 +424,7 @@ export type Database = {
           empresa_id: string
           endereco_completo?: string | null
           estado?: string | null
+          etiquetas?: Json | null
           id?: string
           local_trabalho?: string | null
           nome: string
@@ -448,6 +450,7 @@ export type Database = {
           empresa_id?: string
           endereco_completo?: string | null
           estado?: string | null
+          etiquetas?: Json | null
           id?: string
           local_trabalho?: string | null
           nome?: string
@@ -479,6 +482,7 @@ export type Database = {
           devedor_id: string
           empresa_id: string
           estagio: string
+          etiquetas: Json | null
           id: string
           numero_contrato: string | null
           numero_nf: string | null
@@ -501,6 +505,7 @@ export type Database = {
           devedor_id: string
           empresa_id: string
           estagio?: string
+          etiquetas?: Json | null
           id?: string
           numero_contrato?: string | null
           numero_nf?: string | null
@@ -523,6 +528,7 @@ export type Database = {
           devedor_id?: string
           empresa_id?: string
           estagio?: string
+          etiquetas?: Json | null
           id?: string
           numero_contrato?: string | null
           numero_nf?: string | null
@@ -717,6 +723,47 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      etiquetas_templates: {
+        Row: {
+          cor: string
+          created_at: string | null
+          created_by: string | null
+          empresa_id: string | null
+          id: string
+          nome: string
+          tipo: string
+          updated_at: string | null
+        }
+        Insert: {
+          cor?: string
+          created_at?: string | null
+          created_by?: string | null
+          empresa_id?: string | null
+          id?: string
+          nome: string
+          tipo: string
+          updated_at?: string | null
+        }
+        Update: {
+          cor?: string
+          created_at?: string | null
+          created_by?: string | null
+          empresa_id?: string | null
+          id?: string
+          nome?: string
+          tipo?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "etiquetas_templates_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       eventos: {
         Row: {

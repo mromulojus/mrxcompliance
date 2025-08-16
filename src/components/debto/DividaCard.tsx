@@ -16,6 +16,8 @@ import { Divida } from "@/hooks/useDebtoData";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AcordoManager } from "./AcordoManager";
 import { useAuth } from "@/context/AuthContext";
+import { EmpresaTag } from "./EmpresaTag";
+import { EtiquetasDisplay } from "./EtiquetasDisplay";
 
 interface DividaCardProps {
   divida: Divida;
@@ -116,6 +118,7 @@ export function DividaCard({ divida, compact = false, onUpdate }: DividaCardProp
           <div className="flex-1">
             <CardTitle className="text-lg leading-tight">{divida.origem_divida}</CardTitle>
             <div className="flex items-center gap-2 mt-2">
+              <EmpresaTag empresaId={divida.empresa_id} />
               <Badge className={getStatusColor(divida.status)}>
                 {divida.status}
               </Badge>
@@ -157,6 +160,13 @@ export function DividaCard({ divida, compact = false, onUpdate }: DividaCardProp
           </TabsList>
           
           <TabsContent value="detalhes" className="mt-4 space-y-4">
+            {/* Etiquetas */}
+            {divida.etiquetas && divida.etiquetas.length > 0 && (
+              <div>
+                <EtiquetasDisplay etiquetaIds={divida.etiquetas} maxDisplay={3} />
+              </div>
+            )}
+
             {/* Valores */}
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -217,7 +227,7 @@ export function DividaCard({ divida, compact = false, onUpdate }: DividaCardProp
                 size="sm" 
                 variant="outline" 
                 className="flex-1 text-xs"
-                onClick={() => window.open(`/divida/${divida.id}`, '_blank')}
+                onClick={() => window.location.href = `/divida/${divida.id}`}
               >
                 <Eye className="w-3 h-3 mr-1" />
                 Detalhes

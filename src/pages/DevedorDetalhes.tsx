@@ -142,9 +142,6 @@ export default function DevedorDetalhes() {
         </div>
         
         <div className="flex items-center gap-3">
-          <Badge className={getScoreColor(devedor.score_recuperabilidade)}>
-            Score: {devedor.score_recuperabilidade}/100
-          </Badge>
           <Button variant="outline" onClick={() => window.open(`/devedor/${devedor.id}/editar`, '_blank')}>
             <Edit className="w-4 h-4 mr-2" />
             Editar

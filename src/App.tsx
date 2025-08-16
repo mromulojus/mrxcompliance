@@ -55,6 +55,7 @@ const App = () => (
                 <Route path="/empresa/:empresaId" element={<EmpresaDetalhes />} />
                 <Route path="/debto" element={<DebtosDashboard />} />
                 <Route path="/devedor/:devedorId" element={<DevedorDetalhes />} />
+                <Route path="/divida/:dividaId" element={<DividaDetalhes />} />
                 <Route path="/denuncias/dashboard" element={<DenunciasDashboard />} />
                 
                 {/* Admin only routes */}
