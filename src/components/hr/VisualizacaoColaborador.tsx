@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -25,11 +25,10 @@ import {
   TrendingUp,
   Image
 } from 'lucide-react';
-import { Colaborador } from '@/types/hr';
+import { Colaborador, HistoricoColaborador } from '@/types/hr';
 import { ExportPdf } from './ExportPdf';
-import { AdicionarObservacao } from './AdicionarObservacao';
 import { AdicionarObservacaoInline } from './AdicionarObservacaoInline';
-import { Logo } from '@/components/ui/logo';
+import { fetchHistorico } from '@/lib/historico';
 import { calcularRescisaoColaborador, calcularValorPrevisto } from '@/lib/rescisao';
 
 interface VisualizacaoColaboradorProps {
@@ -146,7 +145,19 @@ function RescisaoContent({ colaborador }: { colaborador: Colaborador }) {
 
 export function VisualizacaoColaborador({ colaborador, onClose, onEdit }: VisualizacaoColaboradorProps) {
   const [activeTab, setActiveTab] = useState('pessoais');
-  const [historico, setHistorico] = useState(colaborador.historico || []);
+  const [historico, setHistorico] = useState<HistoricoColaborador[]>([]);
+
+  useEffect(() => {
+    const carregarHistorico = async () => {
+      try {
+        const data = await fetchHistorico(colaborador.id);
+        setHistorico(data);
+      } catch (error) {
+        console.error('Erro ao carregar histórico:', error);
+      }
+    };
+    carregarHistorico();
+  }, [colaborador.id]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -169,7 +180,7 @@ export function VisualizacaoColaborador({ colaborador, onClose, onEdit }: Visual
     return new Date(data).toLocaleDateString('pt-BR');
   };
 
-  const handleObservacaoAdicionada = (novaObservacao: any) => {
+  const handleObservacaoAdicionada = (novaObservacao: HistoricoColaborador) => {
     setHistorico(prev => [novaObservacao, ...prev]);
   };
 
@@ -615,7 +626,7 @@ export function VisualizacaoColaborador({ colaborador, onClose, onEdit }: Visual
                           {entrada.anexos && entrada.anexos.length > 0 && (
                             <div className="mt-3 mb-3">
                               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                                {entrada.anexos.map((anexo: any, anexoIndex: number) => (
+                                {entrada.anexos.map((anexo: { nome: string; url: string; tipo: string }, anexoIndex: number) => (
                                   <div key={anexoIndex} className="relative">
                                     <img
                                       src={anexo.url}

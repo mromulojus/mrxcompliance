@@ -6,11 +6,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { MessageCircle, Upload, X, Image } from 'lucide-react';
+import { MessageCircle, X, Image } from 'lucide-react';
+import { saveObservacao } from '@/lib/historico';
+import { HistoricoColaborador } from '@/types/hr';
 
 interface AdicionarObservacaoProps {
   colaboradorId: string;
-  onObservacaoAdicionada: (observacao: any) => void;
+  onObservacaoAdicionada: (observacao: HistoricoColaborador) => void;
 }
 
 export function AdicionarObservacao({ colaboradorId, onObservacaoAdicionada }: AdicionarObservacaoProps) {
@@ -53,23 +55,17 @@ export function AdicionarObservacao({ colaboradorId, onObservacaoAdicionada }: A
 
     try {
       // Simular upload de arquivos (você pode implementar upload real aqui)
-      const anexosUrls = anexos.map((file, index) => ({
+      const anexosUrls = anexos.map((file) => ({
         nome: file.name,
         url: URL.createObjectURL(file), // Em produção, usar URL real do upload
         tipo: 'image'
       }));
 
-      const novaObservacao = {
-        id: Date.now().toString(),
-        observacao: observacao,
-        data: new Date().toISOString(),
-        usuario: 'Usuário Atual', // Pegar do contexto de auth
-        anexos: anexosUrls,
-        created_at: new Date().toISOString()
-      };
-
-      // Aqui você salvaria no banco de dados
-      // await saveObservacao(colaboradorId, novaObservacao);
+      const novaObservacao = await saveObservacao(
+        colaboradorId,
+        observacao,
+        anexosUrls
+      );
 
       onObservacaoAdicionada(novaObservacao);
       

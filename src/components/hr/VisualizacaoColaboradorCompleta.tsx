@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { DocumentsManager } from './DocumentsManager';
 import { AdicionarObservacaoInline } from './AdicionarObservacaoInline';
 import { EtiquetasColaborador } from './EtiquetasColaborador';
+import { fetchHistorico } from '@/lib/historico';
 import {
   User,
   Mail,
@@ -30,7 +31,7 @@ import {
   Image,
   AlertTriangle
 } from 'lucide-react';
-import { Colaborador } from '@/types/hr';
+import { Colaborador, HistoricoColaborador } from '@/types/hr';
 import { ExportPdf } from './ExportPdf';
 import { calcularRescisaoColaborador, calcularValorPrevisto } from '@/lib/rescisao';
 
@@ -41,7 +42,19 @@ interface VisualizacaoColaboradorCompletaProps {
 }
 
 export function VisualizacaoColaboradorCompleta({ colaborador, onClose, onEdit }: VisualizacaoColaboradorCompletaProps) {
-  const [historico, setHistorico] = useState(colaborador.historico || []);
+  const [historico, setHistorico] = useState<HistoricoColaborador[]>([]);
+
+  useEffect(() => {
+    const carregarHistorico = async () => {
+      try {
+        const data = await fetchHistorico(colaborador.id);
+        setHistorico(data);
+      } catch (error) {
+        console.error('Erro ao carregar histórico:', error);
+      }
+    };
+    carregarHistorico();
+  }, [colaborador.id]);
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'ATIVO':
@@ -67,7 +80,7 @@ export function VisualizacaoColaboradorCompleta({ colaborador, onClose, onEdit }
   const valorRescisao = 'totalEstimado' in rescisao ? parseFloat(rescisao.totalEstimado) : 0;
   const valorPrevisto = calcularValorPrevisto(valorRescisao);
 
-  const handleObservacaoAdicionada = (novaObservacao: any) => {
+  const handleObservacaoAdicionada = (novaObservacao: HistoricoColaborador) => {
     setHistorico(prev => [novaObservacao, ...prev]);
   };
 
@@ -379,15 +392,15 @@ export function VisualizacaoColaboradorCompleta({ colaborador, onClose, onEdit }
                    <div className="grid grid-cols-3 gap-4">
                      <div>
                        <label className="text-sm font-medium text-muted-foreground">Periculosidade</label>
-                       <p className="font-semibold">{formatarMoeda((colaborador as any)?.periculosidade || 0)}</p>
+                       <p className="font-semibold">{formatarMoeda((colaborador as Record<string, number | undefined>)?.periculosidade || 0)}</p>
                      </div>
                      <div>
                        <label className="text-sm font-medium text-muted-foreground">Insalubridade</label>
-                       <p className="font-semibold">{formatarMoeda((colaborador as any)?.insalubridade || 0)}</p>
+                       <p className="font-semibold">{formatarMoeda((colaborador as Record<string, number | undefined>)?.insalubridade || 0)}</p>
                      </div>
                      <div>
                        <label className="text-sm font-medium text-muted-foreground">Outros Valores</label>
-                       <p className="font-semibold">{formatarMoeda((colaborador as any)?.outros_valores || 0)}</p>
+                       <p className="font-semibold">{formatarMoeda((colaborador as Record<string, number | undefined>)?.outros_valores || 0)}</p>
                      </div>
                    </div>
                  </div>
@@ -649,7 +662,7 @@ export function VisualizacaoColaboradorCompleta({ colaborador, onClose, onEdit }
                             {obs.anexos && obs.anexos.length > 0 && (
                               <div className="mt-2">
                                 <div className="grid grid-cols-3 gap-1">
-                                  {obs.anexos.map((anexo: any, anexoIndex: number) => (
+                                  {obs.anexos.map((anexo: { nome: string; url: string; tipo: string }, anexoIndex: number) => (
                                     <div key={anexoIndex} className="relative">
                                       <img
                                         src={anexo.url}
