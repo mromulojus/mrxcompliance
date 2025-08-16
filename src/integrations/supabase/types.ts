@@ -965,7 +965,9 @@ export type Database = {
         Returns: undefined
       }
       user_can_access_empresa: {
-        Args: { empresa_uuid: string }
+        Args:
+          | { empresa_uuid: string }
+          | { p_empresa_id: string; p_user_id: string }
         Returns: boolean
       }
       user_can_access_empresa_data: {
