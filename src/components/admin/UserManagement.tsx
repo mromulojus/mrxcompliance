@@ -396,6 +396,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         <SelectItem value="operacional">Operacional</SelectItem>
                         <SelectItem value="empresarial">Empresarial</SelectItem>
                         <SelectItem value="administrador">Administrador</SelectItem>
+                        <SelectItem value="compliance">Compliance</SelectItem>
                         <SelectItem value="superuser">Superuser</SelectItem>
                       </SelectContent>
                     </Select>
@@ -559,6 +560,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         <SelectItem value="operacional">Operacional</SelectItem>
                         <SelectItem value="empresarial">Empresarial</SelectItem>
                         <SelectItem value="administrador">Administrador</SelectItem>
+                        <SelectItem value="compliance">Compliance</SelectItem>
                         <SelectItem value="superuser">Superuser</SelectItem>
                       </SelectContent>
                     </Select>
