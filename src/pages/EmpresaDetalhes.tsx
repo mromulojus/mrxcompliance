@@ -726,8 +726,54 @@ export default function EmpresaDetalhes() {
                     }
                   }} 
                   onEdit={(id) => {
-                    const colaborador = colaboradoresEmpresa.find(col => col.id === id);
-                    if (colaborador) {
+                    const c = colaboradoresEmpresa.find(col => col.id === id);
+                    if (c) {
+                      const colaborador = {
+                        ...c,
+                        empresa: c.empresa_id,
+                        contato_emergencia: {
+                          nome: c.contato_emergencia_nome || '',
+                          telefone: c.contato_emergencia_telefone || '',
+                          parentesco: c.contato_emergencia_parentesco || ''
+                        },
+                        documentos: {
+                          cpf: c.cpf || '',
+                          rg: c.rg || '',
+                          rg_orgao_emissor: c.rg_orgao_emissor || '',
+                          ctps: c.ctps || '',
+                          ctps_serie: c.ctps_serie || '',
+                          pis_pasep: c.pis_pasep || '',
+                          titulo_eleitor: c.titulo_eleitor || '',
+                          reservista: c.reservista || ''
+                        },
+                        beneficios: {
+                          vale_transporte: c.vale_transporte || false,
+                          vale_refeicao: c.vale_refeicao || false,
+                          valor_vale_transporte: Number(c.valor_vale_transporte) || 0,
+                          valor_vale_refeicao: Number(c.valor_vale_refeicao) || 0,
+                          plano_saude: c.plano_saude || false,
+                          plano_odontologico: c.plano_odontologico || false
+                        },
+                        dependentes: {
+                          tem_filhos_menores_14: c.tem_filhos_menores_14 || false,
+                          quantidade_filhos: c.quantidade_filhos || 0,
+                          filhos: Array.isArray(c.filhos) ? c.filhos : []
+                        },
+                        dados_bancarios: {
+                          banco: c.banco || '',
+                          agencia: c.agencia || '',
+                          conta: c.conta || '',
+                          tipo_conta: c.tipo_conta || 'CORRENTE',
+                          pix: c.pix || ''
+                        },
+                        documentos_arquivos: [],
+                        historico: [],
+                        auditoria: {
+                          created_at: c.created_at,
+                          updated_at: c.updated_at,
+                          created_by: c.created_by || ''
+                        }
+                      };
                       setColaboradorEditando(colaborador);
                       setShowFormColaborador(true);
                     }
