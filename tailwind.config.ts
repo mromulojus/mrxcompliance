@@ -1,5 +1,17 @@
 import type { Config } from "tailwindcss";
 import tailwindcssAnimate from "tailwindcss-animate";
+import flattenColorPalette from "tailwindcss/lib/util/flattenColorPalette";
+
+function addVariablesForColors({ addBase, theme }: any) {
+	let allColors = flattenColorPalette(theme("colors"));
+	let newVars = Object.fromEntries(
+		Object.entries(allColors).map(([key, val]) => [`--${key}`, val])
+	);
+
+	addBase({
+		":root": newVars,
+	});
+}
 
 export default {
 	darkMode: ["class"],
@@ -92,15 +104,24 @@ export default {
 				marquee: {
 					from: { transform: 'translateX(0)' },
 					to: { transform: 'translateX(calc(-100% - var(--gap)))' }
-				}
+				},
+				aurora: {
+					from: {
+						backgroundPosition: '50% 50%, 50% 50%',
+					},
+					to: {
+						backgroundPosition: '350% 50%, 350% 50%',
+					},
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				marquee: 'marquee var(--duration) linear infinite'
+				marquee: 'marquee var(--duration) linear infinite',
+				aurora: 'aurora 60s linear infinite'
 			}
 		}
 	},
-        // Use ESM import to avoid CommonJS require in ESM environment
-        plugins: [tailwindcssAnimate],
+		// Use ESM import to avoid CommonJS require in ESM environment
+		plugins: [tailwindcssAnimate, addVariablesForColors],
 } satisfies Config;
