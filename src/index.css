@@ -389,3 +389,12 @@ All colors MUST be HSL.
     font-size: clamp(1rem, 4vw, 1.5rem);
   }
 }
+
+@keyframes wave {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
