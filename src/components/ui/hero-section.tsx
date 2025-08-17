@@ -60,23 +60,15 @@ export function HeroSection() {
             </div>
           </div>
 
-          {/* Stats/Visual */}
+          {/* Corporate Image */}
           <div className="relative">
-            <div className="bg-card/50 backdrop-blur-sm border border-border rounded-2xl p-8 space-y-6">
-              <div className="text-center space-y-2">
-                <div className="text-3xl font-bold text-primary">+10 Anos</div>
-                <div className="text-muted-foreground">De Experiência</div>
-              </div>
-              
-              <div className="text-center space-y-2">
-                <div className="text-3xl font-bold text-primary">+1000</div>
-                <div className="text-muted-foreground">Empresas Atendidas</div>
-              </div>
-              
-              <div className="text-center space-y-2">
-                <div className="text-3xl font-bold text-primary">99%</div>
-                <div className="text-muted-foreground">Taxa de Sucesso</div>
-              </div>
+            <div className="rounded-2xl overflow-hidden bg-muted">
+              <img
+                src="/lovable-uploads/ce7571c6-a698-427d-a52f-8b8a227ce443.png"
+                alt="Equipe corporativa profissional"
+                className="w-full h-[500px] object-cover"
+                loading="lazy"
+              />
             </div>
           </div>
         </div>
