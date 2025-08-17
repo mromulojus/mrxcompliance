@@ -1,4 +1,5 @@
-import { HeroSection } from "@/components/ui/hero-section-9";
+import { Header } from "@/components/ui/header";
+import { HeroSection } from "@/components/ui/hero-section";
 import { FeatureSteps } from "@/components/ui/feature-section";
 import { TestimonialsSection } from "@/components/ui/testimonials-section";
 import { StatsSection } from "@/components/ui/stats-section";
@@ -28,6 +29,7 @@ const features = [
 export default function Homepage() {
   return (
     <div className="min-h-screen">
+      <Header />
       <main>
         <HeroSection />
         <StatsSection />
