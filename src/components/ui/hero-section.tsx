@@ -64,7 +64,7 @@ export function HeroSection() {
           <div className="relative">
             <div className="rounded-2xl overflow-hidden bg-muted">
               <img
-                src="/lovable-uploads/ce7571c6-a698-427d-a52f-8b8a227ce443.png"
+                src="/corporate-team.jpg"
                 alt="Equipe corporativa profissional"
                 className="w-full h-[500px] object-cover"
                 loading="lazy"
