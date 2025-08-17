@@ -14,15 +14,11 @@ export function Logo({ className, size = "md", variant = "default" }: LogoProps)
   };
 
   const IconSvg = () => (
-    <svg
-      viewBox="0 0 100 100"
-      className={cn(sizeClasses[size], className)}
-      fill="currentColor"
-    >
-      <path d="M15 20C15 11.7157 21.7157 5 30 5H40C44.4183 5 48 8.58172 48 13V87C48 91.4183 44.4183 95 40 95H30C21.7157 95 15 88.2843 15 80V20Z"/>
-      <path d="M70 20C70 11.7157 76.7157 5 85 5H95C95 5 95 95 95 95H85C76.7157 95 70 88.2843 70 80V20Z"/>
-      <path d="M32 35C40 30 50 25 60 35C65 40 65 45 55 50C50 55 45 60 40 65C35 55 25 45 32 35Z"/>
-    </svg>
+    <img
+      src="/lovable-uploads/0bb1fa68-8f72-4b82-aa3a-0707d95cd69a.png"
+      alt="MRxCompliance Logo"
+      className={cn(sizeClasses[size], "object-contain", className)}
+    />
   );
 
   if (variant === "icon") {
