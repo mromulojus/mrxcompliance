@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import {
   Activity,
   BookText,
@@ -13,22 +13,10 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from "@/components/ui/sidebar";
+import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/animated-sidebar";
 
 export function AppSidebar() {
-  const { state } = useSidebar();
   const { signOut, profile } = useAuth();
-  const collapsed = state === "collapsed";
   const location = useLocation();
   const path = location.pathname;
 
@@ -46,50 +34,54 @@ export function AppSidebar() {
     { title: "Documentação", url: "/admin/docs", icon: BookText, show: true },
   ];
 
-  const getCls = ({ isActive }: { isActive: boolean }) =>
-    isActive ? "bg-muted text-primary font-medium" : "hover:bg-muted/50";
-
   return (
     <Sidebar>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Menu</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {items.filter((i) => i.show).map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={path === item.url}>
-                    <NavLink to={item.url} className={getCls} end>
-                      <item.icon className="mr-2 h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-              
-              {/* User Info & Logout */}
-              <SidebarMenuItem>
-                <SidebarMenuButton onClick={() => signOut()}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  {!collapsed && <span>Sair</span>}
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        
-        {profile && !collapsed && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Usuário</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <div className="px-2 py-1 text-xs text-muted-foreground">
-                <div className="font-medium">{profile.full_name}</div>
-                <div className="capitalize">{profile.role}</div>
-              </div>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
-      </SidebarContent>
+      <SidebarBody className="justify-between gap-10">
+        <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+          <div className="mt-2 flex flex-col gap-2">
+            {items.filter((i) => i.show).map((item) => (
+              <SidebarLink
+                key={item.title}
+                className={path === item.url ? "bg-neutral-200/60 dark:bg-neutral-700/60 rounded-md px-2" : "px-2"}
+                link={{
+                  label: item.title,
+                  href: item.url,
+                  icon: <item.icon className="text-neutral-700 dark:text-neutral-200 h-4 w-4 flex-shrink-0" />,
+                }}
+              />
+            ))}
+          </div>
+        </div>
+        <div className="mb-2">
+          {profile && (
+            <SidebarLink
+              className="px-2"
+              link={{
+                label: profile.full_name || "Usuário",
+                href: "/profile",
+                icon: (
+                  <img
+                    src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=64&q=80&auto=format&fit=crop&crop=faces"
+                    className="h-7 w-7 flex-shrink-0 rounded-full object-cover"
+                    width={28}
+                    height={28}
+                    alt="Avatar"
+                  />
+                ),
+              }}
+            />
+          )}
+          <SidebarLink
+            className="px-2"
+            onClick={() => signOut()}
+            link={{
+              label: "Sair",
+              href: "#",
+              icon: <LogOut className="text-neutral-700 dark:text-neutral-200 h-4 w-4 flex-shrink-0" />,
+            }}
+          />
+        </div>
+      </SidebarBody>
     </Sidebar>
   );
 }
