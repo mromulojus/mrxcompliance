@@ -194,9 +194,9 @@ export default function DenunciaPublica() {
           <CardHeader className="text-center">
             <div className="mx-auto mb-4 w-20 h-16 flex items-center justify-center">
               <img 
-                src="/lovable-uploads/cbe050ae-bdf6-4931-86b4-d8e69e8995af.png" 
-                alt="Logo" 
-                className="h-16 w-auto object-contain"
+                src="/lovable-uploads/0bb1fa68-8f72-4b82-aa3a-0707d95cd69a.png" 
+                alt="MRxCompliance Logo" 
+                className="h-16 w-16 object-contain"
               />
             </div>
             <CardTitle className="text-2xl">Canal de Denúncias</CardTitle>
