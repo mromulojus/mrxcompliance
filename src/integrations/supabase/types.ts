@@ -1223,6 +1223,108 @@ export type Database = {
         }
         Relationships: []
       }
+      tarefas: {
+        Row: {
+          anexos: string[] | null
+          colaborador_id: string | null
+          created_at: string
+          created_by: string
+          data_conclusao: string | null
+          data_vencimento: string | null
+          denuncia_id: string | null
+          descricao: string | null
+          divida_id: string | null
+          empresa_id: string | null
+          id: string
+          modulo_origem: Database["public"]["Enums"]["task_module"]
+          ordem_na_coluna: number | null
+          prioridade: Database["public"]["Enums"]["task_priority"]
+          processo_id: string | null
+          responsavel_id: string | null
+          status: Database["public"]["Enums"]["task_status"]
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          anexos?: string[] | null
+          colaborador_id?: string | null
+          created_at?: string
+          created_by: string
+          data_conclusao?: string | null
+          data_vencimento?: string | null
+          denuncia_id?: string | null
+          descricao?: string | null
+          divida_id?: string | null
+          empresa_id?: string | null
+          id?: string
+          modulo_origem?: Database["public"]["Enums"]["task_module"]
+          ordem_na_coluna?: number | null
+          prioridade?: Database["public"]["Enums"]["task_priority"]
+          processo_id?: string | null
+          responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["task_status"]
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          anexos?: string[] | null
+          colaborador_id?: string | null
+          created_at?: string
+          created_by?: string
+          data_conclusao?: string | null
+          data_vencimento?: string | null
+          denuncia_id?: string | null
+          descricao?: string | null
+          divida_id?: string | null
+          empresa_id?: string | null
+          id?: string
+          modulo_origem?: Database["public"]["Enums"]["task_module"]
+          ordem_na_coluna?: number | null
+          prioridade?: Database["public"]["Enums"]["task_priority"]
+          processo_id?: string | null
+          responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["task_status"]
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tarefas_colaborador_id_fkey"
+            columns: ["colaborador_id"]
+            isOneToOne: false
+            referencedRelation: "colaboradores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefas_denuncia_id_fkey"
+            columns: ["denuncia_id"]
+            isOneToOne: false
+            referencedRelation: "denuncias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefas_divida_id_fkey"
+            columns: ["divida_id"]
+            isOneToOne: false
+            referencedRelation: "dividas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefas_processo_id_fkey"
+            columns: ["processo_id"]
+            isOneToOne: false
+            referencedRelation: "processos_judiciais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1267,6 +1369,14 @@ export type Database = {
           user_uuid: string
         }
         Returns: boolean
+      }
+      reorder_tasks_in_column: {
+        Args: {
+          p_new_order: number
+          p_new_status: Database["public"]["Enums"]["task_status"]
+          p_task_id: string
+        }
+        Returns: undefined
       }
       update_last_login: {
         Args: Record<PropertyKey, never>
@@ -1335,6 +1445,9 @@ export type Database = {
         | "CLIENTE"
         | "OUTRO"
       sexo: "MASCULINO" | "FEMININO"
+      task_module: "ouvidoria" | "auditoria" | "cobrancas" | "geral"
+      task_priority: "alta" | "media" | "baixa"
+      task_status: "a_fazer" | "em_andamento" | "em_revisao" | "concluido"
       tipo_conta: "CORRENTE" | "POUPANCA"
       tipo_contrato: "CLT" | "PJ" | "PF"
       tipo_denuncia:
@@ -1353,7 +1466,7 @@ export type Database = {
         | "LAUDO"
         | "CONTRATO"
         | "OUTROS"
-      user_role: "superuser" | "administrador" | "empresarial" | "operacional" | "compliance"
+      user_role: "superuser" | "administrador" | "empresarial" | "operacional"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1539,6 +1652,9 @@ export const Constants = {
         "OUTRO",
       ],
       sexo: ["MASCULINO", "FEMININO"],
+      task_module: ["ouvidoria", "auditoria", "cobrancas", "geral"],
+      task_priority: ["alta", "media", "baixa"],
+      task_status: ["a_fazer", "em_andamento", "em_revisao", "concluido"],
       tipo_conta: ["CORRENTE", "POUPANCA"],
       tipo_contrato: ["CLT", "PJ", "PF"],
       tipo_denuncia: [
@@ -1559,7 +1675,7 @@ export const Constants = {
         "CONTRATO",
         "OUTROS",
       ],
-      user_role: ["superuser", "administrador", "empresarial", "operacional", "compliance"],
+      user_role: ["superuser", "administrador", "empresarial", "operacional"],
     },
   },
 } as const
