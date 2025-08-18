@@ -9,11 +9,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useHR } from '@/context/HRContext';
 import { Denuncia, DenunciaStatus } from '@/types/denuncia';
-import { AlertTriangle, MessageSquare, Calendar, User, ArrowLeft, TrendingUp, BarChart3 } from 'lucide-react';
+import { AlertTriangle, MessageSquare, Calendar, User, ArrowLeft, TrendingUp, BarChart3, FileText, Download, Upload } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function DenunciasDashboard() {
   const { denuncias, empresas, atualizarStatus, adicionarComentario } = useHR();
@@ -24,6 +26,8 @@ export default function DenunciasDashboard() {
   const [novoComentario, setNovoComentario] = useState('');
   const [novoStatus, setNovoStatus] = useState<DenunciaStatus>('RECEBIDO');
   const [activeTab, setActiveTab] = useState('nao-tratadas');
+  const [novoAnexoArquivos, setNovoAnexoArquivos] = useState<File[]>([]);
+  const [uploadingAnexos, setUploadingAnexos] = useState(false);
 
   const denunciasNaoTratadas = denuncias.filter(d => d.status === 'RECEBIDO');
   const denunciasEmAndamento = denuncias.filter(d => ['EM_ANALISE', 'INVESTIGACAO'].includes(d.status));
@@ -85,6 +89,51 @@ export default function DenunciasDashboard() {
       title: 'Comentário adicionado',
       description: 'Seu comentário foi registrado na denúncia.'
     });
+  };
+
+  const handleUploadAnexos = async () => {
+    if (!selectedDenuncia || novoAnexoArquivos.length === 0) return;
+    try {
+      setUploadingAnexos(true);
+      const folder = `empresa_${selectedDenuncia.empresaId}/${selectedDenuncia.id}`;
+      const anexosPaths: string[] = [];
+      for (const file of novoAnexoArquivos) {
+        const allowedTypes = [
+          'image/jpeg', 'image/png', 'image/webp',
+          'application/pdf',
+          'application/msword',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        ];
+        if (!allowedTypes.includes(file.type)) {
+          throw new Error('Tipo de arquivo não permitido. Use JPG, PNG, WEBP, PDF ou DOC/DOCX.');
+        }
+        if (file.size > 10 * 1024 * 1024) {
+          throw new Error('Arquivo muito grande. Máximo 10MB por arquivo.');
+        }
+        const safeName = file.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
+        const path = `${folder}/${Date.now()}_${safeName}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('denuncia-anexos')
+          .upload(path, file, { cacheControl: '3600', upsert: true });
+        if (uploadError) throw uploadError;
+        anexosPaths.push(uploadData.path);
+      }
+
+      const novosAnexos = [...(selectedDenuncia.anexos || []), ...anexosPaths];
+      await supabase
+        .from('denuncias')
+        .update({ anexos: novosAnexos })
+        .eq('id', selectedDenuncia.id);
+
+      setSelectedDenuncia({ ...selectedDenuncia, anexos: novosAnexos });
+      setNovoAnexoArquivos([]);
+      toast({ title: 'Anexos enviados', description: 'Arquivos anexados à denúncia.' });
+    } catch (e: any) {
+      console.error('Erro ao anexar arquivos:', e);
+      toast({ title: 'Erro ao anexar', description: e.message || 'Falha ao enviar anexos', variant: 'destructive' });
+    } finally {
+      setUploadingAnexos(false);
+    }
   };
 
   const getEmpresaNome = (empresaId: string) => {
@@ -184,6 +233,60 @@ export default function DenunciasDashboard() {
                               <p className="text-sm bg-muted p-3 rounded mt-1">{selectedDenuncia.sugestao}</p>
                             </div>
                           )}
+
+                          {/* Anexos */}
+                          <div className="space-y-3">
+                            <label className="text-sm font-medium">Anexos:</label>
+                            {selectedDenuncia.anexos && selectedDenuncia.anexos.length > 0 ? (
+                              <div className="space-y-2">
+                                {selectedDenuncia.anexos.map((path, idx) => (
+                                  <div key={idx} className="flex items-center gap-2 p-2 bg-muted rounded">
+                                    <FileText className="h-4 w-4 text-muted-foreground" />
+                                    <span className="text-sm flex-1 truncate">{path.split('/').pop()}</span>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={async () => {
+                                        const { data, error } = await supabase.storage
+                                          .from('denuncia-anexos')
+                                          .createSignedUrl(path, 60 * 5);
+                                        if (!error && data?.signedUrl) {
+                                          window.open(data.signedUrl, '_blank');
+                                        }
+                                      }}
+                                    >
+                                      <Download className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-muted-foreground">Nenhum anexo.</p>
+                            )}
+
+                            <div className="space-y-2 pt-2">
+                              <Input
+                                type="file"
+                                multiple
+                                accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx"
+                                onChange={(e) => setNovoAnexoArquivos(Array.from(e.target.files || []))}
+                                disabled={uploadingAnexos}
+                              />
+                              <Button onClick={handleUploadAnexos} disabled={novoAnexoArquivos.length === 0 || uploadingAnexos}>
+                                {uploadingAnexos ? (
+                                  <>
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                                    Enviando...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Upload className="h-4 w-4 mr-2" />
+                                    Anexar Arquivos
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          </div>
 
                           {/* Atualizar Status */}
                           <Separator />
