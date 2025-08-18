@@ -127,7 +127,7 @@ export default function TarefasDashboard() {
         </div>
       </div>
 
-      {/* KPIs */}
+      {/* KPIs (compactos) */}
       <TaskKPICards kpis={kpis} />
 
       {/* Filters */}
@@ -152,7 +152,7 @@ export default function TarefasDashboard() {
         </CardHeader>
         <CardContent className="p-0">
           {view === 'kanban' ? (
-            <div className="h-[calc(100vh-400px)] min-h-[600px]">
+            <div className="h-[calc(100vh-480px)] min-h-[520px]">
               <Kanban
                 tasks={filteredTarefas}
                 onTaskUpdate={handleTaskReorder}

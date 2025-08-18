@@ -22,7 +22,7 @@ interface KanbanProps {
 
 export const Kanban = ({ tasks, onTaskUpdate, onTaskCreate, onTaskDelete, loading = false }: KanbanProps) => {
   return (
-    <div className={cn("h-full w-full bg-background text-foreground")}>
+    <div className={cn("h-full w-full bg-neutral-900 text-neutral-100")}>
       <Board 
         tasks={tasks}
         onTaskUpdate={onTaskUpdate}
@@ -83,7 +83,7 @@ const Board = ({ tasks, onTaskUpdate, onTaskCreate, onTaskDelete, loading }: Boa
           onTaskCreate={onTaskCreate}
         />
       ))}
-      <BurnBarrel onTaskDelete={onTaskDelete} />
+      {/* Lixeira removida para aumentar área útil do quadro */}
     </div>
   );
 };
@@ -211,8 +211,8 @@ const Column = ({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         className={`h-full w-full transition-colors rounded-lg ${
-          active ? "bg-muted/50" : "bg-background"
-        } min-h-[500px] border-2 border-dashed ${active ? "border-primary" : "border-transparent"}`}
+          active ? "bg-neutral-700/60" : "bg-neutral-800"
+        } min-h-[500px] border-2 border-dashed ${active ? "border-primary" : "border-neutral-700"}`}
       >
         {filteredTasks
           .sort((a, b) => a.ordem_na_coluna - b.ordem_na_coluna)
@@ -260,7 +260,7 @@ const TaskCard = ({ task, handleDragStart }: TaskCardProps) => {
         layoutId={task.id}
         draggable="true"
         onDragStart={(e: any) => handleDragStart(e, task)}
-        className="cursor-grab rounded-lg border bg-card text-card-foreground shadow-sm p-4 mb-3 active:cursor-grabbing hover:shadow-md transition-all hover:border-primary/50 group"
+        className="cursor-grab rounded-lg border border-neutral-700 bg-neutral-800 text-neutral-100 shadow-sm p-4 mb-3 active:cursor-grabbing hover:shadow-md transition-all hover:border-primary/50 group"
       >
         <div className="space-y-3">
           {/* Header with title and avatar */}
@@ -404,7 +404,7 @@ const AddCard = ({ column, onTaskCreate }: AddCardProps) => {
     <motion.button
       layout
       onClick={() => onTaskCreate(column)}
-      className="flex w-full items-center gap-1.5 px-3 py-4 text-xs text-muted-foreground transition-colors hover:text-foreground rounded-lg hover:bg-muted/50 border-2 border-dashed border-transparent hover:border-primary/50"
+      className="flex w-full items-center gap-1.5 px-3 py-3 text-xs text-neutral-300 transition-colors hover:text-white rounded-lg hover:bg-neutral-700/50 border-2 border-dashed border-neutral-700 hover:border-primary/50"
     >
       <FiPlus className="h-4 w-4" />
       <span>Adicionar tarefa</span>
