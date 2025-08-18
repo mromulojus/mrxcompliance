@@ -78,7 +78,9 @@ export default function DenunciaPublica() {
     );
   }
 
-  if (!loadingEmpresa && !empresa) {
+  // Se não conseguirmos carregar a empresa (por exemplo, RLS bloqueando SELECT para usuários anônimos),
+  // ainda assim permitimos o acesso público ao formulário. Só redirecionamos caso não haja empresaId.
+  if (!empresaId) {
     return <Navigate to="/404" replace />;
   }
 
@@ -201,6 +203,11 @@ export default function DenunciaPublica() {
             </div>
             <CardTitle className="text-2xl">Canal de Denúncias</CardTitle>
             <p className="text-muted-foreground">{empresa?.nome ?? 'Empresa'}</p>
+            {!empresa && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Canal público ativo. O nome da empresa pode não aparecer para proteger dados internos.
+              </p>
+            )}
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="bg-blue-50 p-4 rounded-lg">
