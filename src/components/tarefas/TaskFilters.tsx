@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { TaskFilters } from '@/types/tarefas';
-import { supabase } from '@/integrations/supabase/client';
 
 interface TaskFiltersProps {
   filters: TaskFilters;
@@ -23,14 +22,6 @@ export function TaskFiltersComponent({
   onFiltersChange, 
   onClearFilters 
 }: TaskFiltersProps) {
-  const [users, setUsers] = useState<{ id: string; name: string }[]>([]);
-  useEffect(() => {
-    const loadUsers = async () => {
-      const { data } = await supabase.from('profiles').select('user_id, username').order('username');
-      setUsers((data || []).map((u) => ({ id: u.user_id as string, name: (u.username as string) || 'Sem nome' })));
-    };
-    loadUsers();
-  }, []);
   const handleFilterChange = (key: keyof TaskFilters, value: string) => {
     onFiltersChange({
       ...filters,
@@ -120,10 +111,8 @@ export function TaskFiltersComponent({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="">Todos</SelectItem>
+            {/* TODO: Add dynamic users list */}
             <SelectItem value="current_user">Minhas Tarefas</SelectItem>
-            {users.map((u) => (
-              <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
-            ))}
           </SelectContent>
         </Select>
       </div>

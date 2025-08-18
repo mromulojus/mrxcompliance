@@ -8,7 +8,6 @@ export function useTarefasData() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   // Fetch tarefas
   const fetchTarefas = async () => {
@@ -35,16 +34,6 @@ export function useTarefasData() {
     }
   };
 
-  // Fetch current user id once
-  const fetchCurrentUser = async () => {
-    try {
-      const { data: user } = await supabase.auth.getUser();
-      setCurrentUserId(user.user?.id ?? null);
-    } catch (e) {
-      setCurrentUserId(null);
-    }
-  };
-
   // Create tarefa
   const createTarefa = async (tarefaData: TaskFormData) => {
     try {
@@ -55,10 +44,6 @@ export function useTarefasData() {
         .from('tarefas')
         .insert({
           ...tarefaData,
-          responsavel_id:
-            tarefaData.responsavel_id === 'current_user'
-              ? user.user.id
-              : tarefaData.responsavel_id,
           created_by: user.user.id,
         })
         .select()
@@ -143,30 +128,19 @@ export function useTarefasData() {
   // Bulk update tarefas (for drag and drop)
   const updateTarefas = async (updatedTarefas: Tarefa[]) => {
     try {
-      // Calcula ordem por coluna separadamente
-      const byColumn: Record<string, Tarefa[]> = {
-        a_fazer: [],
-        em_andamento: [],
-        em_revisao: [],
-        concluido: [],
-      };
+      const updates = updatedTarefas.map((tarefa, index) => ({
+        id: tarefa.id,
+        status: tarefa.status,
+        ordem_na_coluna: index,
+      }));
 
-      for (const t of updatedTarefas) {
-        byColumn[t.status] = [...(byColumn[t.status] || []), t];
-      }
-
-      const batchedUpdates: { id: string; status: string; ordem_na_coluna: number }[] = [];
-      (Object.keys(byColumn) as Array<keyof typeof byColumn>).forEach((statusKey) => {
-        const list = byColumn[statusKey];
-        list.forEach((t, idx) => {
-          batchedUpdates.push({ id: t.id, status: statusKey as string, ordem_na_coluna: idx });
-        });
-      });
-
-      for (const update of batchedUpdates) {
+      for (const update of updates) {
         await supabase
           .from('tarefas')
-          .update({ status: update.status, ordem_na_coluna: update.ordem_na_coluna })
+          .update({
+            status: update.status,
+            ordem_na_coluna: update.ordem_na_coluna,
+          })
           .eq('id', update.id);
       }
 
@@ -208,12 +182,8 @@ export function useTarefasData() {
         return false;
       }
 
-      if (filters.responsavel) {
-        const expectedId =
-          filters.responsavel === 'current_user' ? currentUserId : filters.responsavel;
-        if (expectedId && tarefa.responsavel_id !== expectedId) {
-          return false;
-        }
+      if (filters.responsavel && tarefa.responsavel_id !== filters.responsavel) {
+        return false;
       }
 
       return true;
@@ -247,7 +217,6 @@ export function useTarefasData() {
   };
 
   useEffect(() => {
-    fetchCurrentUser();
     fetchTarefas();
   }, []);
 
@@ -255,7 +224,6 @@ export function useTarefasData() {
     tarefas,
     loading,
     error,
-    currentUserId,
     createTarefa,
     updateTarefa,
     deleteTarefa,

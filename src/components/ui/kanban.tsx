@@ -42,7 +42,7 @@ interface BoardProps {
 
 const Board = ({ tasks, onTaskUpdate, onTaskCreate, onTaskDelete }: BoardProps) => {
   return (
-    <div className="flex h-full w-full gap-4 overflow-x-auto p-6 bg-muted/20 dark:bg-secondary/20 rounded-xl">
+    <div className="flex h-full w-full gap-3 overflow-x-auto p-6">
       <Column
         title={TASK_STATUS_LABELS.a_fazer}
         column="a_fazer"
@@ -198,9 +198,9 @@ const Column = ({
 
   return (
     <div className="w-80 shrink-0">
-      <div className="mb-3 flex items-center justify-between sticky top-0 z-10">
-        <h3 className={`font-semibold ${headingColor}`}>{title}</h3>
-        <span className="rounded text-xs px-2 py-0.5 bg-muted text-muted-foreground">
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className={`font-medium ${headingColor}`}>{title}</h3>
+        <span className="rounded text-sm text-muted-foreground">
           {filteredTasks.length}
         </span>
       </div>
@@ -208,11 +208,9 @@ const Column = ({
         onDrop={handleDragEnd}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
-        className={`h-full w-full transition-colors rounded-xl min-h-[500px] shadow-sm ${
-          active
-            ? "bg-muted/60 border-primary/60"
-            : "bg-card/60 dark:bg-secondary/30 border-border/60"
-        } border`}
+        className={`h-full w-full transition-colors rounded-lg ${
+          active ? "bg-muted/50" : "bg-background"
+        } min-h-[500px] border-2 border-dashed ${active ? "border-primary" : "border-transparent"}`}
       >
         {filteredTasks.map((task) => {
           return <TaskCard key={task.id} task={task} handleDragStart={handleDragStart} />;
@@ -267,11 +265,6 @@ const TaskCard = ({ task, handleDragStart }: TaskCardProps) => {
             }`}>
               {task.modulo_origem}
             </span>
-            {task.responsavel_id && (
-              <span className="px-2 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
-                👤 Atribuída
-              </span>
-            )}
           </div>
           
           {task.data_vencimento && (
