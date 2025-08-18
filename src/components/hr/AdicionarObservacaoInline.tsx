@@ -4,6 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Plus } from 'lucide-react';
 import { saveObservacao } from '@/lib/historico';
+import { useAuth } from '@/context/AuthContext';
 
 interface AdicionarObservacaoInlineProps {
   colaboradorId: string;
@@ -14,8 +15,18 @@ export function AdicionarObservacaoInline({ colaboradorId, onObservacaoAdicionad
   const [observacao, setObservacao] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { hasAnyRole } = useAuth();
+  const canAddObservation = hasAnyRole(['administrador', 'empresarial']);
 
   const handleSubmit = async () => {
+    if (!canAddObservation) {
+      toast({
+        title: 'Permissão insuficiente',
+        description: 'Você não tem permissão para adicionar observações.',
+        variant: 'destructive'
+      });
+      return;
+    }
     if (!observacao.trim()) {
       toast({
         title: "Observação obrigatória",
@@ -59,10 +70,14 @@ export function AdicionarObservacaoInline({ colaboradorId, onObservacaoAdicionad
         onChange={(e) => setObservacao(e.target.value)}
         rows={3}
         className="resize-none"
+        disabled={!canAddObservation || isLoading}
       />
+      {!canAddObservation && (
+        <p className="text-xs text-muted-foreground">Você não tem permissão para registrar observações.</p>
+      )}
       <Button 
         onClick={handleSubmit} 
-        disabled={isLoading || !observacao.trim()}
+        disabled={isLoading || !observacao.trim() || !canAddObservation}
         className="w-full sm:w-auto"
       >
         <Plus className="h-4 w-4 mr-2" />
