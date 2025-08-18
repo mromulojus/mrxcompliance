@@ -210,15 +210,15 @@ const SystemData: React.FC = () => {
       const historicoPayload = dividasInseridas.slice(0, 5).map((divida: any, i: number) => ({
         divida_id: divida.id,
         devedor_id: divida.devedor_id,
-        tipo_acao: pick(['LIGACAO', 'WHATSAPP', 'EMAIL', 'CARTA']),
-        canal: pick(['telefone', 'whatsapp', 'email', 'correios']),
+        tipo_acao: pick(['contato_telefone', 'contato_whatsapp', 'email', 'sms', 'carta', 'visita', 'acordo', 'pagamento', 'negativacao', 'protesto', 'judicial']),
+        canal: pick(['telefone', 'whatsapp', 'email', 'sms', 'carta', 'presencial']),
         descricao: pick([
           'Tentativa de contato via telefone',
           'Mensagem enviada pelo WhatsApp',
           'Email de cobrança enviado',
           'Proposta de acordo apresentada'
         ]),
-        resultado: pick(['SUCESSO', 'SEM_RESPOSTA', 'PROMESSA', 'RECUSA', 'REAGENDADO']),
+        resultado: pick(['sem_resposta', 'pessoa_certa', 'pessoa_errada', 'numero_inexistente', 'compromisso_pagamento', 'acordo_fechado', 'recusa', 'disputa']),
         data_compromisso: Math.random() < 0.5 ? randomDate(2024, 2025) : null,
         valor_negociado: Math.random() < 0.3 ? rand(100, divida.valor_original) : null,
         observacoes: 'Histórico gerado automaticamente para demonstração',

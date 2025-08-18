@@ -177,14 +177,17 @@ export function HistoricoCobrancasAvancado({ dividaId, devedorId }: HistoricoCob
                       <SelectValue placeholder="Selecione..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="contato_inicial">Contato Inicial</SelectItem>
-                      <SelectItem value="cobranca_amigavel">Cobrança Amigável</SelectItem>
-                      <SelectItem value="negociacao">Negociação</SelectItem>
+                      <SelectItem value="contato_telefone">Contato por Telefone</SelectItem>
+                      <SelectItem value="contato_whatsapp">Contato por WhatsApp</SelectItem>
+                      <SelectItem value="email">E-mail</SelectItem>
+                      <SelectItem value="sms">SMS</SelectItem>
+                      <SelectItem value="carta">Carta</SelectItem>
+                      <SelectItem value="visita">Visita</SelectItem>
                       <SelectItem value="acordo">Acordo</SelectItem>
-                      <SelectItem value="protesto">Protesto</SelectItem>
+                      <SelectItem value="pagamento">Pagamento</SelectItem>
                       <SelectItem value="negativacao">Negativação</SelectItem>
+                      <SelectItem value="protesto">Protesto</SelectItem>
                       <SelectItem value="judicial">Judicial</SelectItem>
-                      <SelectItem value="outros">Outros</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -226,11 +229,14 @@ export function HistoricoCobrancasAvancado({ dividaId, devedorId }: HistoricoCob
                       <SelectValue placeholder="Selecione..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="sucesso">Sucesso</SelectItem>
                       <SelectItem value="sem_resposta">Sem Resposta</SelectItem>
-                      <SelectItem value="negativa">Negativa</SelectItem>
-                      <SelectItem value="reagendado">Reagendado</SelectItem>
-                      <SelectItem value="parcial">Parcial</SelectItem>
+                      <SelectItem value="pessoa_certa">Pessoa Certa</SelectItem>
+                      <SelectItem value="pessoa_errada">Pessoa Errada</SelectItem>
+                      <SelectItem value="numero_inexistente">Número Inexistente</SelectItem>
+                      <SelectItem value="compromisso_pagamento">Compromisso de Pagamento</SelectItem>
+                      <SelectItem value="acordo_fechado">Acordo Fechado</SelectItem>
+                      <SelectItem value="recusa">Recusa</SelectItem>
+                      <SelectItem value="disputa">Disputa</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

@@ -283,10 +283,10 @@ export function useDebtoData() {
           await adicionarHistorico({
             divida_id: dividaId,
             devedor_id: divida.devedor_id,
-            tipo_acao: 'atualizacao',
+            tipo_acao: 'contato_telefone',
             canal: 'sistema',
             descricao: descricaoHistorico,
-            resultado: 'sucesso'
+            resultado: 'sem_resposta'
           });
         } catch (histError) {
           console.error('Erro ao criar histórico automático:', histError);

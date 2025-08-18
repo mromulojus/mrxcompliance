@@ -283,7 +283,7 @@ export function DividaCard({ divida, compact = false, onUpdate }: DividaCardProp
                         await adicionarHistorico({
                           divida_id: divida.id,
                           devedor_id: divida.devedor_id,
-                          tipo_acao: "observacao",
+                          tipo_acao: "contato_telefone",
                           canal: "sistema",
                           descricao: novoTexto.trim(),
                         });
