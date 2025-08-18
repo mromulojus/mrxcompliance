@@ -10,6 +10,7 @@ import {
   LogOut,
   DollarSign,
   type LucideIcon,
+  KanbanSquare,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/animated-sidebar";
@@ -30,6 +31,7 @@ export function AppSidebar() {
   const items: Item[] = [
     { title: "Painel", url: "/", icon: MrxIcon as unknown as LucideIcon, show: true },
     { title: "Empresas", url: "/empresas", icon: Building2, show: true },
+    { title: "Tarefas", url: "/tarefas", icon: KanbanSquare, show: true },
     { title: "Debto - Cobranças", url: "/debto", icon: DollarSign, show: true },
     { title: "Dashboard Denúncias", url: "/denuncias/dashboard", icon: Shield, show: true },
     { title: "Log de Atividades", url: "/admin/activity-log", icon: Activity, show: true },
