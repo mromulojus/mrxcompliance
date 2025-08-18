@@ -25,6 +25,7 @@ import DebtosDashboard from "@/pages/DebtosDashboard";
 import DevedorDetalhes from "./pages/DevedorDetalhes";
 import DividaDetalhes from "./pages/DividaDetalhes";
 import Homepage from "@/pages/Homepage";
+import { SupabaseProtectedRoute } from "@/components/auth/SupabaseProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -57,11 +58,15 @@ const App = () => (
                 <Route path="/debto" element={<DebtosDashboard />} />
                 <Route path="/devedor/:devedorId" element={<DevedorDetalhes />} />
                 <Route path="/divida/:dividaId" element={<DividaDetalhes />} />
-                <Route path="/denuncias/dashboard" element={<DenunciasDashboard />} />
+                <Route path="/denuncias/dashboard" element={
+                  <SupabaseProtectedRoute requireAnyOf={[{ type: 'perm', value: 'view:denuncias' }]}>
+                    <DenunciasDashboard />
+                  </SupabaseProtectedRoute>
+                } />
                 
                 {/* Admin only routes */}
                 <Route path="/admin/activity-log" element={
-                  <ProtectedRoute requiredRole="administrador">
+                  <ProtectedRoute requiredRole="superuser">
                     <ActivityLog />
                   </ProtectedRoute>
                 } />
