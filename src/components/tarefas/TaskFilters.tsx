@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
@@ -10,6 +10,13 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { TaskFilters } from '@/types/tarefas';
+import { supabase } from '@/integrations/supabase/client';
+
+interface UserProfile {
+  user_id: string;
+  full_name: string;
+  username: string;
+}
 
 interface TaskFiltersProps {
   filters: TaskFilters;
@@ -22,12 +29,38 @@ export function TaskFiltersComponent({
   onFiltersChange, 
   onClearFilters 
 }: TaskFiltersProps) {
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [currentUser, setCurrentUser] = useState<string | null>(null);
+
   const handleFilterChange = (key: keyof TaskFilters, value: string) => {
     onFiltersChange({
       ...filters,
       [key]: value || undefined,
     });
   };
+
+  // Fetch users for filter dropdown
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const [usersResult, userResult] = await Promise.all([
+          supabase
+            .from('profiles')
+            .select('user_id, full_name, username')
+            .eq('is_active', true)
+            .order('full_name'),
+          supabase.auth.getUser()
+        ]);
+
+        if (usersResult.data) setUsers(usersResult.data);
+        if (userResult.data.user) setCurrentUser(userResult.data.user.id);
+      } catch (err) {
+        console.error('Error fetching users:', err);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   const hasActiveFilters = Object.values(filters).some(value => 
     value !== undefined && value !== ''
@@ -111,8 +144,13 @@ export function TaskFiltersComponent({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="">Todos</SelectItem>
-            {/* TODO: Add dynamic users list */}
-            <SelectItem value="current_user">Minhas Tarefas</SelectItem>
+            <SelectItem value={currentUser || ''}>Minhas Tarefas</SelectItem>
+            <SelectItem value="unassigned">Não Atribuídas</SelectItem>
+            {users.map((user) => (
+              <SelectItem key={user.user_id} value={user.user_id}>
+                {user.full_name || user.username}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>

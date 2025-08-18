@@ -182,8 +182,12 @@ export function useTarefasData() {
         return false;
       }
 
-      if (filters.responsavel && tarefa.responsavel_id !== filters.responsavel) {
-        return false;
+      if (filters.responsavel) {
+        if (filters.responsavel === 'unassigned') {
+          if (tarefa.responsavel_id) return false;
+        } else if (tarefa.responsavel_id !== filters.responsavel) {
+          return false;
+        }
       }
 
       return true;

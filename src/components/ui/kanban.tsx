@@ -240,8 +240,15 @@ const TaskCard = ({ task, handleDragStart }: TaskCardProps) => {
         onDragStart={(e) => handleDragStart(e, task)}
         className="cursor-grab rounded-lg border bg-card text-card-foreground shadow-sm p-4 mb-3 active:cursor-grabbing hover:shadow-md transition-shadow"
       >
-        <div className="space-y-2">
-          <h4 className="font-medium text-sm">{task.titulo}</h4>
+        <div className="space-y-3">
+          <div className="flex items-start justify-between gap-2">
+            <h4 className="font-medium text-sm flex-1">{task.titulo}</h4>
+            {task.responsavel_id && (
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground text-xs font-medium">
+                {task.responsavel_id.slice(0, 2).toUpperCase()}
+              </div>
+            )}
+          </div>
           
           {task.descricao && (
             <p className="text-xs text-muted-foreground line-clamp-2">{task.descricao}</p>
@@ -263,14 +270,16 @@ const TaskCard = ({ task, handleDragStart }: TaskCardProps) => {
               task.modulo_origem === 'cobrancas' ? 'bg-orange-100 text-orange-600' :
               'bg-gray-100 text-gray-600'
             }`}>
-              {task.modulo_origem}
+              {task.modulo_origem === 'ouvidoria' ? 'Ouvidoria' :
+               task.modulo_origem === 'auditoria' ? 'Auditoria' :
+               task.modulo_origem === 'cobrancas' ? 'Cobranças' : 'Geral'}
             </span>
           </div>
           
           {task.data_vencimento && (
             <div className={`text-xs ${isOverdue ? 'text-red-600 font-medium' : 'text-muted-foreground'}`}>
-              Vence: {new Date(task.data_vencimento).toLocaleDateString('pt-BR')}
-              {isOverdue && ' (Atrasada)'}
+              📅 {new Date(task.data_vencimento).toLocaleDateString('pt-BR')}
+              {isOverdue && ' ⚠️'}
             </div>
           )}
         </div>

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -26,7 +26,15 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { TaskFormData, TaskModule, TaskStatus, TaskPriority } from '@/types/tarefas';
+import { TaskFormData } from '@/types/tarefas';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+
+interface UserProfile {
+  user_id: string;
+  full_name: string;
+  username: string;
+}
 
 const taskFormSchema = z.object({
   titulo: z.string().min(1, 'Título é obrigatório'),
@@ -59,6 +67,9 @@ export function TaskFormModal({
   defaultValues,
   editData 
 }: TaskFormModalProps) {
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const { toast } = useToast();
+  
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
@@ -72,7 +83,32 @@ export function TaskFormModal({
     },
   });
 
+  // Fetch users for assignment
+  const fetchUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, username')
+        .eq('is_active', true)
+        .order('full_name');
+
+      if (error) throw error;
+      setUsers(data || []);
+    } catch (err) {
+      console.error('Error fetching users:', err);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar a lista de usuários',
+        variant: 'destructive',
+      });
+    }
+  };
+
   useEffect(() => {
+    if (open) {
+      fetchUsers();
+    }
+    
     if (editData) {
       form.reset(editData);
     } else if (defaultValues) {
@@ -86,7 +122,7 @@ export function TaskFormModal({
         responsavel_id: defaultValues.responsavel_id,
       });
     }
-  }, [editData, defaultValues, form]);
+  }, [editData, defaultValues, form, open]);
 
   const handleSubmit = (data: TaskFormData) => {
     onSubmit(data);
@@ -194,6 +230,32 @@ export function TaskFormModal({
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
+                name="responsavel_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Responsável</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o responsável" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="">Não atribuído</SelectItem>
+                        {users.map((user) => (
+                          <SelectItem key={user.user_id} value={user.user_id}>
+                            {user.full_name || user.username}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
                 name="status"
                 render={({ field }) => (
                   <FormItem>
@@ -215,21 +277,21 @@ export function TaskFormModal({
                   </FormItem>
                 )}
               />
-
-              <FormField
-                control={form.control}
-                name="data_vencimento"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Data de Vencimento</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
+
+            <FormField
+              control={form.control}
+              name="data_vencimento"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Data de Vencimento</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="flex justify-end space-x-2 pt-4">
               <Button type="button" variant="outline" onClick={handleClose}>
