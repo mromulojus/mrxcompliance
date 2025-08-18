@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -27,6 +27,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { TaskFormData, TaskModule, TaskStatus, TaskPriority } from '@/types/tarefas';
+import { supabase } from '@/integrations/supabase/client';
 
 const taskFormSchema = z.object({
   titulo: z.string().min(1, 'Título é obrigatório'),
@@ -59,6 +60,14 @@ export function TaskFormModal({
   defaultValues,
   editData 
 }: TaskFormModalProps) {
+  const [users, setUsers] = useState<{ id: string; name: string }[]>([]);
+  useEffect(() => {
+    const loadUsers = async () => {
+      const { data } = await supabase.from('profiles').select('user_id, username').order('username');
+      setUsers((data || []).map((u) => ({ id: u.user_id as string, name: (u.username as string) || 'Sem nome' })));
+    };
+    loadUsers();
+  }, []);
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
@@ -218,6 +227,33 @@ export function TaskFormModal({
 
               <FormField
                 control={form.control}
+                name="responsavel_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Responsável</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o responsável" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="">Não atribuído</SelectItem>
+                        <SelectItem value="current_user">Eu</SelectItem>
+                        {users.map((u) => (
+                          <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
                 name="data_vencimento"
                 render={({ field }) => (
                   <FormItem>
@@ -229,6 +265,7 @@ export function TaskFormModal({
                   </FormItem>
                 )}
               />
+              {/* Espaço reservado para seleção de empresa/equipe no futuro */}
             </div>
 
             <div className="flex justify-end space-x-2 pt-4">
