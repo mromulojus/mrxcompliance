@@ -81,11 +81,12 @@ The `denuncias` table in Supabase uses row-level security:
 
 These policies ensure public reporting while keeping report data restricted to the compliance team.
 
-## Authentication OTP Expiry
+## Authentication Security Settings
 
-Supabase one-time passwords (OTPs) expire **5 minutes** after issuance as configured in
-`supabase/config.toml`. This aligns with the organization policy balancing security and
-usability by allowing a short window for entry while limiting exposure.
+- OTP expiry is set to **2 minutes (120 seconds)** in Supabase Auth to reduce attack window.
+- Enable **Leaked password protection** in Supabase Auth so compromised passwords are rejected during signup and password changes.
+
+Navigate to: Project > Authentication > Providers > Email/Phone and adjust these settings accordingly.
 
 ## Password Complexity Requirements
 
