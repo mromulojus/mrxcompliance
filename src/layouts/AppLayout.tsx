@@ -2,9 +2,14 @@ import React from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Logo } from "@/components/ui/logo";
+import { FabMrx } from "@/components/ui/fab-mrx";
+import { TaskModal } from "@/components/tasks/TaskModal";
+import { useTaskStore } from "@/store/taskStore";
 
 const AppLayout: React.FC = () => {
   const location = useLocation();
+  const { createTask } = useTaskStore();
+  const [open, setOpen] = React.useState(false);
 
   React.useEffect(() => {
     const path = location.pathname;
@@ -60,6 +65,12 @@ const AppLayout: React.FC = () => {
         <div className="p-2 md:p-4">
           <Outlet />
         </div>
+        <FabMrx onClick={() => setOpen(true)} />
+        <TaskModal
+          open={open}
+          onClose={() => setOpen(false)}
+          onSubmit={async (data) => { await createTask(data); }}
+        />
       </main>
     </div>
   );

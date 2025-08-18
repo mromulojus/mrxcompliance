@@ -25,6 +25,7 @@ import DebtosDashboard from "@/pages/DebtosDashboard";
 import DevedorDetalhes from "./pages/DevedorDetalhes";
 import DividaDetalhes from "./pages/DividaDetalhes";
 import Homepage from "@/pages/Homepage";
+import Tarefas from "@/pages/Tarefas";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +59,7 @@ const App = () => (
                 <Route path="/devedor/:devedorId" element={<DevedorDetalhes />} />
                 <Route path="/divida/:dividaId" element={<DividaDetalhes />} />
                 <Route path="/denuncias/dashboard" element={<DenunciasDashboard />} />
+                <Route path="/tarefas" element={<Tarefas />} />
                 
                 {/* Admin only routes */}
                 <Route path="/admin/activity-log" element={

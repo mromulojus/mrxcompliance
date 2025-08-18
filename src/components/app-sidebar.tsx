@@ -9,6 +9,7 @@ import {
   Users,
   LogOut,
   DollarSign,
+  KanbanSquare,
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -31,6 +32,7 @@ export function AppSidebar() {
     { title: "Painel", url: "/", icon: MrxIcon as unknown as LucideIcon, show: true },
     { title: "Empresas", url: "/empresas", icon: Building2, show: true },
     { title: "Debto - Cobranças", url: "/debto", icon: DollarSign, show: true },
+    { title: "Tarefas", url: "/tarefas", icon: KanbanSquare, show: true },
     { title: "Dashboard Denúncias", url: "/denuncias/dashboard", icon: Shield, show: true },
     { title: "Log de Atividades", url: "/admin/activity-log", icon: Activity, show: true },
     { title: "Dados do Sistema", url: "/admin/system-data", icon: Settings2, show: true },
