@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   Calendar, 
   DollarSign, 
@@ -18,6 +19,8 @@ import { AcordoManager } from "./AcordoManager";
 import { useAuth } from "@/context/AuthContext";
 import { EmpresaTag } from "./EmpresaTag";
 import { EtiquetasDisplay } from "./EtiquetasDisplay";
+import { useDebtoData } from "@/hooks/useDebtoData";
+import { useEffect, useState } from "react";
 
 interface DividaCardProps {
   divida: Divida;
@@ -27,6 +30,13 @@ interface DividaCardProps {
 
 export function DividaCard({ divida, compact = false, onUpdate }: DividaCardProps) {
   const { hasRole } = useAuth();
+  const { historico, fetchHistorico, adicionarHistorico } = useDebtoData();
+  const [novoTexto, setNovoTexto] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    fetchHistorico(divida.id);
+  }, [divida.id]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -254,9 +264,64 @@ export function DividaCard({ divida, compact = false, onUpdate }: DividaCardProp
           </TabsContent>
 
           <TabsContent value="historico" className="mt-4">
-            <div className="text-center py-8 text-muted-foreground">
-              <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">Histórico de atualizações em desenvolvimento</p>
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Textarea
+                  placeholder="Adicionar observação ou histórico..."
+                  value={novoTexto}
+                  onChange={(e) => setNovoTexto(e.target.value)}
+                  className="min-h-[80px]"
+                />
+                <div className="flex justify-end">
+                  <Button
+                    size="sm"
+                    disabled={isSaving || !novoTexto.trim()}
+                    onClick={async () => {
+                      if (!novoTexto.trim()) return;
+                      try {
+                        setIsSaving(true);
+                        await adicionarHistorico({
+                          divida_id: divida.id,
+                          devedor_id: divida.devedor_id,
+                          tipo_acao: "observacao",
+                          canal: "sistema",
+                          descricao: novoTexto.trim(),
+                        });
+                        setNovoTexto("");
+                        await fetchHistorico(divida.id);
+                      } finally {
+                        setIsSaving(false);
+                      }
+                    }}
+                  >
+                    Salvar
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                {historico
+                  .filter((h) => h.divida_id === divida.id)
+                  .slice(0, 5)
+                  .map((item) => (
+                    <div key={item.id} className="p-3 border rounded-md">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>{item.tipo_acao.replace("_", " ")}</span>
+                        <span>{new Date(item.created_at).toLocaleString("pt-BR")}</span>
+                      </div>
+                      <div className="text-sm mt-1">{item.descricao}</div>
+                      {item.observacoes && (
+                        <div className="text-xs text-muted-foreground mt-1">{item.observacoes}</div>
+                      )}
+                    </div>
+                  ))}
+                {historico.filter((h) => h.divida_id === divida.id).length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Ainda não há registros para esta dívida</p>
+                  </div>
+                )}
+              </div>
             </div>
           </TabsContent>
         </Tabs>
