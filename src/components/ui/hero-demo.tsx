@@ -41,9 +41,7 @@ export function HeroCompliance() {
         size: "md",
       }}
       content={{
-        title: "Compliance Empresarial sob Medida",
-        titleHighlight: "com o Protocolo PLAN > CHECK > CONTROL",
-        description:
+        title: "Compliance Empresarial sob Medida"
           "Estruture, monitore e controle seus processos de compliance com nosso método exclusivo. Conte com especialistas dedicados ao sucesso do seu negócio.",
         primaryAction: {
           href: "/contato",
