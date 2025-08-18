@@ -118,8 +118,15 @@ export function AcordoManager({ dividaId, devedorId, valorOriginal, onAcordoCria
 
       console.log("Salvando acordo:", acordoData);
       
-      // Atualizar status da dívida para "acordado"
-      await atualizarDivida(dividaId, { status: 'acordado' }, false);
+      // Atualizar status da dívida para "acordado" e ajustar a data de vencimento para a data do acordo
+      await atualizarDivida(
+        dividaId,
+        {
+          status: 'acordado',
+          data_vencimento: format(acordo.data_entrada, 'yyyy-MM-dd')
+        },
+        false
+      );
       
       // Criar histórico automático do acordo
       await adicionarHistorico({
@@ -127,7 +134,7 @@ export function AcordoManager({ dividaId, devedorId, valorOriginal, onAcordoCria
         devedor_id: devedorId,
         tipo_acao: 'acordo',
         canal: 'sistema',
-        descricao: `Acordo criado: ${formatCurrency(acordo.valor_total)} em ${acordo.numero_parcelas} parcelas`,
+        descricao: `Acordo criado: ${formatCurrency(acordo.valor_total)} em ${acordo.numero_parcelas} parcelas. Nova data de vencimento: ${format(acordo.data_entrada, 'dd/MM/yyyy')}`,
         resultado: 'sucesso',
         valor_negociado: acordo.valor_total,
         observacoes: `Forma de pagamento: ${acordo.forma_pagamento}. ${acordo.observacoes || ''}`
