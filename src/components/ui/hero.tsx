@@ -28,7 +28,7 @@ function HeroContent({ title, titleHighlight, description, primaryAction, second
   return (
     <div className="flex flex-col space-y-4">
       <motion.h1
-        className="text-4xl font-bold tracking-tight sm:text-6xl lg:text-7xl xl:text-8xl"
+        className="text-3xl font-bold tracking-tight leading-tight sm:text-5xl lg:text-6xl xl:text-7xl"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease }}
@@ -90,7 +90,7 @@ const Hero = ({ pill, content, preview }: HeroProps) => {
   return (
     <div className="container relative overflow-hidden">
       <div className="flex min-h-[calc(100vh-64px)] flex-col lg:flex-row items-center py-8 px-4 md:px-8 lg:px-12">
-        <div className="flex flex-col gap-4 w-full lg:max-w-2xl">
+        <div className="flex flex-col gap-4 w-full lg:max-w-3xl">
           {pill && <HeroBadge {...pill} />}
           <HeroContent {...content} />
         </div>
