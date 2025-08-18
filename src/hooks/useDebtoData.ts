@@ -180,21 +180,39 @@ export function useDebtoData() {
   const adicionarDivida = async (dividaData: Partial<Divida>) => {
     try {
       const { data: user } = await supabase.auth.getUser();
-      
+
+      // Apenas colunas existentes na tabela `dividas`
+      const payload = {
+        devedor_id: dividaData.devedor_id,
+        empresa_id: dividaData.empresa_id,
+        numero_contrato: dividaData.numero_contrato,
+        numero_nf: dividaData.numero_nf,
+        origem_divida: dividaData.origem_divida,
+        data_vencimento: dividaData.data_vencimento,
+        valor_original: dividaData.valor_original,
+        valor_atualizado: dividaData.valor_atualizado,
+        status: dividaData.status,
+        estagio: dividaData.estagio,
+        data_negativacao: dividaData.data_negativacao,
+        data_protesto: dividaData.data_protesto,
+        urgency_score: dividaData.urgency_score,
+        created_by: user.user?.id,
+      } as any;
+
       const { data, error } = await supabase
         .from('dividas')
-        .insert(dividaData as any)
+        .insert(payload)
         .select()
         .single();
 
       if (error) throw error;
-      
+
       setDividas(prev => [data as Divida, ...prev]);
       toast.success('Dívida cadastrada com sucesso!');
       return data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao adicionar dívida:', error);
-      toast.error('Erro ao cadastrar dívida');
+      toast.error(`Erro ao cadastrar dívida: ${error?.message ?? 'tente novamente'}`);
       throw error;
     }
   };
