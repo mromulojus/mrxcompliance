@@ -33,7 +33,7 @@ import { CalendarIcon, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useProcessosData } from '@/hooks/useProcessosData';
-import { useAuth } from '@/context/AuthContext';
+import { useSupabaseAuth } from '@/context/SupabaseAuthContext';
 import type { EventoTipo } from '@/types/processos';
 
 const formSchema = z.object({
@@ -60,7 +60,7 @@ interface FormEventoProps {
 
 export function FormEvento({ empresaId, dataInicial, onClose, onSuccess }: FormEventoProps) {
   const { adicionarEvento } = useProcessosData();
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   const [loading, setLoading] = useState(false);
 
   const form = useForm<FormData>({

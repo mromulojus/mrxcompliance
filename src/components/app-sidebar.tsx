@@ -20,17 +20,17 @@ export function AppSidebar() {
   const location = useLocation();
   const path = location.pathname;
 
-  type Item = { title: string; url: string; icon: LucideIcon; show: boolean; permission?: string };
+  type Item = { title: string; url: string; icon: LucideIcon; show: boolean };
 
   const items: Item[] = [
     { title: "Painel", url: "/", icon: Home, show: true },
     { title: "Empresas", url: "/empresas", icon: Building2, show: true },
     { title: "Debto - Cobranças", url: "/debto", icon: DollarSign, show: true },
-    { title: "Dashboard Denúncias", url: "/denuncias/dashboard", icon: Shield, show: true, permission: 'view:denuncias' },
-    { title: "Log de Atividades", url: "/admin/activity-log", icon: Activity, show: true, permission: 'view:activity-log' },
-    { title: "Dados do Sistema", url: "/admin/system-data", icon: Settings2, show: true, permission: 'view:system-data' },
-    { title: "Estrutura", url: "/admin/structure", icon: ListTree, show: true, permission: 'manage:structure' },
-    { title: "Usuários", url: "/admin/users", icon: Users, show: true, permission: 'manage:users' },
+    { title: "Dashboard Denúncias", url: "/denuncias/dashboard", icon: Shield, show: true },
+    { title: "Log de Atividades", url: "/admin/activity-log", icon: Activity, show: true },
+    { title: "Dados do Sistema", url: "/admin/system-data", icon: Settings2, show: true },
+    { title: "Estrutura", url: "/admin/structure", icon: ListTree, show: true },
+    { title: "Usuários", url: "/admin/users", icon: Users, show: true },
     { title: "Documentação", url: "/admin/docs", icon: BookText, show: true },
   ];
 
@@ -47,7 +47,6 @@ export function AppSidebar() {
                   label: item.title,
                   href: item.url,
                   icon: <item.icon className="text-neutral-700 dark:text-neutral-200 h-4 w-4 flex-shrink-0" />,
-                  permission: item.permission,
                 }}
               />
             ))}

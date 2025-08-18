@@ -5,13 +5,11 @@ import { Link, LinkProps as RouterLinkProps } from "react-router-dom";
 import React, { useState, createContext, useContext } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
 
 interface Links {
   label: string;
   href: string;
   icon: React.JSX.Element | React.ReactNode;
-  permission?: string;
 }
 
 interface SidebarContextProps {
@@ -167,10 +165,6 @@ export const SidebarLink = ({
   ...props
 }: SidebarLinkProps) => {
   const { open, animate } = useAnimatedSidebar();
-  const { can } = useAuth();
-  if (link.permission && !can(link.permission)) {
-    return null;
-  }
   return (
     <Link
       to={link.href}

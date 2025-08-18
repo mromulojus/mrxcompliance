@@ -4,10 +4,6 @@ import { FeatureSteps } from "@/components/ui/feature-section";
 import { TestimonialsSection } from "@/components/ui/testimonials-section";
 import { StatsSection } from "@/components/ui/stats-section";
 import { Footer } from "@/components/ui/footer";
-import { TrustSection } from "@/components/ui/trust-section";
-import { SolutionsSection } from "@/components/ui/solutions-section";
-import { ProtocoloSection } from "@/components/ui/protocolo-section";
-import { FinalCTASection } from "@/components/ui/final-cta-section";
 
 const features = [
   { 
@@ -32,16 +28,13 @@ const features = [
 
 export default function Homepage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-muted/30 to-background">
+    <div className="min-h-screen">
       <Header />
-      <main className="pt-16 md:pt-20">
+      <main>
         <HeroSection />
-        <TrustSection />
         <StatsSection />
-        <SolutionsSection />
-        <ProtocoloSection />
         <div id="features">
-          <FeatureSteps
+          <FeatureSteps 
             features={features}
             title="Metodologia PLAN • CHECK • CONTROL"
             autoPlayInterval={4000}
@@ -49,7 +42,6 @@ export default function Homepage() {
           />
         </div>
         <TestimonialsSection />
-        <FinalCTASection />
       </main>
       <Footer />
     </div>
