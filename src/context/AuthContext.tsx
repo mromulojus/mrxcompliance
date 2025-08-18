@@ -32,6 +32,7 @@ interface AuthContextType {
   hasRole: (requiredRole: UserRole) => boolean;
   hasAnyRole: (roles: UserRole[]) => boolean;
   refreshProfile: () => Promise<void>;
+  can: (permission: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -54,6 +55,56 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+
+  // Central permission map
+  const rolePermissions: Record<UserRole, string[]> = {
+    superuser: [
+      'view:activity-log',
+      'view:system-data',
+      'manage:structure',
+      'manage:users',
+      'manage:vinculos',
+      'export:all',
+      'view:denuncias',
+      'view:denuncias:stats',
+      'view:rescisao',
+      'view:processos',
+      'use:docs',
+      'use:operacional',
+    ],
+    administrador: [
+      'view:system-data',
+      'manage:users',
+      'manage:vinculos',
+      'view:denuncias',
+      'view:denuncias:stats',
+      'view:rescisao',
+      // sem export:all, sem view:activity-log, sem view:processos
+      'use:docs',
+      'use:operacional',
+    ],
+    compliance: [
+      'view:denuncias',
+      'view:denuncias:stats',
+      'view:system-data',
+      'use:docs',
+    ],
+    empresarial: [
+      // dono da empresa
+      'export:empresa',
+      'manage:users', // limitado à própria empresa via RLS
+      'manage:vinculos', // idem
+      'view:denuncias:stats',
+      'view:rescisao',
+      'use:docs',
+      'use:operacional',
+    ],
+    operacional: [
+      'use:docs',
+      'use:operacional',
+      // sem denuncias, sem rescisao, sem export, sem processos
+    ],
+  };
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -279,6 +330,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return roles.some(role => hasRole(role));
   };
 
+   const can = (permission: string): boolean => {
+     if (!profile) return false;
+     const perms = rolePermissions[profile.role] || [];
+     return perms.includes(permission);
+   };
+
   const value = {
     user,
     session,
@@ -289,7 +346,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     signOut,
     hasRole,
     hasAnyRole,
-    refreshProfile
+    refreshProfile,
+    can
   };
 
   return (

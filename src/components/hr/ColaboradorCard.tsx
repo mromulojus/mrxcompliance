@@ -11,6 +11,7 @@ import { calcularRescisaoColaborador, calcularValorPrevisto } from '@/lib/rescis
 import { VisualizacaoColaboradorCompleta } from './VisualizacaoColaboradorCompleta';
 import { EtiquetasColaborador } from './EtiquetasColaborador';
 import { useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
 
 interface ColaboradorCardProps {
   colaborador: Colaborador;
@@ -21,6 +22,7 @@ interface ColaboradorCardProps {
 export function ColaboradorCard({ colaborador, onEdit, onView }: ColaboradorCardProps) {
   const { removerColaborador, empresas } = useHR();
   const [showVisualizacao, setShowVisualizacao] = useState(false);
+  const { can } = useAuth();
   
   const iniciais = colaborador.nome
     .split(' ')
@@ -129,21 +131,23 @@ export function ColaboradorCard({ colaborador, onEdit, onView }: ColaboradorCard
           </p>
         </div>
         
-        <div className="space-y-1">
-          <p className="text-xs text-muted-foreground">Rescisão Estimada:</p>
-          <p className="text-sm font-medium text-red-600">
-            {valorRescisao.toLocaleString('pt-BR', {
-              style: 'currency',
-              currency: 'BRL'
-            })}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Previsto: {valorPrevisto.toLocaleString('pt-BR', {
-              style: 'currency',
-              currency: 'BRL'
-            })}
-          </p>
-        </div>
+        {can('view:rescisao') && (
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">Rescisão Estimada:</p>
+            <p className="text-sm font-medium text-red-600">
+              {valorRescisao.toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+              })}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Previsto: {valorPrevisto.toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+              })}
+            </p>
+          </div>
+        )}
       </CardContent>
 
       {showVisualizacao && (

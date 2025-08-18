@@ -1,11 +1,11 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
-import { useSupabaseAuth, Role } from "@/context/SupabaseAuthContext";
+import { useAuth, UserRole } from "@/context/AuthContext";
 
 type ProtectedRouteProps = {
   children: React.ReactNode;
   requireAnyOf?: Array<
-    | { type: "role"; value: Role }
+    | { type: "role"; value: UserRole }
     | { type: "perm"; value: string }
   >;
 };
@@ -14,7 +14,7 @@ export const SupabaseProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children, 
   requireAnyOf 
 }) => {
-  const { user, profile, loading, can } = useSupabaseAuth();
+  const { user, profile, loading, can } = useAuth();
 
   if (loading) {
     return (
