@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import HeroBadge from "@/components/ui/hero-badge";
 
-const ease = [0.16, 1, 0.3, 1];
+const ease = "easeInOut";
 
 interface HeroContentProps {
   title: string;

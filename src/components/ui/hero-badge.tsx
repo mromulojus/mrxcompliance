@@ -4,7 +4,7 @@ import { motion, useAnimation, type Variants } from "framer-motion";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
-const ease = [0.16, 1, 0.3, 1];
+const ease = "easeInOut";
 
 interface HeroBadgeProps {
   href?: string;
