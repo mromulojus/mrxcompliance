@@ -9,7 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, Users, Building2, TrendingUp, PieChart, BarChart3, DollarSign, UserPlus, FileSpreadsheet, FileText, CheckSquare, AlertTriangle, Search, LayoutDashboard, Scale, Copy } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { useSupabaseData } from '@/hooks/useSupabaseData';
 import { useHR } from '@/context/HRContext';
 import { ColaboradorCard } from '@/components/hr/ColaboradorCard';
 import { FormColaboradorCompleto } from '@/components/hr/FormColaboradorCompleto';
@@ -32,11 +31,7 @@ export default function EmpresaDetalhes() {
     empresaId
   } = useParams();
   const navigate = useNavigate();
-  const {
-    empresas,
-    colaboradores
-  } = useSupabaseData();
-  const { colaboradores: colaboradoresHR } = useHR();
+  const { empresas, colaboradores } = useHR();
   const { can } = useAuth();
   const [showFormColaborador, setShowFormColaborador] = useState(false);
   const [showImportColaboradores, setShowImportColaboradores] = useState(false);
@@ -47,16 +42,23 @@ export default function EmpresaDetalhes() {
   const [searchColaboradores, setSearchColaboradores] = useState('');
   const { toast } = useToast();
   const empresa = empresas.find(e => e.id === empresaId);
-  // Usar apenas colaboradores do Supabase para evitar duplicação
-  const colaboradoresEmpresa = colaboradores.filter(c => c.empresa_id === empresaId);
+  // Colaboradores da empresa no formato do HRContext
+  const colaboradoresEmpresa = colaboradores.filter(c => c.empresa === empresaId);
   
   // Filtrar colaboradores pela busca
-  const colaboradoresFiltrados = colaboradoresEmpresa.filter(colaborador =>
-    colaborador.nome.toLowerCase().includes(searchColaboradores.toLowerCase()) ||
-    colaborador.cpf.toLowerCase().includes(searchColaboradores.toLowerCase()) ||
-    colaborador.cargo.toLowerCase().includes(searchColaboradores.toLowerCase()) ||
-    colaborador.departamento.toLowerCase().includes(searchColaboradores.toLowerCase())
-  );
+  const colaboradoresFiltrados = colaboradoresEmpresa.filter(colaborador => {
+    const termo = searchColaboradores.toLowerCase();
+    const nome = (colaborador.nome || '').toLowerCase();
+    const cpf = (colaborador.documentos?.cpf || '').toLowerCase();
+    const cargo = (colaborador.cargo || '').toLowerCase();
+    const departamento = (colaborador.departamento || '').toLowerCase();
+    return (
+      nome.includes(termo) ||
+      cpf.includes(termo) ||
+      cargo.includes(termo) ||
+      departamento.includes(termo)
+    );
+  });
   if (!empresa) {
     return <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
