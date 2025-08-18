@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { MessageCircle, Upload, X, Image } from 'lucide-react';
 import { saveObservacao } from '@/lib/historico';
+import { useAuth } from '@/context/AuthContext';
 
 interface AdicionarObservacaoProps {
   colaboradorId: string;
@@ -20,6 +21,8 @@ export function AdicionarObservacao({ colaboradorId, onObservacaoAdicionada }: A
   const [anexos, setAnexos] = useState<File[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { hasAnyRole } = useAuth();
+  const canAddObservation = hasAnyRole(['administrador', 'empresarial']);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
@@ -41,6 +44,14 @@ export function AdicionarObservacao({ colaboradorId, onObservacaoAdicionada }: A
   };
 
   const handleSubmit = async () => {
+    if (!canAddObservation) {
+      toast({
+        title: 'Permissão insuficiente',
+        description: 'Você não tem permissão para adicionar observações.',
+        variant: 'destructive'
+      });
+      return;
+    }
     if (!observacao.trim()) {
       toast({
         title: "Observação obrigatória",
@@ -86,7 +97,7 @@ export function AdicionarObservacao({ colaboradorId, onObservacaoAdicionada }: A
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" disabled={!canAddObservation}>
           <MessageCircle className="h-4 w-4 mr-2" />
           Adicionar Observação
         </Button>
@@ -105,6 +116,7 @@ export function AdicionarObservacao({ colaboradorId, onObservacaoAdicionada }: A
               value={observacao}
               onChange={(e) => setObservacao(e.target.value)}
               rows={4}
+              disabled={!canAddObservation || isLoading}
             />
           </div>
 
@@ -117,6 +129,7 @@ export function AdicionarObservacao({ colaboradorId, onObservacaoAdicionada }: A
                 multiple
                 onChange={handleFileUpload}
                 className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/80"
+                disabled={!canAddObservation || isLoading}
               />
             </div>
           </div>
@@ -158,7 +171,7 @@ export function AdicionarObservacao({ colaboradorId, onObservacaoAdicionada }: A
             <Button variant="outline" onClick={() => setIsOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleSubmit} disabled={isLoading}>
+            <Button onClick={handleSubmit} disabled={isLoading || !canAddObservation}>
               {isLoading ? 'Salvando...' : 'Salvar Observação'}
             </Button>
           </div>
