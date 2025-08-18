@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { TaskModal } from '@/components/tasks/TaskModal';
+import { FixedSizeList as List } from 'react-window';
 
 const statusTitles: Record<TaskStatus, string> = {
   A_FAZER: 'A Fazer',
@@ -79,20 +80,21 @@ const Tarefas: React.FC = () => {
       <DndContext sensors={sensors} onDragEnd={onDragEnd}>
         <div className="flex overflow-x-auto pb-2">
           {(Object.keys(statusTitles) as TaskStatus[]).map((status) => (
-            <KanbanColumn
-              key={status}
-              title={statusTitles[status]}
-              status={status}
-              tasks={byStatus[status]}
-              onAdd={() => setOpenModal(true)}
-              renderDraggable={(task) => (
-                <SortableContext items={[task.id]} strategy={verticalListSortingStrategy}>
-                  <DraggableTask task={task}>
-                    {(dragging) => <TaskCard task={task} isDragging={dragging} />}
-                  </DraggableTask>
-                </SortableContext>
-              )}
-            />
+            <div key={status} className="w-72 shrink-0 mr-3">
+              <KanbanColumn
+                title={statusTitles[status]}
+                status={status}
+                tasks={byStatus[status]}
+                onAdd={() => setOpenModal(true)}
+                renderDraggable={(task) => (
+                  <SortableContext items={[task.id]} strategy={verticalListSortingStrategy}>
+                    <DraggableTask task={task}>
+                      {(dragging) => <TaskCard task={task} isDragging={dragging} />}
+                    </DraggableTask>
+                  </SortableContext>
+                )}
+              />
+            </div>
           ))}
         </div>
       </DndContext>

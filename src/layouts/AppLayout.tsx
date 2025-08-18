@@ -12,6 +12,16 @@ const AppLayout: React.FC = () => {
   const [open, setOpen] = React.useState(false);
 
   React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() === 'c' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        setOpen(true);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  React.useEffect(() => {
     const path = location.pathname;
     const titles: Record<string, string> = {
       "/": "MRx Compliance - Painel",
