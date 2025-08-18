@@ -41,8 +41,8 @@ export function HeroCompliance() {
         size: "md",
       }}
       content={{
-        title: "Compliance Empresarial sob Medida"
-          "Estruture, monitore e controle seus processos de compliance com nosso método exclusivo. Conte com especialistas dedicados ao sucesso do seu negócio.",
+        title: "Protocolo de compliance empresarial",
+        description: "Estruture, monitore e controle seus processos de compliance com nosso método exclusivo. Conte com especialistas dedicados ao sucesso do seu negócio.",
         primaryAction: {
           href: "/contato",
           text: "Quero aplicar Compliance de Verdade",
