@@ -3,7 +3,6 @@ import {
   Activity,
   BookText,
   Building2,
-  Home,
   ListTree,
   Settings2,
   Shield,
@@ -14,6 +13,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/animated-sidebar";
+import { Logo } from "@/components/ui/logo";
 
 export function AppSidebar() {
   const { signOut, profile } = useAuth();
@@ -22,8 +22,13 @@ export function AppSidebar() {
 
   type Item = { title: string; url: string; icon: LucideIcon; show: boolean };
 
+  // Wrapper para usar o logotipo MRx como ícone no mesmo formato dos ícones do Lucide
+  const MrxIcon = ({ className }: { className?: string }) => (
+    <Logo variant="icon" size="sm" className={className} />
+  );
+
   const items: Item[] = [
-    { title: "Painel", url: "/", icon: Home, show: true },
+    { title: "Painel", url: "/", icon: MrxIcon as unknown as LucideIcon, show: true },
     { title: "Empresas", url: "/empresas", icon: Building2, show: true },
     { title: "Debto - Cobranças", url: "/debto", icon: DollarSign, show: true },
     { title: "Dashboard Denúncias", url: "/denuncias/dashboard", icon: Shield, show: true },
