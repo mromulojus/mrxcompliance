@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Tarefa, TarefaWithUser, TaskFormData, TaskFilters, TaskKPIs, UserProfile } from '@/types/tarefas';
+import { Tarefa, TarefaWithUser, TaskFormData, TaskFilters, TaskKPIs, UserProfile, TaskStatus } from '@/types/tarefas';
 import { useToast } from '@/hooks/use-toast';
 
 export function useTarefasData() {
