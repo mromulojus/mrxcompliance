@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, GitBranch, Github, MessageSquare, Star, Users, CheckCircle2 } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress as ProgressBar } from "@/components/ui/progress";
+import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useExpandable } from "@/components/hooks/use-expandable";
 
@@ -24,12 +25,21 @@ interface ProjectStatusCardProps {
 export function ProjectStatusCard({ title, progress, dueDate, contributors, tasks, githubStars, openIssues }: ProjectStatusCardProps) {
   const { isExpanded, toggleExpand, animatedHeight } = useExpandable();
   const contentRef = useRef<HTMLDivElement>(null);
+  const [newComment, setNewComment] = useState("");
+  const [comments, setComments] = useState<Array<{ text: string; createdAt: Date }>>([]);
 
   useEffect(() => {
     if (contentRef.current) {
       animatedHeight.set(isExpanded ? contentRef.current.scrollHeight : 0);
     }
   }, [isExpanded, animatedHeight]);
+
+  const handleAddComment = () => {
+    const trimmed = newComment.trim();
+    if (!trimmed) return;
+    setComments((prev) => [{ text: trimmed, createdAt: new Date() }, ...prev]);
+    setNewComment("");
+  };
 
   return (
     <Card className="w-full max-w-md cursor-pointer transition-all duration-300 hover:shadow-lg" onClick={toggleExpand}>
@@ -70,7 +80,7 @@ export function ProjectStatusCard({ title, progress, dueDate, contributors, task
             <div ref={contentRef}>
               <AnimatePresence>
                 {isExpanded && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4 pt-2">
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4 pt-2" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-between text-sm text-gray-600">
                       <div className="flex items-center">
                         <Clock className="h-4 w-4 mr-2" />
@@ -120,6 +130,38 @@ export function ProjectStatusCard({ title, progress, dueDate, contributors, task
                           {task.completed && <CheckCircle2 className="h-4 w-4 text-green-500" />}
                         </div>
                       ))}
+                    </div>
+
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-sm flex items-center">
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Histórico
+                      </h4>
+                      <div className="space-y-2">
+                        <Textarea
+                          placeholder="Escreva um comentário..."
+                          value={newComment}
+                          onChange={(e) => setNewComment(e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <div className="flex justify-end">
+                          <Button size="sm" onClick={(e) => { e.stopPropagation(); handleAddComment(); }} disabled={!newComment.trim()}>
+                            Adicionar comentário
+                          </Button>
+                        </div>
+                      </div>
+                      {comments.length > 0 && (
+                        <div className="max-h-40 overflow-y-auto space-y-2 pr-1">
+                          {comments.map((c, idx) => (
+                            <div key={idx} className="rounded-md border p-2 text-sm">
+                              <div className="text-gray-700">{c.text}</div>
+                              <div className="mt-1 text-[10px] uppercase tracking-wide text-gray-400">
+                                {c.createdAt.toLocaleString()}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     <div className="space-y-2">
