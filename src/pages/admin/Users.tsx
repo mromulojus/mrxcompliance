@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { UserManagement } from "@/components/admin/UserManagement";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, UserRole } from "@/context/AuthContext";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 type DatabaseRole = UserRole;
 
 type User = {

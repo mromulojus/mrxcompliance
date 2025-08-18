@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { UserRole } from "@/context/AuthContext";
 
 type DatabaseRole = UserRole;
@@ -396,7 +396,6 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         <SelectItem value="operacional">Operacional</SelectItem>
                         <SelectItem value="empresarial">Empresarial</SelectItem>
                         <SelectItem value="administrador">Administrador</SelectItem>
-                        <SelectItem value="compliance">Compliance</SelectItem>
                         <SelectItem value="superuser">Superuser</SelectItem>
                       </SelectContent>
                     </Select>
@@ -560,7 +559,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         <SelectItem value="operacional">Operacional</SelectItem>
                         <SelectItem value="empresarial">Empresarial</SelectItem>
                         <SelectItem value="administrador">Administrador</SelectItem>
-                        <SelectItem value="compliance">Compliance</SelectItem>
+                        
                         <SelectItem value="superuser">Superuser</SelectItem>
                       </SelectContent>
                     </Select>

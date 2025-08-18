@@ -24,6 +24,7 @@ import Empresas from "@/pages/Empresas";
 import DebtosDashboard from "@/pages/DebtosDashboard";
 import DevedorDetalhes from "./pages/DevedorDetalhes";
 import DividaDetalhes from "./pages/DividaDetalhes";
+import TarefasDashboard from "./pages/TarefasDashboard";
 import Homepage from "@/pages/Homepage";
 
 const queryClient = new QueryClient();
@@ -51,6 +52,7 @@ const App = () => (
                 </ProtectedRoute>
               }>
                 <Route path="/" element={<Index />} />
+                <Route path="/tarefas" element={<TarefasDashboard />} />
                 <Route path="/dashboard" element={<Index />} />
                 <Route path="/empresas" element={<Empresas />} />
                 <Route path="/empresa/:empresaId" element={<EmpresaDetalhes />} />

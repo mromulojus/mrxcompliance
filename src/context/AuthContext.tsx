@@ -3,7 +3,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-export type UserRole = 'superuser' | 'administrador' | 'compliance' | 'empresarial' | 'operacional';
+export type UserRole = 'superuser' | 'administrador' | 'empresarial' | 'operacional';
 
 export interface UserProfile {
   id: string;
@@ -262,9 +262,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     if (!profile) return false;
     
     const roleHierarchy = {
-      'superuser': 5,
-      'administrador': 4,
-      'compliance': 3,
+      'superuser': 4,
+      'administrador': 3,
       'empresarial': 2,
       'operacional': 1
     };
