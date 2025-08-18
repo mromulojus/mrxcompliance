@@ -40,12 +40,16 @@ export function useTarefasData() {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) throw new Error('Usuário não autenticado');
 
+      // Handle "none" value for responsavel_id
+      const processedData = {
+        ...tarefaData,
+        responsavel_id: tarefaData.responsavel_id === 'none' ? null : tarefaData.responsavel_id,
+        created_by: user.user.id,
+      };
+
       const { data, error } = await supabase
         .from('tarefas')
-        .insert({
-          ...tarefaData,
-          created_by: user.user.id,
-        })
+        .insert(processedData)
         .select()
         .single();
 

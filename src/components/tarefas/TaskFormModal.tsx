@@ -241,7 +241,7 @@ export function TaskFormModal({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Não atribuído</SelectItem>
+                        <SelectItem value="none">Não atribuído</SelectItem>
                         {users.map((user) => (
                           <SelectItem key={user.user_id} value={user.user_id}>
                             {user.full_name || user.username}

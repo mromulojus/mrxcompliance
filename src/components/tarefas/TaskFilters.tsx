@@ -33,9 +33,11 @@ export function TaskFiltersComponent({
   const [currentUser, setCurrentUser] = useState<string | null>(null);
 
   const handleFilterChange = (key: keyof TaskFilters, value: string) => {
+    // Convert "all" values back to undefined for filtering
+    const filterValue = value === 'all' ? undefined : value;
     onFiltersChange({
       ...filters,
-      [key]: value || undefined,
+      [key]: filterValue,
     });
   };
 
@@ -89,14 +91,14 @@ export function TaskFiltersComponent({
         </div>
 
         <Select
-          value={filters.prioridade || ''}
+          value={filters.prioridade || 'all'}
           onValueChange={(value) => handleFilterChange('prioridade', value)}
         >
           <SelectTrigger>
             <SelectValue placeholder="Prioridade" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todas</SelectItem>
+            <SelectItem value="all">Todas</SelectItem>
             <SelectItem value="alta">🔴 Alta</SelectItem>
             <SelectItem value="media">🟡 Média</SelectItem>
             <SelectItem value="baixa">🟢 Baixa</SelectItem>
@@ -104,14 +106,14 @@ export function TaskFiltersComponent({
         </Select>
 
         <Select
-          value={filters.modulo || ''}
+          value={filters.modulo || 'all'}
           onValueChange={(value) => handleFilterChange('modulo', value)}
         >
           <SelectTrigger>
             <SelectValue placeholder="Módulo" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos</SelectItem>
+            <SelectItem value="all">Todos</SelectItem>
             <SelectItem value="geral">Geral</SelectItem>
             <SelectItem value="ouvidoria">Ouvidoria</SelectItem>
             <SelectItem value="auditoria">Auditoria</SelectItem>
@@ -120,14 +122,14 @@ export function TaskFiltersComponent({
         </Select>
 
         <Select
-          value={filters.status || ''}
+          value={filters.status || 'all'}
           onValueChange={(value) => handleFilterChange('status', value)}
         >
           <SelectTrigger>
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos</SelectItem>
+            <SelectItem value="all">Todos</SelectItem>
             <SelectItem value="a_fazer">A Fazer</SelectItem>
             <SelectItem value="em_andamento">Em Andamento</SelectItem>
             <SelectItem value="em_revisao">Em Revisão</SelectItem>
@@ -136,15 +138,15 @@ export function TaskFiltersComponent({
         </Select>
 
         <Select
-          value={filters.responsavel || ''}
+          value={filters.responsavel || 'all'}
           onValueChange={(value) => handleFilterChange('responsavel', value)}
         >
           <SelectTrigger>
             <SelectValue placeholder="Responsável" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos</SelectItem>
-            <SelectItem value={currentUser || ''}>Minhas Tarefas</SelectItem>
+            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value={currentUser || 'current'}>Minhas Tarefas</SelectItem>
             <SelectItem value="unassigned">Não Atribuídas</SelectItem>
             {users.map((user) => (
               <SelectItem key={user.user_id} value={user.user_id}>
