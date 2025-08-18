@@ -57,15 +57,15 @@ export function AnimatedSidebarDemo() {
           <div>
             <SidebarLink
               link={{
-                label: "Manu Arora",
+                label: "Perfil",
                 href: "/profile",
                 icon: (
                   <img
-                    src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=64&q=80&auto=format&fit=crop&crop=faces"
-                    className="h-7 w-7 flex-shrink-0 rounded-full object-cover"
+                    src="/lovable-uploads/0bb1fa68-8f72-4b82-aa3a-0707d95cd69a.png"
+                    className="h-7 w-7 flex-shrink-0 rounded-full object-contain bg-white"
                     width={28}
                     height={28}
-                    alt="Avatar"
+                    alt="MRX logo"
                   />
                 ),
               }}

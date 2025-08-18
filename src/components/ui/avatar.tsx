@@ -3,6 +3,8 @@ import * as AvatarPrimitive from "@radix-ui/react-avatar"
 
 import { cn } from "@/lib/utils"
 
+const DEFAULT_MRX_LOGO_SRC = "/lovable-uploads/0bb1fa68-8f72-4b82-aa3a-0707d95cd69a.png";
+
 const Avatar = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Root>
@@ -21,13 +23,18 @@ Avatar.displayName = AvatarPrimitive.Root.displayName
 const AvatarImage = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Image>,
   React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>
->(({ className, ...props }, ref) => (
-  <AvatarPrimitive.Image
-    ref={ref}
-    className={cn("aspect-square h-full w-full", className)}
-    {...props}
-  />
-))
+>(({ className, ...props }, ref) => {
+  const { src: _ignoredSrc, alt, ...rest } = props as any;
+  return (
+    <AvatarPrimitive.Image
+      ref={ref}
+      className={cn("aspect-square h-full w-full", className)}
+      src={DEFAULT_MRX_LOGO_SRC}
+      alt={alt ?? "MRX logo"}
+      {...rest}
+    />
+  );
+})
 AvatarImage.displayName = AvatarPrimitive.Image.displayName
 
 const AvatarFallback = React.forwardRef<
@@ -41,7 +48,13 @@ const AvatarFallback = React.forwardRef<
       className
     )}
     {...props}
-  />
+  >
+    <img
+      src={DEFAULT_MRX_LOGO_SRC}
+      alt="MRX logo"
+      className="h-3/4 w-3/4 object-contain"
+    />
+  </AvatarPrimitive.Fallback>
 ))
 AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName
 
