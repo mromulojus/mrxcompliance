@@ -1,15 +1,15 @@
 import React, { useState, useMemo } from 'react';
-import { KanbanSquare, LayoutGrid, Filter } from 'lucide-react';
+import { KanbanSquare, LayoutGrid, Filter, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Kanban } from '@/components/ui/kanban';
+import { Kanban } from '@/components/ui/kanban-new';
 import { TaskKPICards } from '@/components/tarefas/TaskKPICards';
-import { TaskFiltersComponent } from '@/components/tarefas/TaskFilters';
-import { TaskFormModal } from '@/components/tarefas/TaskFormModal';
+import { TaskFiltersComponent } from '@/components/tarefas/TaskFiltersNew';
+import { TaskFormModal } from '@/components/tarefas/TaskFormModalNew';
 import { FloatingTaskButton } from '@/components/tarefas/FloatingTaskButton';
-import { useTarefasData } from '@/hooks/useTarefasData';
+import { useTarefasData } from '@/hooks/useTarefasDataNew';
 import { TaskFilters, TaskFormData, TaskStatus } from '@/types/tarefas';
 
 export default function TarefasDashboard() {
@@ -21,13 +21,15 @@ export default function TarefasDashboard() {
 
   const {
     tarefas,
+    users,
     loading,
     createTarefa,
     updateTarefa,
     deleteTarefa,
-    updateTarefas,
+    reorderTasks,
     filterTarefas,
     calculateKPIs,
+    refreshTarefas,
   } = useTarefasData();
 
   const filteredTarefas = useMemo(() => {
@@ -46,6 +48,10 @@ export default function TarefasDashboard() {
   const handleTaskCreateFromColumn = (columnStatus: TaskStatus) => {
     setSelectedColumnStatus(columnStatus);
     setShowTaskModal(true);
+  };
+
+  const handleTaskReorder = (taskId: string, newStatus: TaskStatus, newOrder: number) => {
+    reorderTasks(taskId, newStatus, newOrder);
   };
 
   const handleFiltersChange = (newFilters: TaskFilters) => {
@@ -79,6 +85,16 @@ export default function TarefasDashboard() {
         </div>
         
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refreshTarefas}
+            disabled={loading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
+          
           <Button
             variant={showFilters ? "default" : "outline"}
             size="sm"
@@ -121,6 +137,7 @@ export default function TarefasDashboard() {
             filters={filters}
             onFiltersChange={handleFiltersChange}
             onClearFilters={handleClearFilters}
+            users={users}
           />
         </CollapsibleContent>
       </Collapsible>
@@ -138,9 +155,10 @@ export default function TarefasDashboard() {
             <div className="h-[calc(100vh-400px)] min-h-[600px]">
               <Kanban
                 tasks={filteredTarefas}
-                onTaskUpdate={updateTarefas}
+                onTaskUpdate={handleTaskReorder}
                 onTaskCreate={handleTaskCreateFromColumn}
                 onTaskDelete={deleteTarefa}
+                loading={loading}
               />
             </div>
           ) : (
@@ -156,6 +174,7 @@ export default function TarefasDashboard() {
       {/* Floating Action Button */}
       <FloatingTaskButton
         onTaskCreate={handleTaskCreate}
+        users={users}
         contextData={{
           modulo_origem: 'geral',
         }}
@@ -166,6 +185,7 @@ export default function TarefasDashboard() {
         open={showTaskModal}
         onOpenChange={setShowTaskModal}
         onSubmit={handleTaskCreate}
+        users={users}
         defaultValues={{
           status: selectedColumnStatus,
           modulo_origem: 'geral',

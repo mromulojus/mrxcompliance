@@ -8,11 +8,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { TaskFormModal } from './TaskFormModal';
+import { TaskFormModal } from './TaskFormModalNew';
 import { TaskFormData } from '@/types/tarefas';
 
 interface FloatingTaskButtonProps {
   onTaskCreate: (task: TaskFormData) => void;
+  users: any[];
   contextData?: {
     empresa_id?: string;
     modulo_origem?: 'ouvidoria' | 'auditoria' | 'cobrancas' | 'geral';
@@ -23,7 +24,7 @@ interface FloatingTaskButtonProps {
   };
 }
 
-export function FloatingTaskButton({ onTaskCreate, contextData }: FloatingTaskButtonProps) {
+export function FloatingTaskButton({ onTaskCreate, users, contextData }: FloatingTaskButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleTaskSubmit = (taskData: TaskFormData) => {
@@ -63,6 +64,7 @@ export function FloatingTaskButton({ onTaskCreate, contextData }: FloatingTaskBu
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
         onSubmit={handleTaskSubmit}
+        users={users}
         defaultValues={contextData}
       />
     </>

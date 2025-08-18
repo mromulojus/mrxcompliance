@@ -2,6 +2,7 @@ export type TaskStatus = 'a_fazer' | 'em_andamento' | 'em_revisao' | 'concluido'
 export type TaskPriority = 'alta' | 'media' | 'baixa';
 export type TaskModule = 'ouvidoria' | 'auditoria' | 'cobrancas' | 'geral';
 
+// Interface básica para tarefa
 export interface Tarefa {
   id: string;
   titulo: string;
@@ -27,6 +28,25 @@ export interface Tarefa {
   
   created_at: string;
   updated_at: string;
+}
+
+// Interface estendida com dados do usuário responsável
+export interface TarefaWithUser extends Tarefa {
+  responsavel?: {
+    user_id: string;
+    full_name: string;
+    username: string;
+    avatar_url?: string;
+  };
+}
+
+// Interface para dados de usuário
+export interface UserProfile {
+  user_id: string;
+  full_name: string;
+  username: string;
+  avatar_url?: string;
+  is_active: boolean;
 }
 
 export interface TaskFormData {
