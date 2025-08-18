@@ -10,20 +10,23 @@ type SolutionCardProps = {
 
 function SolutionCard({ icon, title, what, do: doText }: SolutionCardProps) {
   return (
-    <div className="rounded-xl border bg-card p-6 shadow-sm">
-      <div className="flex items-center gap-3">
-        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-          {icon}
+    <div className="group relative rounded-2xl border bg-card/60 backdrop-blur supports-[backdrop-filter]:bg-card/40 p-6 shadow-sm overflow-hidden">
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[radial-gradient(400px_120px_at_20%_0%,hsl(var(--primary)/0.06),transparent_60%)]" />
+      <div className="relative z-[1]">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+            {icon}
+          </div>
+          <h3 className="text-xl font-semibold text-foreground">{title}</h3>
         </div>
-        <h3 className="text-xl font-semibold text-foreground">{title}</h3>
-      </div>
-      <div className="mt-4 space-y-2 text-sm text-muted-foreground">
-        <p>
-          <span className="font-medium text-foreground">O que é:</span> {what}
-        </p>
-        <p>
-          <span className="font-medium text-foreground">O que fazemos:</span> {doText}
-        </p>
+        <div className="mt-4 space-y-2 text-sm text-muted-foreground">
+          <p>
+            <span className="font-medium text-foreground">O que é:</span> {what}
+          </p>
+          <p>
+            <span className="font-medium text-foreground">O que fazemos:</span> {doText}
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -31,7 +34,7 @@ function SolutionCard({ icon, title, what, do: doText }: SolutionCardProps) {
 
 export function SolutionsSection() {
   return (
-    <section id="solucoes" className="py-16 md:py-24 bg-background">
+    <section id="solucoes" className="py-16 md:py-24 bg-transparent">
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto text-center mb-12">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-foreground">

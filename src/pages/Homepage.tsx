@@ -32,9 +32,9 @@ const features = [
 
 export default function Homepage() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-b from-background via-muted/30 to-background">
       <Header />
-      <main>
+      <main className="pt-16 md:pt-20">
         <HeroSection />
         <TrustSection />
         <StatsSection />
