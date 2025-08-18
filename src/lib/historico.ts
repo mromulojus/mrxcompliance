@@ -1,13 +1,14 @@
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/context/AuthContext';
 import type { Database } from '@/integrations/supabase/types';
 
 export type HistoricoColaboradorRow = Database['public']['Tables']['historico_colaborador']['Row'];
 
 export async function saveObservacao(colaboradorId: string, observacao: string): Promise<HistoricoColaboradorRow> {
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const { user } = useAuth();
-
+  const { data: userData, error: authError } = await supabase.auth.getUser();
+  if (authError) {
+    throw new Error(authError.message || 'Falha ao obter usuário autenticado');
+  }
+  const user = userData.user;
   if (!user?.id) {
     throw new Error('Usuário não autenticado');
   }
