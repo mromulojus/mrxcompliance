@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
-import { Shield, AlertTriangle, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { Shield, AlertTriangle, CheckCircle, Eye, EyeOff, FileText, Upload, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useHR } from '@/context/HRContext';
@@ -37,6 +37,8 @@ export default function DenunciaPublica() {
   
   const [empresa, setEmpresa] = useState<{ id: string; nome: string } | null>(null);
   const [loadingEmpresa, setLoadingEmpresa] = useState(true);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [uploadingAnexos, setUploadingAnexos] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -106,6 +108,37 @@ export default function DenunciaPublica() {
     }
 
     try {
+      // Upload anexos antes de criar a denúncia
+      let anexosPaths: string[] = [];
+      if (selectedFiles.length > 0) {
+        setUploadingAnexos(true);
+        const folder = `empresa_${empresaId}/${Date.now()}_${Math.random().toString(36).slice(2)}`;
+        for (const file of selectedFiles) {
+          // Validações: tipo e tamanho (máx 10MB por arquivo)
+          const allowedTypes = [
+            'image/jpeg', 'image/png', 'image/webp',
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+          ];
+          if (!allowedTypes.includes(file.type)) {
+            throw new Error('Tipo de arquivo não permitido. Use JPG, PNG, WEBP, PDF ou DOC/DOCX.');
+          }
+          if (file.size > 10 * 1024 * 1024) {
+            throw new Error('Arquivo muito grande. Máximo 10MB por arquivo.');
+          }
+
+          const safeName = file.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
+          const path = `${folder}/${Date.now()}_${safeName}`;
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('denuncia-anexos')
+            .upload(path, file, { cacheControl: '3600', upsert: true });
+          if (uploadError) throw uploadError;
+          anexosPaths.push(uploadData.path);
+        }
+        setUploadingAnexos(false);
+      }
+
       const denuncia = await criarDenuncia({
         empresaId: empresaId!,
         identificado: formData.identificado,
@@ -119,12 +152,14 @@ export default function DenunciaPublica() {
         descricao: formData.descricao,
         evidenciasDescricao: formData.evidenciasDescricao || undefined,
         sugestao: formData.sugestao || undefined,
+        anexos: anexosPaths.length ? anexosPaths : undefined,
       });
 
       if (!denuncia) throw new Error('Falha ao criar denúncia');
 
       setProtocolo(denuncia.protocolo);
       setSubmitted(true);
+      setSelectedFiles([]);
 
       toast({
         title: 'Denúncia registrada',
@@ -386,6 +421,42 @@ export default function DenunciaPublica() {
                     rows={3}
                   />
                 </div>
+
+                {/* Anexos */}
+                <div className="space-y-2">
+                  <Label htmlFor="anexos">Anexos (opcional, múltiplos, máx 10MB por arquivo)</Label>
+                  <Input
+                    id="anexos"
+                    type="file"
+                    multiple
+                    accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx"
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || []);
+                      setSelectedFiles(files);
+                    }}
+                    disabled={uploadingAnexos}
+                  />
+                  {selectedFiles.length > 0 && (
+                    <div className="space-y-2">
+                      {selectedFiles.map((file, idx) => (
+                        <div key={idx} className="flex items-center gap-2 p-2 bg-muted rounded">
+                          <FileText className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm flex-1 truncate">{file.name}</span>
+                          <span className="text-xs text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedFiles(prev => prev.filter((_, i) => i !== idx))}
+                            disabled={uploadingAnexos}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="bg-amber-50 p-4 rounded-lg">
@@ -395,8 +466,15 @@ export default function DenunciaPublica() {
                 </p>
               </div>
 
-              <Button type="submit" className="w-full" size="lg">
-                Registrar Denúncia
+              <Button type="submit" className="w-full" size="lg" disabled={uploadingAnexos}>
+                {uploadingAnexos ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                    Enviando anexos...
+                  </>
+                ) : (
+                  'Registrar Denúncia'
+                )}
               </Button>
             </form>
           </CardContent>
