@@ -12,26 +12,29 @@ type PhaseCardProps = {
 
 function PhaseCard({ phase, title, what, do: doText, result, icon }: PhaseCardProps) {
   return (
-    <div className="rounded-xl border bg-card p-6 shadow-sm">
-      <div className="flex items-center gap-3">
-        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-          {icon}
+    <div className="group relative rounded-2xl border bg-card/60 backdrop-blur supports-[backdrop-filter]:bg-card/40 p-6 shadow-sm overflow-hidden">
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[radial-gradient(400px_120px_at_20%_0%,hsl(var(--primary)/0.06),transparent_60%)]" />
+      <div className="relative z-[1]">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+            {icon}
+          </div>
+          <div>
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">{phase}</div>
+            <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+          </div>
         </div>
-        <div>
-          <div className="text-xs uppercase tracking-wide text-muted-foreground">{phase}</div>
-          <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+        <div className="mt-4 space-y-2 text-sm text-muted-foreground">
+          <p>
+            <span className="font-medium text-foreground">O que é:</span> {what}
+          </p>
+          <p>
+            <span className="font-medium text-foreground">O que fazemos:</span> {doText}
+          </p>
+          <p>
+            <span className="font-medium text-foreground">Resultado para você:</span> {result}
+          </p>
         </div>
-      </div>
-      <div className="mt-4 space-y-2 text-sm text-muted-foreground">
-        <p>
-          <span className="font-medium text-foreground">O que é:</span> {what}
-        </p>
-        <p>
-          <span className="font-medium text-foreground">O que fazemos:</span> {doText}
-        </p>
-        <p>
-          <span className="font-medium text-foreground">Resultado para você:</span> {result}
-        </p>
       </div>
     </div>
   );
@@ -39,7 +42,7 @@ function PhaseCard({ phase, title, what, do: doText, result, icon }: PhaseCardPr
 
 export function ProtocoloSection() {
   return (
-    <section id="metodo" className="py-16 md:py-24 bg-background">
+    <section id="metodo" className="py-16 md:py-24 bg-transparent">
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto text-center mb-12">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-foreground">

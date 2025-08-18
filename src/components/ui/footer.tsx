@@ -13,7 +13,7 @@ export function Footer() {
             <a href="/home#contato" className="hover:text-foreground">Contato</a>
           </nav>
           <div className="text-xs md:text-sm text-muted-foreground md:text-right">
-            <div>CONTATO@MRXBR.COM • Telefone: (xx) xxxxx-xxxx</div>
+            <div><a className="hover:text-foreground" href="mailto:CONTATO@MRXBR.COM">CONTATO@MRXBR.COM</a> • Telefone: (xx) xxxxx-xxxx</div>
             <div className="mt-1">© 2024 MRX Compliance. Todos os direitos reservados.</div>
           </div>
         </div>

@@ -88,13 +88,25 @@ interface HeroProps {
 
 const Hero = ({ pill, content, preview }: HeroProps) => {
   return (
-    <div className="container relative overflow-hidden">
-      <div className="flex min-h-[calc(100vh-64px)] flex-col lg:flex-row items-center py-8 px-4 md:px-8 lg:px-12">
-        <div className="flex flex-col gap-4 w-full lg:max-w-3xl">
-          {pill && <HeroBadge {...pill} />}
-          <HeroContent {...content} />
+    <div className="relative overflow-hidden">
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(1200px_600px_at_10%_-10%,hsl(var(--primary)/0.08),transparent_60%),radial-gradient(1200px_600px_at_90%_10%,hsl(var(--accent-foreground)/0.06),transparent_60%)]" />
+      <div className="container">
+        <div className="flex min-h-[calc(100vh-80px)] flex-col lg:flex-row items-center py-12 md:py-20">
+          <div className="flex flex-col gap-5 w-full lg:max-w-3xl">
+            {pill && <HeroBadge {...pill} />}
+            <HeroContent {...content} />
+          </div>
+          {preview && (
+            <div className="w-full lg:max-w-xl lg:pl-16 mt-12 lg:mt-0">
+              <div className="relative group rounded-2xl border bg-card/60 backdrop-blur supports-[backdrop-filter]:bg-card/50 shadow-sm overflow-hidden">
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[radial-gradient(600px_200px_at_20%_0%,hsl(var(--primary)/0.08),transparent_60%)]" />
+                <div className="p-3 md:p-4">
+                  {preview}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-        {preview && <div className="w-full lg:max-w-xl lg:pl-16 mt-12 lg:mt-0">{preview}</div>}
       </div>
     </div>
   );

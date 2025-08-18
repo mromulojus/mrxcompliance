@@ -11,7 +11,7 @@ export function TrustSection() {
   ];
 
   return (
-    <section className="py-12 md:py-16 bg-background border-b" id="confianca">
+    <section className="py-12 md:py-16 bg-transparent" id="confianca">
       <div className="container mx-auto px-4">
         <p className="text-center text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
           Empresas de todos os portes confiam na nossa metodologia para construir um futuro mais seguro e ético.
