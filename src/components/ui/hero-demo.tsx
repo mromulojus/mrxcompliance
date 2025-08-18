@@ -41,16 +41,16 @@ export function HeroCompliance() {
         size: "md",
       }}
       content={{
-        title: "Protocolo de compliance empresarial",
-        description: "Estruture, monitore e controle seus processos de compliance com nosso método exclusivo. Conte com especialistas dedicados ao sucesso do seu negócio.",
+        title: "Protocolo MRX de Compliance: Governança e Segurança Jurídica com a tecnologia PLAN • CHECK • CONTROL.",
+        description: "Um framework completo que utiliza metodologias globais e tecnologia própria para blindar sua empresa contra riscos e irregularidades.",
         primaryAction: {
-          href: "/contato",
-          text: "Quero aplicar Compliance de Verdade",
+          href: "/home#diagnostico",
+          text: "Solicitar Diagnóstico Gratuito",
           icon: <ShieldCheck className="h-4 w-4" />,
         },
         secondaryAction: {
-          href: "/diagnostico",
-          text: "Solicite diagnóstico gratuito",
+          href: "/home#solucoes",
+          text: "Conheça Nossas Soluções",
           icon: <LineChart className="h-4 w-4" />,
         },
       }}
