@@ -18,17 +18,20 @@ interface KanbanProps {
   onTaskCreate: (columnStatus: TaskStatus) => void;
   onTaskDelete: (taskId: string) => void;
   loading?: boolean;
+  /** When true, task cards are hidden (columns stay visible). */
+  hideCards?: boolean;
 }
 
-export const Kanban = ({ tasks, onTaskUpdate, onTaskCreate, onTaskDelete, loading = false }: KanbanProps) => {
+export const Kanban = ({ tasks, onTaskUpdate, onTaskCreate, onTaskDelete, loading = false, hideCards = false }: KanbanProps) => {
   return (
-    <div className={cn("h-full w-full bg-neutral-900 text-neutral-100")}>
+    <div className={cn("h-full w-full bg-transparent text-foreground")}>
       <Board 
         tasks={tasks}
         onTaskUpdate={onTaskUpdate}
         onTaskCreate={onTaskCreate}
         onTaskDelete={onTaskDelete}
         loading={loading}
+        hideCards={hideCards}
       />
     </div>
   );
@@ -40,9 +43,10 @@ interface BoardProps {
   onTaskCreate: (columnStatus: TaskStatus) => void;
   onTaskDelete: (taskId: string) => void;
   loading: boolean;
+  hideCards: boolean;
 }
 
-const Board = ({ tasks, onTaskUpdate, onTaskCreate, onTaskDelete, loading }: BoardProps) => {
+const Board = ({ tasks, onTaskUpdate, onTaskCreate, onTaskDelete, loading, hideCards }: BoardProps) => {
   const columns: { status: TaskStatus; title: string; color: string }[] = [
     { status: 'a_fazer', title: TASK_STATUS_LABELS.a_fazer, color: 'text-yellow-600' },
     { status: 'em_andamento', title: TASK_STATUS_LABELS.em_andamento, color: 'text-blue-600' },
@@ -81,6 +85,7 @@ const Board = ({ tasks, onTaskUpdate, onTaskCreate, onTaskDelete, loading }: Boa
           tasks={tasks}
           onTaskUpdate={onTaskUpdate}
           onTaskCreate={onTaskCreate}
+          hideCards={hideCards}
         />
       ))}
       {/* Lixeira removida para aumentar área útil do quadro */}
@@ -95,6 +100,7 @@ type ColumnProps = {
   column: TaskStatus;
   onTaskUpdate: (taskId: string, newStatus: TaskStatus, newOrder: number) => void;
   onTaskCreate: (columnStatus: TaskStatus) => void;
+  hideCards: boolean;
 };
 
 const Column = ({
@@ -104,6 +110,7 @@ const Column = ({
   column,
   onTaskUpdate,
   onTaskCreate,
+  hideCards,
 }: ColumnProps) => {
   const [active, setActive] = useState(false);
 
@@ -211,10 +218,10 @@ const Column = ({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         className={`h-full w-full transition-colors rounded-lg ${
-          active ? "bg-neutral-700/60" : "bg-neutral-800"
-        } min-h-[500px] border-2 border-dashed ${active ? "border-primary" : "border-neutral-700"}`}
+          active ? "bg-neutral-300/60" : "bg-neutral-200"
+        } min-h-[360px] border-2 border-dashed ${active ? "border-primary" : "border-neutral-300"}`}
       >
-        {filteredTasks
+        {!hideCards && filteredTasks
           .sort((a, b) => a.ordem_na_coluna - b.ordem_na_coluna)
           .map((task) => (
             <TaskCard key={task.id} task={task} handleDragStart={handleDragStart} />
@@ -260,7 +267,7 @@ const TaskCard = ({ task, handleDragStart }: TaskCardProps) => {
         layoutId={task.id}
         draggable="true"
         onDragStart={(e: any) => handleDragStart(e, task)}
-        className="cursor-grab rounded-lg border border-neutral-700 bg-neutral-800 text-neutral-100 shadow-sm p-4 mb-3 active:cursor-grabbing hover:shadow-md transition-all hover:border-primary/50 group"
+        className="cursor-grab rounded-lg border border-neutral-300 bg-white text-neutral-800 shadow-sm p-4 mb-3 active:cursor-grabbing hover:shadow-md transition-all hover:border-primary/50 group"
       >
         <div className="space-y-3">
           {/* Header with title and avatar */}

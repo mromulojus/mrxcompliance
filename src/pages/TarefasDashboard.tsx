@@ -159,6 +159,7 @@ export default function TarefasDashboard() {
                 onTaskCreate={handleTaskCreateFromColumn}
                 onTaskDelete={deleteTarefa}
                 loading={loading}
+                hideCards
               />
             </div>
           ) : (
