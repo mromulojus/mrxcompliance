@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { KanbanSquare, LayoutGrid, Filter, RefreshCw } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
@@ -101,6 +102,9 @@ export default function TarefasDashboard() {
         </div>
         
         <div className="flex items-center gap-2">
+          <Link to="/tarefas/quadros">
+            <Button variant="outline" size="sm">Ver Quadros</Button>
+          </Link>
           <Button
             variant="outline"
             size="sm"
