@@ -33,6 +33,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { EmpresaSelectModal } from '@/components/empresas/EmpresaSelectModal';
 import { Label } from '@/components/ui/label';
 import { Paperclip } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const taskFormSchema = z.object({
   titulo: z.string().min(1, 'Título é obrigatório'),
@@ -74,6 +75,7 @@ export function TaskFormModal({
   const [selectedEmpresa, setSelectedEmpresa] = useState<{ id: string; nome: string } | null>(null);
   const [anexoArquivos, setAnexoArquivos] = useState<File[]>([]);
   const [uploadingAnexos, setUploadingAnexos] = useState(false);
+  const [selectedResponsaveis, setSelectedResponsaveis] = useState<string[]>([]);
 
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskFormSchema),
@@ -113,6 +115,9 @@ export function TaskFormModal({
         setSelectedEmpresa(null);
       }
     }
+    // preset multi-select from single if provided
+    const single = (editData?.responsavel_id || defaultValues?.responsavel_id);
+    setSelectedResponsaveis(single && single !== 'none' ? [single] : []);
   }, [editData, defaultValues, form, open]);
 
   const uploadAnexos = async (files: File[], empresaId?: string): Promise<string[]> => {
@@ -139,12 +144,19 @@ export function TaskFormModal({
   const handleSubmit = async (data: TaskFormData) => {
     const empresaId = selectedEmpresa?.id || data.empresa_id;
     const anexosPaths = await uploadAnexos(anexoArquivos, empresaId);
-    onSubmit({
+    const payload: TaskFormData = {
       ...data,
       empresa_id: empresaId,
       ...contextData,
       anexos: anexosPaths.length ? anexosPaths : undefined,
-    });
+    } as any;
+    if (selectedResponsaveis.length > 0) {
+      // prefer multi; keep primary as first for backward compat
+      (payload as any).responsavel_id = selectedResponsaveis[0];
+    } else if (data.responsavel_id === 'none') {
+      (payload as any).responsavel_id = undefined;
+    }
+    onSubmit(payload);
     handleClose();
   };
 
@@ -152,9 +164,11 @@ export function TaskFormModal({
     onOpenChange(false);
     form.reset();
     setAnexoArquivos([]);
+    setSelectedResponsaveis([]);
   };
 
-  const selectedUser = users.find(user => user.user_id === form.watch('responsavel_id'));
+  const primarySelectedId = selectedResponsaveis[0] || form.watch('responsavel_id');
+  const selectedUser = users.find(user => user.user_id === primarySelectedId);
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -278,54 +292,55 @@ export function TaskFormModal({
               />
             </div>
 
-            {/* Responsible and Status */}
+            {/* Responsible (multi) and Status */}
             <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="responsavel_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Responsável</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || 'none'}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o responsável" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="none">
-                          <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-full bg-muted border border-dashed flex items-center justify-center">
-                              <span className="text-xs">?</span>
-                            </div>
-                            <span>Não atribuído</span>
-                          </div>
-                        </SelectItem>
-                        {users.map((user) => (
-                          <SelectItem key={user.user_id} value={user.user_id}>
-                            <div className="flex items-center gap-2">
-                              <Avatar className="w-6 h-6">
-                                <AvatarImage src={user.avatar_url} />
-                                <AvatarFallback className="text-xs">
-                                  {user.full_name
-                                    ?.split(' ')
-                                    .map(n => n[0])
-                                    .join('')
-                                    .toUpperCase()
-                                    .slice(0, 2) || 
-                                   user.username?.slice(0, 2).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="text-sm">{user.full_name || user.username}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
+              <div className="space-y-2">
+                <FormLabel>Responsáveis</FormLabel>
+                <div className="max-h-40 overflow-auto rounded border p-2 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={selectedResponsaveis.length === 0}
+                      onCheckedChange={(v) => {
+                        if (v) setSelectedResponsaveis([]);
+                      }}
+                    />
+                    <span className="text-sm text-muted-foreground">Não atribuído</span>
+                  </div>
+                  {users.map((user) => {
+                    const checked = selectedResponsaveis.includes(user.user_id);
+                    return (
+                      <div key={user.user_id} className="flex items-center gap-2">
+                        <Checkbox
+                          checked={checked}
+                          onCheckedChange={(v) => {
+                            const isChecked = Boolean(v);
+                            setSelectedResponsaveis((prev) => {
+                              if (isChecked) return Array.from(new Set([...prev, user.user_id]));
+                              return prev.filter((id) => id !== user.user_id);
+                            });
+                          }}
+                        />
+                        <Avatar className="w-6 h-6">
+                          <AvatarImage src={user.avatar_url} />
+                          <AvatarFallback className="text-xs">
+                            {user.full_name
+                              ?.split(' ')
+                              .map(n => n[0])
+                              .join('')
+                              .toUpperCase()
+                              .slice(0, 2) || 
+                             user.username?.slice(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm">{user.full_name || user.username}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                {selectedResponsaveis.length > 0 && (
+                  <p className="text-xs text-muted-foreground">Principal: {users.find(u => u.user_id === selectedResponsaveis[0])?.full_name || users.find(u => u.user_id === selectedResponsaveis[0])?.username}</p>
                 )}
-              />
+              </div>
 
               <FormField
                 control={form.control}

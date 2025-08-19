@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { TarefaWithUser } from '@/types/tarefas';
+import { Input } from '@/components/ui/input';
 
 export type DynamicColumn = {
   id: string;
@@ -19,9 +20,10 @@ interface KanbanDynamicProps {
   onTaskClick?: (task: TarefaWithUser) => void;
   onCreateTask?: (columnId: string) => void;
   hideCards?: boolean;
+  onRenameColumn?: (columnId: string, newName: string) => void;
 }
 
-export const KanbanDynamic = ({ columns, tasks, onTaskUpdate, onTaskClick, onCreateTask, hideCards = false }: KanbanDynamicProps) => {
+export const KanbanDynamic = ({ columns, tasks, onTaskUpdate, onTaskClick, onCreateTask, hideCards = false, onRenameColumn }: KanbanDynamicProps) => {
   return (
     <div className="flex h-full w-full gap-3 p-4 overflow-x-auto">
       {columns.map(col => (
@@ -35,6 +37,7 @@ export const KanbanDynamic = ({ columns, tasks, onTaskUpdate, onTaskClick, onCre
           onTaskClick={onTaskClick}
           onCreateTask={onCreateTask}
           hideCards={hideCards}
+          onRenameColumn={onRenameColumn}
         />
       ))}
     </div>
@@ -50,10 +53,13 @@ type ColumnProps = {
   onTaskClick?: (task: TarefaWithUser) => void;
   onCreateTask?: (columnId: string) => void;
   hideCards: boolean;
+  onRenameColumn?: (columnId: string, newName: string) => void;
 };
 
-const Column = ({ title, headingColor, tasks, columnId, onTaskUpdate, onTaskClick, onCreateTask, hideCards }: ColumnProps) => {
+const Column = ({ title, headingColor, tasks, columnId, onTaskUpdate, onTaskClick, onCreateTask, hideCards, onRenameColumn }: ColumnProps) => {
   const [active, setActive] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [nameDraft, setNameDraft] = useState(title);
 
   const handleDragStart = (e: DragEvent, task: TarefaWithUser) => {
     e.dataTransfer.setData('taskId', task.id);
@@ -134,7 +140,45 @@ const Column = ({ title, headingColor, tasks, columnId, onTaskUpdate, onTaskClic
   return (
     <div className="flex-1 min-w-0 h-full flex flex-col">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className={`font-medium`} style={{ color: headingColor || undefined }}>{title}</h3>
+        {editing ? (
+          <div className="flex items-center gap-2">
+            <Input
+              value={nameDraft}
+              onChange={(e) => setNameDraft(e.target.value)}
+              className="h-8 w-56"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  setEditing(false);
+                  if (onRenameColumn && nameDraft.trim() && nameDraft.trim() !== title) {
+                    onRenameColumn(columnId, nameDraft.trim());
+                  }
+                }
+                if (e.key === 'Escape') {
+                  setEditing(false);
+                  setNameDraft(title);
+                }
+              }}
+              onBlur={() => {
+                setEditing(false);
+                if (onRenameColumn && nameDraft.trim() && nameDraft.trim() !== title) {
+                  onRenameColumn(columnId, nameDraft.trim());
+                } else {
+                  setNameDraft(title);
+                }
+              }}
+              autoFocus
+            />
+          </div>
+        ) : (
+          <h3
+            className={`font-medium cursor-text`}
+            style={{ color: headingColor || undefined }}
+            onDoubleClick={() => setEditing(true)}
+            title="Clique duas vezes para renomear"
+          >
+            {title}
+          </h3>
+        )}
         <Badge variant="secondary" className="text-xs">{filteredTasks.length}</Badge>
       </div>
       <div

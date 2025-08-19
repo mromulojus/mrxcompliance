@@ -4,13 +4,24 @@ import React, {
   useState,
   DragEvent,
 } from "react";
-import { FiPlus, FiTrash } from "react-icons/fi";
+import { FiPlus, FiTrash, FiX } from "react-icons/fi";
 import { motion } from "framer-motion";
 import { FaFire } from "react-icons/fa";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { TarefaWithUser, TaskStatus, TASK_STATUS_LABELS, TASK_PRIORITY_LABELS, TASK_MODULE_LABELS } from "@/types/tarefas";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogTrigger,
+  AlertDialogFooter,
+} from "@/components/ui/alert-dialog";
 
 interface KanbanProps {
   tasks: TarefaWithUser[];
@@ -231,7 +242,17 @@ const Column = ({
         {!hideCards && filteredTasks
           .sort((a, b) => a.ordem_na_coluna - b.ordem_na_coluna)
           .map((task) => (
-            <TaskCard key={task.id} task={task} handleDragStart={handleDragStart} onTaskClick={onTaskClick} />
+            <TaskCard
+              key={task.id}
+              task={task}
+              handleDragStart={handleDragStart}
+              onTaskClick={onTaskClick}
+              onCloseTask={() => {
+                const concluidos = tasks.filter(t => t.status === 'concluido');
+                const newOrder = concluidos.length;
+                onTaskUpdate(task.id, 'concluido', newOrder);
+              }}
+            />
           ))}
         <DropIndicator beforeId={null} column={column} />
       </div>
@@ -243,9 +264,10 @@ type TaskCardProps = {
   task: TarefaWithUser;
   handleDragStart: (e: DragEvent, task: TarefaWithUser) => void;
   onTaskClick?: (task: TarefaWithUser) => void;
+  onCloseTask?: () => void;
 };
 
-const TaskCard = ({ task, handleDragStart, onTaskClick }: TaskCardProps) => {
+const TaskCard = ({ task, handleDragStart, onTaskClick, onCloseTask }: TaskCardProps) => {
   const isOverdue = task.data_vencimento && new Date(task.data_vencimento) < new Date();
   
   const getPriorityColor = (priority: string) => {
@@ -283,7 +305,8 @@ const TaskCard = ({ task, handleDragStart, onTaskClick }: TaskCardProps) => {
             <h4 className="font-medium text-sm flex-1 line-clamp-2 group-hover:text-primary transition-colors">
               {task.titulo}
             </h4>
-            {task.responsaveis && task.responsaveis.length > 0 ? (
+            <div className="flex items-start gap-2">
+              {task.responsaveis && task.responsaveis.length > 0 ? (
               <div className="flex items-center">
                 <div className="flex -space-x-2">
                   {task.responsaveis.slice(0, 5).map((u, idx) => (
@@ -304,7 +327,7 @@ const TaskCard = ({ task, handleDragStart, onTaskClick }: TaskCardProps) => {
                   )}
                 </div>
               </div>
-            ) : task.responsavel ? (
+              ) : task.responsavel ? (
               <Avatar className="h-8 w-8 border-2 border-background shadow-sm">
                 <AvatarImage src={task.responsavel.avatar_url} />
                 <AvatarFallback className="text-xs bg-primary text-primary-foreground">
@@ -317,11 +340,39 @@ const TaskCard = ({ task, handleDragStart, onTaskClick }: TaskCardProps) => {
                    task.responsavel.username?.slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-            ) : (
+              ) : (
               <div className="w-8 h-8 rounded-full bg-muted border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
                 <span className="text-xs text-muted-foreground">?</span>
               </div>
-            )}
+              )}
+
+              {/* Close (finish) card button */}
+              {onCloseTask && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button
+                      title="Fechar cartão"
+                      onClick={(e) => { e.stopPropagation(); }}
+                      className="h-8 w-8 inline-flex items-center justify-center rounded-md border border-neutral-300 text-neutral-500 hover:text-destructive hover:border-destructive/60 hover:bg-destructive/10 transition-colors"
+                    >
+                      <FiX className="h-4 w-4" />
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Fechar cartão?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Esta ação marcará a tarefa como concluída e a moverá para a coluna Concluído.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={(e) => { e.stopPropagation(); onCloseTask?.(); }}>Confirmar</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+            </div>
           </div>
           
           {/* Description */}
