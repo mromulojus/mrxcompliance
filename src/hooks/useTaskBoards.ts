@@ -11,6 +11,7 @@ export interface TaskBoard {
   is_archived: boolean;
   created_at: string;
   updated_at: string;
+  card_default?: any | null;
 }
 
 export interface TaskColumn {
@@ -72,12 +73,14 @@ export function useTaskBoards(boardId?: string) {
     }
   }, [toast]);
 
-  const updateBoard = useCallback(async (id: string, name: string) => {
+  const updateBoard = useCallback(async (id: string, name: string, card_default?: any) => {
     try {
       const sb = supabase as any;
+      const payload: any = { name };
+      if (typeof card_default !== 'undefined') payload.card_default = card_default;
       const { data, error } = await sb
         .from('task_boards')
-        .update({ name })
+        .update(payload)
         .eq('id', id)
         .select()
         .single();

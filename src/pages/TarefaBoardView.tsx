@@ -28,6 +28,16 @@ export default function TarefaBoardView() {
   const [nameDraft, setNameDraft] = useState(board?.name || '');
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [selectedColumnId, setSelectedColumnId] = useState<string | null>(null);
+  const [cardDefaultsDraft, setCardDefaultsDraft] = useState<string>('');
+
+  React.useEffect(() => {
+    if (board?.card_default) {
+      try { setCardDefaultsDraft(JSON.stringify(board.card_default, null, 2)); }
+      catch { setCardDefaultsDraft(''); }
+    } else {
+      setCardDefaultsDraft('');
+    }
+  }, [board?.card_default]);
 
   React.useEffect(() => {
     setNameDraft(board?.name || '');
@@ -84,6 +94,24 @@ export default function TarefaBoardView() {
               </div>
             ))}
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Modelo padrão de card (JSON)</span>
+            <Button size="sm" onClick={() => { try { const json = cardDefaultsDraft ? JSON.parse(cardDefaultsDraft) : null; void updateBoard(boardId as string, nameDraft || board?.name || 'Quadro', json); } catch {} }}>Salvar modelo</Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <textarea
+            className="w-full min-h-[160px] text-sm rounded-md border p-3 font-mono"
+            placeholder='Ex: {"prioridade":"media","modulo_origem":"geral"}'
+            value={cardDefaultsDraft}
+            onChange={(e) => setCardDefaultsDraft(e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground mt-2">Esse JSON será aplicado como valores padrão ao criar novos cards neste quadro.</p>
         </CardContent>
       </Card>
 
