@@ -1,10 +1,12 @@
 -- Create storage bucket for denuncia attachments
-INSERT INTO storage.buckets (id, name, public) VALUES ('denuncia-anexos', 'denuncia-anexos', false);
+INSERT INTO storage.buckets (id, name, public) VALUES ('denuncia-anexos', 'denuncia-anexos', false)
+ON CONFLICT (id) DO NOTHING;
 
 -- Allow anyone (including anonymous) to upload into denuncia-anexos
 CREATE POLICY "Anyone can upload denuncia anexos"
 ON storage.objects 
 FOR INSERT 
+TO anon, authenticated
 WITH CHECK (
   bucket_id = 'denuncia-anexos'
 );
