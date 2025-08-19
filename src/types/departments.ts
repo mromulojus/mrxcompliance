@@ -1,6 +1,7 @@
 export interface Department {
   id: string;
   company_id: string;
+  module_id: string;
   name: string;
   slug: string;
   color?: string;
