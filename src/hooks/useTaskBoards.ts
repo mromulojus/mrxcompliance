@@ -29,6 +29,7 @@ export function useTaskBoards(boardId?: string) {
   const [columns, setColumns] = useState<TaskColumn[]>([]);
   const [tasks, setTasks] = useState<TarefaWithUser[]>([]);
   const [loading, setLoading] = useState(false);
+  const [members, setMembers] = useState<{ user_id: string; role: string }[]>([]);
   const { toast } = useToast();
 
   const fetchBoards = useCallback(async () => {
@@ -226,24 +227,6 @@ export function useTaskBoards(boardId?: string) {
     }
   }, [toast]);
 
-  const createTaskInColumn = useCallback(async (bId: string, cId: string, payload: any) => {
-    try {
-      const sb = supabase as any;
-      const { data, error } = await sb
-        .from('tarefas')
-        .insert({ ...payload, board_id: bId, column_id: cId })
-        .select()
-        .single();
-      if (error) throw error;
-      setTasks(prev => [...prev, data as unknown as TarefaWithUser]);
-      toast({ title: 'Tarefa criada', description: 'A tarefa foi adicionada no quadro.' });
-    } catch (err) {
-      console.error('Erro ao criar tarefa no quadro:', err);
-      toast({ title: 'Erro', description: 'Não foi possível criar a tarefa', variant: 'destructive' });
-      throw err;
-    }
-  }, [toast]);
-
   const reorderTask = useCallback(async (taskId: string, newColumnId: string, newOrder: number) => {
     try {
       // fetch tasks in target column to compute shifts
@@ -266,6 +249,30 @@ export function useTaskBoards(boardId?: string) {
     }
   }, [tasks, boardId, fetchBoardTasks, toast]);
 
+  const fetchMembers = useCallback(async (bId: string) => {
+    try {
+      const sb = supabase as any;
+      const { data, error } = await sb.from('task_board_members').select('user_id, role').eq('board_id', bId);
+      if (error) throw error;
+      setMembers(data || []);
+    } catch (err) {
+      console.error('Erro ao carregar membros:', err);
+      toast({ title: 'Erro', description: 'Não foi possível carregar os membros', variant: 'destructive' });
+    }
+  }, [toast]);
+
+  const addMember = useCallback(async (bId: string, userId: string, role: string = 'member') => {
+    const sb = supabase as any;
+    await sb.from('task_board_members').insert({ board_id: bId, user_id: userId, role });
+    await fetchMembers(bId);
+  }, [fetchMembers]);
+
+  const removeMember = useCallback(async (bId: string, userId: string) => {
+    const sb = supabase as any;
+    await sb.from('task_board_members').delete().eq('board_id', bId).eq('user_id', userId);
+    await fetchMembers(bId);
+  }, [fetchMembers]);
+
   useEffect(() => {
     void fetchBoards();
   }, [fetchBoards]);
@@ -274,8 +281,9 @@ export function useTaskBoards(boardId?: string) {
     if (boardId) {
       void fetchColumns(boardId);
       void fetchBoardTasks(boardId);
+      void fetchMembers(boardId);
     }
-  }, [boardId, fetchColumns, fetchBoardTasks]);
+  }, [boardId, fetchColumns, fetchBoardTasks, fetchMembers]);
 
   const board = useMemo(() => boards.find(b => b.id === boardId), [boards, boardId]);
 
@@ -284,6 +292,7 @@ export function useTaskBoards(boardId?: string) {
     board,
     columns,
     tasks,
+    members,
     loading,
     fetchBoards,
     createBoard,
@@ -294,8 +303,10 @@ export function useTaskBoards(boardId?: string) {
     updateColumn,
     deleteColumn,
     fetchBoardTasks,
-    createTaskInColumn,
     reorderTask,
+    fetchMembers,
+    addMember,
+    removeMember,
+    moveColumn,
   };
 }
-
