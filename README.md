@@ -117,3 +117,32 @@ vulnerabilities early.
 ## Compliance
 
 See [docs/compliance_credentials_rotation.md](docs/compliance_credentials_rotation.md) for the credential rotation procedure for the compliance team.
+
+## Supabase configuration
+
+This app depends on Supabase for auth and data. Configure environment variables (Vite) and run the SQL migrations in your Supabase project:
+
+1) Create a `.env` from the example and set your project keys:
+
+```sh
+cp .env.example .env
+# Edit .env and fill VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+```
+
+2) Apply SQL migrations (tables, RLS and RPC for task boards):
+
+- Upload the SQL files under `supabase/migrations/` to your Supabase SQL editor and run them in chronological order, or use your migration tooling to apply them.
+- Ensure the following exist after applying:
+  - Tables: `task_boards`, `task_columns`, `task_board_members`
+  - Columns on `tarefas`: `board_id`, `column_id`
+  - RPC function: `move_task_column`
+
+3) Start the app:
+
+```sh
+npm i
+npm run dev
+```
+
+Troubleshooting:
+- If task boards do not load/create, verify you are authenticated and that the tables above exist in the target project configured in your `.env`.
