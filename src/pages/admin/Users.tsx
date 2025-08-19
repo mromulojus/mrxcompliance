@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +21,7 @@ type User = {
 };
 
 const UsersPage: React.FC = () => {
+  const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const { profile } = useAuth();
@@ -169,6 +171,13 @@ const UsersPage: React.FC = () => {
                       <TableCell>{user.username}</TableCell>
                       <TableCell className="uppercase">{user.role}</TableCell>
                       <TableCell className="text-right space-x-2">
+                        <Button 
+                          variant="secondary" 
+                          size="sm"
+                          onClick={() => navigate(`/admin/users/${user.id}`)}
+                        >
+                          Visualizar
+                        </Button>
                         <Button 
                           variant="outline" 
                           size="sm"

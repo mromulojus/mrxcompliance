@@ -26,6 +26,7 @@ import DevedorDetalhes from "./pages/DevedorDetalhes";
 import DividaDetalhes from "./pages/DividaDetalhes";
 import TarefasDashboard from "./pages/TarefasDashboard";
 import Homepage from "@/pages/Homepage";
+import UserDetails from "@/pages/admin/UserDetails";
 
 const queryClient = new QueryClient();
 
@@ -80,6 +81,11 @@ const App = () => (
                 <Route path="/admin/users" element={
                   <ProtectedRoute allowedRoles={['superuser', 'administrador']}>
                     <UsersPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/users/:userId" element={
+                  <ProtectedRoute allowedRoles={['superuser', 'administrador']}>
+                    <UserDetails />
                   </ProtectedRoute>
                 } />
                 <Route path="/admin/docs" element={<Docs />} />
