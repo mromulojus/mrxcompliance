@@ -4,9 +4,12 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Label } from "@/components/ui/label";
 
+type Empresa = { id: string; nome: string };
+
 type DepartmentRecord = {
   id: string;
   name: string;
+  company_id: string;
   business_unit?: string | null;
 };
 
@@ -14,6 +17,8 @@ type UserDepartmentsModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   userId?: string; // se fornecido, salva imediatamente no Supabase
+  empresaIds: string[]; // empresas selecionadas para filtrar os departamentos
+  empresas: Empresa[]; // para exibir nomes das empresas
   selectedDepartmentIds: string[]; // seleção atual
   onSelectedChange: (departmentIds: string[]) => void; // callback para atualizar seleção no pai
   onSaved?: () => void; // chamado após salvar no servidor (modo edição)
@@ -23,6 +28,8 @@ export const UserDepartmentsModal: React.FC<UserDepartmentsModalProps> = ({
   open,
   onOpenChange,
   userId,
+  empresaIds,
+  empresas,
   selectedDepartmentIds,
   onSelectedChange,
   onSaved,
@@ -38,9 +45,14 @@ export const UserDepartmentsModal: React.FC<UserDepartmentsModalProps> = ({
   useEffect(() => {
     const fetchDepartments = async () => {
       if (!open) return;
+      if (!empresaIds || empresaIds.length === 0) {
+        setDepartments([]);
+        return;
+      }
       const { data, error } = await supabase
         .from("departments")
-        .select("id, name, business_unit, is_active")
+        .select("id, name, company_id, business_unit, is_active")
+        .in("company_id", empresaIds)
         .eq("is_active", true)
         .order("name");
       if (!error && data) {
@@ -50,10 +62,21 @@ export const UserDepartmentsModal: React.FC<UserDepartmentsModalProps> = ({
       }
     };
     fetchDepartments();
-  }, [open]);
+  }, [open, empresaIds]);
 
-  const sortedDepartments = useMemo(() => {
-    return [...departments].sort((a, b) => a.name.localeCompare(b.name));
+  const empresasMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const emp of empresas) map[emp.id] = emp.nome;
+    return map;
+  }, [empresas]);
+
+  const departmentsByEmpresa = useMemo(() => {
+    const group: Record<string, DepartmentRecord[]> = {};
+    for (const d of departments) {
+      if (!group[d.company_id]) group[d.company_id] = [];
+      group[d.company_id].push(d);
+    }
+    return group;
   }, [departments]);
 
   const toggleDepartment = (deptId: string, checked: boolean) => {
@@ -71,7 +94,7 @@ export const UserDepartmentsModal: React.FC<UserDepartmentsModalProps> = ({
     }
     try {
       setWorking(true);
-      // limitar o escopo de remoção/inserção aos departamentos ativos carregados (escopo do sistema)
+      // limitar o escopo de remoção/inserção apenas aos departamentos das empresas visíveis
       const scopedDeptIds = departments.map((d) => d.id);
       const { data: existing, error: existingErr } = await supabase
         .from("user_departments")
@@ -118,26 +141,41 @@ export const UserDepartmentsModal: React.FC<UserDepartmentsModalProps> = ({
           <DialogTitle>Vincular Departamentos</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
-          {sortedDepartments.map((dept) => {
-            const label = dept.business_unit ? `${dept.name} (${dept.business_unit})` : dept.name;
-            const checked = localSelection.includes(dept.id);
-            return (
-              <div key={dept.id} className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id={`dept-${dept.id}`}
-                  checked={checked}
-                  onChange={(e) => toggleDepartment(dept.id, e.target.checked)}
-                />
-                <Label htmlFor={`dept-${dept.id}`} className="text-sm">{label}</Label>
+        {empresaIds.length === 0 ? (
+          <div className="text-sm text-muted-foreground">
+            Selecione ao menos uma empresa para listar os departamentos.
+          </div>
+        ) : (
+          <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-1">
+            {empresaIds.map((empId) => (
+              <div key={empId} className="space-y-2">
+                <div className="text-sm font-medium">{empresasMap[empId] || "Empresa"}</div>
+                <div className="space-y-2">
+                  {(departmentsByEmpresa[empId] || []).map((dept) => {
+                    const label = dept.business_unit
+                      ? `${dept.name} (${dept.business_unit})`
+                      : dept.name;
+                    const checked = localSelection.includes(dept.id);
+                    return (
+                      <div key={dept.id} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id={`dept-${dept.id}`}
+                          checked={checked}
+                          onChange={(e) => toggleDepartment(dept.id, e.target.checked)}
+                        />
+                        <Label htmlFor={`dept-${dept.id}`} className="text-sm">{label}</Label>
+                      </div>
+                    );
+                  })}
+                  {(departmentsByEmpresa[empId] || []).length === 0 && (
+                    <div className="text-xs text-muted-foreground">Nenhum departamento ativo.</div>
+                  )}
+                </div>
               </div>
-            );
-          })}
-          {sortedDepartments.length === 0 && (
-            <div className="text-xs text-muted-foreground">Nenhum departamento ativo.</div>
-          )}
-        </div>
+            ))}
+          </div>
+        )}
 
         <div className="flex justify-end space-x-2 pt-2">
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={working}>
