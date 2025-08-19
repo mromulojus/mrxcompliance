@@ -56,9 +56,9 @@ const Board = ({ tasks, onTaskUpdate, onTaskCreate, onTaskDelete, loading, hideC
 
   if (loading) {
     return (
-      <div className="flex h-full w-full gap-3 overflow-x-auto p-6">
+      <div className="flex h-full w-full gap-3 p-4 overflow-x-hidden">
         {columns.map((col) => (
-          <div key={col.status} className="w-80 shrink-0">
+          <div key={col.status} className="flex-1 min-w-0">
             <div className="mb-3 flex items-center justify-between">
               <h3 className={`font-medium ${col.color}`}>{col.title}</h3>
               <div className="h-4 w-6 bg-muted animate-pulse rounded" />
@@ -75,7 +75,7 @@ const Board = ({ tasks, onTaskUpdate, onTaskCreate, onTaskDelete, loading, hideC
   }
 
   return (
-    <div className="flex h-full w-full gap-3 overflow-x-auto p-6">
+    <div className="flex h-full w-full gap-3 p-4 overflow-x-hidden">
       {columns.map((col) => (
         <Column
           key={col.status}
@@ -206,7 +206,7 @@ const Column = ({
   const filteredTasks = tasks.filter((t) => t.status === column);
 
   return (
-    <div className="w-80 shrink-0 h-full flex flex-col">
+    <div className="flex-1 min-w-0 h-full flex flex-col">
       <div className="mb-3 flex items-center justify-between">
         <h3 className={`font-medium ${headingColor}`}>{title}</h3>
         <Badge variant="secondary" className="text-xs">
