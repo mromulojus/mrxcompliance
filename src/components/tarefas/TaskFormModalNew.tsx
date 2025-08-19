@@ -29,6 +29,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { TaskFormData, UserProfile } from '@/types/tarefas';
+import { supabase } from '@/integrations/supabase/client';
+import { useState } from 'react';
+import type { Department } from '@/types/departments';
 
 const taskFormSchema = z.object({
   titulo: z.string().min(1, 'Título é obrigatório'),
@@ -63,6 +66,9 @@ export function TaskFormModal({
   defaultValues,
   editData 
 }: TaskFormModalProps) {
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
+  const [primaryDepartmentId, setPrimaryDepartmentId] = useState<string | undefined>(undefined);
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
@@ -77,6 +83,31 @@ export function TaskFormModal({
   });
 
   useEffect(() => {
+    const loadDepartments = async () => {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return;
+      // Busca departamentos acessíveis ao usuário (todas empresas onde tem acesso)
+      const { data } = await supabase.rpc('my_departments');
+      const unique: Record<string, Department> = {};
+      (data || []).forEach((d: any) => {
+        unique[d.department_id] = {
+          id: d.department_id,
+          company_id: d.company_id,
+          name: d.name,
+          slug: d.slug,
+          color: d.color,
+          business_unit: d.business_unit,
+          is_active: d.is_active,
+        };
+      });
+      const list = Object.values(unique);
+      setDepartments(list);
+      if (!primaryDepartmentId && list.length > 0) {
+        setPrimaryDepartmentId(list[0].id);
+        setSelectedDepartments([list[0].id]);
+      }
+    };
+    void loadDepartments();
     if (editData) {
       form.reset(editData);
     } else if (defaultValues) {
@@ -94,7 +125,11 @@ export function TaskFormModal({
   }, [editData, defaultValues, form, open]);
 
   const handleSubmit = (data: TaskFormData) => {
-    onSubmit(data);
+    onSubmit({
+      ...data,
+      department_ids: selectedDepartments,
+      primary_department_id: primaryDepartmentId,
+    });
     handleClose();
   };
 
@@ -292,6 +327,59 @@ export function TaskFormModal({
                 </FormItem>
               )}
             />
+
+            {/* Departments selection */}
+            <div className="grid grid-cols-2 gap-4">
+              <FormItem>
+                <FormLabel>Departamentos (mín. 1)</FormLabel>
+                <div className="flex flex-wrap gap-2">
+                  {departments.map((dept) => {
+                    const selected = selectedDepartments.includes(dept.id);
+                    return (
+                      <Button
+                        key={dept.id}
+                        type="button"
+                        variant={selected ? 'default' : 'outline'}
+                        className="h-8 px-3"
+                        onClick={() => {
+                          setSelectedDepartments((prev) => {
+                            const exists = prev.includes(dept.id);
+                            const next = exists ? prev.filter(id => id !== dept.id) : [...prev, dept.id];
+                            if (!exists && !primaryDepartmentId) setPrimaryDepartmentId(dept.id);
+                            if (exists && primaryDepartmentId === dept.id) setPrimaryDepartmentId(next[0]);
+                            return next;
+                          });
+                        }}
+                        style={{ backgroundColor: selected ? undefined : undefined }}
+                      >
+                        <span className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: dept.color || '#9ca3af' }} />
+                        {dept.name}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </FormItem>
+              <FormItem>
+                <FormLabel>Departamento Principal</FormLabel>
+                <Select value={primaryDepartmentId} onValueChange={setPrimaryDepartmentId}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o principal" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {selectedDepartments.map((id) => {
+                      const dept = departments.find(d => d.id === id);
+                      if (!dept) return null;
+                      return (
+                        <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            </div>
 
             {/* Selected User Preview */}
             {selectedUser && (
