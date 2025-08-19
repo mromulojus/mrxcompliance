@@ -383,6 +383,44 @@ export type Database = {
           },
         ]
       }
+      historico_empresa: {
+        Row: {
+          id: string
+          empresa_id: string
+          tipo: string
+          descricao: string
+          meta: Json | null
+          created_at: string
+          created_by: string
+        }
+        Insert: {
+          id?: string
+          empresa_id: string
+          tipo: string
+          descricao: string
+          meta?: Json | null
+          created_at?: string
+          created_by?: string
+        }
+        Update: {
+          id?: string
+          empresa_id?: string
+          tipo?: string
+          descricao?: string
+          meta?: Json | null
+          created_at?: string
+          created_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historico_empresa_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       devedores: {
         Row: {
           canal_preferencial: string | null

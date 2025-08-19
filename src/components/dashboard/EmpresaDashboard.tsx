@@ -15,6 +15,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
 import { useSupabaseData } from "@/hooks/useSupabaseData";
 import { useDebtoData } from "@/hooks/useDebtoData";
+import { EmpresaHistorico } from "./EmpresaHistorico";
 
 interface EmpresaDashboardProps {
   empresaId: string;
@@ -342,6 +343,9 @@ export function EmpresaDashboard({ empresaId }: EmpresaDashboardProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Histórico & Comentários da Empresa */}
+      <EmpresaHistorico empresaId={empresaId} />
     </div>
   );
 }
