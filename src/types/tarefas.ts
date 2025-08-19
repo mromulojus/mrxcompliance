@@ -38,6 +38,13 @@ export interface TarefaWithUser extends Tarefa {
     username: string;
     avatar_url?: string;
   };
+  // Novo: suporte a múltiplos responsáveis
+  responsaveis?: Array<{
+    user_id: string;
+    full_name: string;
+    username: string;
+    avatar_url?: string;
+  }>;
 }
 
 // Interface para dados de usuário

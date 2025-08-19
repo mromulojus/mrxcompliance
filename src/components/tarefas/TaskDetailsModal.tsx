@@ -1,18 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Calendar, 
-  Clock, 
-  User, 
-  Edit3, 
-  MessageSquare, 
-  CheckCircle2,
-  Circle,
-  Plus,
-  X,
-  Send,
-  History
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Calendar, User, Edit3, MessageSquare, CheckCircle2, Circle, Plus, X, Send, History } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { TarefaWithUser, TaskPriority, TaskStatus, UserProfile } from '@/types/tarefas';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
 
 interface TaskDetailsModalProps {
   open: boolean;
@@ -33,6 +21,9 @@ interface TaskDetailsModalProps {
   tarefa: TarefaWithUser | null;
   onEdit: (tarefa: TarefaWithUser) => void;
   onUpdate: (id: string, updates: Partial<TarefaWithUser>) => Promise<void>;
+  users?: UserProfile[];
+  onAddResponsavel?: (tarefaId: string, userId: string) => Promise<void> | void;
+  onRemoveResponsavel?: (tarefaId: string, userId: string) => Promise<void> | void;
 }
 
 interface ChecklistItem {
@@ -53,25 +44,25 @@ export function TaskDetailsModal({
   onOpenChange, 
   tarefa, 
   onEdit,
-  onUpdate 
+  onUpdate,
+  users = [],
+  onAddResponsavel,
+  onRemoveResponsavel,
 }: TaskDetailsModalProps) {
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [newChecklistItem, setNewChecklistItem] = useState('');
   const [isAddingChecklistItem, setIsAddingChecklistItem] = useState(false);
+  const [selectedUserToAdd, setSelectedUserToAdd] = useState<string>('');
   const { toast } = useToast();
 
-  // Load checklist and comments when tarefa changes
   useEffect(() => {
     if (tarefa) {
-      // Parse checklist from tarefa data (you might want to store this in a separate field)
       const savedChecklist = tarefa.descricao?.includes('checklist:') 
         ? JSON.parse(tarefa.descricao.split('checklist:')[1] || '[]')
         : [];
       setChecklist(savedChecklist);
-      
-      // Load comments (you might want to create a separate table for this)
       setComments([]);
     }
   }, [tarefa]);
@@ -107,8 +98,6 @@ export function TaskDetailsModal({
       setChecklist(prev => [...prev, newItem]);
       setNewChecklistItem('');
       setIsAddingChecklistItem(false);
-      
-      // Update task with new checklist
       updateTaskChecklist([...checklist, newItem]);
     }
   };
@@ -146,12 +135,11 @@ export function TaskDetailsModal({
       const comment: Comment = {
         id: Date.now().toString(),
         text: newComment.trim(),
-        author: 'Usuário Atual', // Replace with actual user
+        author: 'Usuário Atual',
         createdAt: new Date()
       };
       setComments(prev => [comment, ...prev]);
       setNewComment('');
-      
       toast({
         title: 'Comentário adicionado',
         description: 'Seu comentário foi adicionado com sucesso',
@@ -159,12 +147,26 @@ export function TaskDetailsModal({
     }
   };
 
-  const completedItems = checklist.filter(item => item.completed).length;
-  const progress = checklist.length > 0 ? (completedItems / checklist.length) * 100 : 0;
+  const handleAddResponsavel = async () => {
+    if (!selectedUserToAdd) return;
+    try {
+      await onAddResponsavel?.(tarefa.id, selectedUserToAdd);
+      setSelectedUserToAdd('');
+    } catch {}
+  };
+
+  const handleRemoveResponsavel = async (userId: string) => {
+    try {
+      await onRemoveResponsavel?.(tarefa.id, userId);
+    } catch {}
+  };
+
+  const alreadyAssignedIds = new Set((tarefa.responsaveis || []).map(u => u.user_id));
+  const availableUsers = users.filter(u => !alreadyAssignedIds.has(u.user_id));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col min-h-0">
         <DialogHeader className="flex-shrink-0">
           <div className="flex items-start justify-between">
             <div className="space-y-2">
@@ -180,20 +182,15 @@ export function TaskDetailsModal({
                 </Badge>
               </div>
             </div>
-            <Button 
-              onClick={() => onEdit(tarefa)}
-              size="sm"
-              variant="outline"
-            >
+            <Button onClick={() => onEdit(tarefa)} size="sm" variant="outline">
               <Edit3 className="h-4 w-4 mr-2" />
               Editar
             </Button>
           </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4">
+        <ScrollArea className="flex-1 pr-4 min-h-0">
           <div className="space-y-6">
-            {/* Task Info */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Informações da Tarefa</CardTitle>
@@ -203,7 +200,24 @@ export function TaskDetailsModal({
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm font-medium">Responsável:</span>
-                    {tarefa.responsavel ? (
+                    {Array.isArray(tarefa.responsaveis) && tarefa.responsaveis.length > 0 ? (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {tarefa.responsaveis.map(u => (
+                          <div key={u.user_id} className="flex items-center gap-1">
+                            <Avatar className="h-6 w-6">
+                              <AvatarImage src={u.avatar_url} />
+                              <AvatarFallback>
+                                {(u.full_name?.[0] || u.username[0])}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="text-sm">{u.full_name || u.username}</span>
+                            <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => handleRemoveResponsavel(u.user_id)}>
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : tarefa.responsavel ? (
                       <div className="flex items-center gap-2">
                         <Avatar className="h-6 w-6">
                           <AvatarImage src={tarefa.responsavel.avatar_url} />
@@ -219,7 +233,6 @@ export function TaskDetailsModal({
                       <span className="text-sm text-muted-foreground">Não atribuído</span>
                     )}
                   </div>
-                  
                   {tarefa.data_vencimento && (
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -229,6 +242,20 @@ export function TaskDetailsModal({
                       </span>
                     </div>
                   )}
+                </div>
+
+                <div className="grid grid-cols-[1fr_auto] gap-2 items-center">
+                  <Select value={selectedUserToAdd || undefined} onValueChange={(v) => setSelectedUserToAdd(v)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Adicionar responsável" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableUsers.map(u => (
+                        <SelectItem key={u.user_id} value={u.user_id}>{u.full_name || u.username}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button size="sm" onClick={handleAddResponsavel} disabled={!selectedUserToAdd}>Adicionar</Button>
                 </div>
 
                 {tarefa.descricao && !tarefa.descricao.includes('checklist:') && (
@@ -242,20 +269,19 @@ export function TaskDetailsModal({
               </CardContent>
             </Card>
 
-            {/* Checklist */}
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">Checklist</CardTitle>
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground">
-                      {completedItems}/{checklist.length} concluídos
+                      {checklist.filter(i=>i.completed).length}/{checklist.length} concluídos
                     </span>
                     {checklist.length > 0 && (
                       <div className="w-16 bg-secondary rounded-full h-2">
                         <div 
                           className="bg-primary h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${progress}%` }}
+                          style={{ width: `${checklist.length ? (checklist.filter(i=>i.completed).length / checklist.length) * 100 : 0}%` }}
                         />
                       </div>
                     )}
@@ -265,31 +291,17 @@ export function TaskDetailsModal({
               <CardContent className="space-y-3">
                 {checklist.map((item) => (
                   <div key={item.id} className="flex items-center gap-3 group">
-                    <button
-                      onClick={() => toggleChecklistItem(item.id)}
-                      className="flex-shrink-0"
-                    >
+                    <button onClick={() => toggleChecklistItem(item.id)} className="flex-shrink-0">
                       {item.completed ? (
                         <CheckCircle2 className="h-5 w-5 text-green-600" />
                       ) : (
                         <Circle className="h-5 w-5 text-muted-foreground hover:text-primary" />
                       )}
                     </button>
-                    <span 
-                      className={`flex-1 text-sm ${
-                        item.completed 
-                          ? 'line-through text-muted-foreground' 
-                          : 'text-foreground'
-                      }`}
-                    >
+                    <span className={`flex-1 text-sm ${item.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
                       {item.text}
                     </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeChecklistItem(item.id)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
+                    <Button variant="ghost" size="sm" onClick={() => removeChecklistItem(item.id)} className="opacity-0 group-hover:opacity-100 transition-opacity">
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
@@ -309,24 +321,12 @@ export function TaskDetailsModal({
                     <Button size="sm" onClick={addChecklistItem}>
                       <Send className="h-4 w-4" />
                     </Button>
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      onClick={() => {
-                        setIsAddingChecklistItem(false);
-                        setNewChecklistItem('');
-                      }}
-                    >
+                    <Button size="sm" variant="ghost" onClick={() => { setIsAddingChecklistItem(false); setNewChecklistItem(''); }}>
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
                 ) : (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsAddingChecklistItem(true)}
-                    className="w-full"
-                  >
+                  <Button variant="outline" size="sm" onClick={() => setIsAddingChecklistItem(true)} className="w-full">
                     <Plus className="h-4 w-4 mr-2" />
                     Adicionar item
                   </Button>
@@ -334,7 +334,6 @@ export function TaskDetailsModal({
               </CardContent>
             </Card>
 
-            {/* Comments */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -343,7 +342,6 @@ export function TaskDetailsModal({
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Add Comment */}
                 <div className="space-y-2">
                   <Textarea
                     placeholder="Adicione um comentário ou observação..."
@@ -352,11 +350,7 @@ export function TaskDetailsModal({
                     className="min-h-[80px]"
                   />
                   <div className="flex justify-end">
-                    <Button 
-                      size="sm" 
-                      onClick={addComment}
-                      disabled={!newComment.trim()}
-                    >
+                    <Button size="sm" onClick={addComment} disabled={!newComment.trim()}>
                       <Send className="h-4 w-4 mr-2" />
                       Adicionar Comentário
                     </Button>
@@ -365,7 +359,6 @@ export function TaskDetailsModal({
 
                 <Separator />
 
-                {/* Comments List */}
                 <div className="space-y-3">
                   {comments.length === 0 ? (
                     <div className="text-center py-6 text-muted-foreground">

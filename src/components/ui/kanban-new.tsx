@@ -283,7 +283,18 @@ const TaskCard = ({ task, handleDragStart, onTaskClick }: TaskCardProps) => {
             <h4 className="font-medium text-sm flex-1 line-clamp-2 group-hover:text-primary transition-colors">
               {task.titulo}
             </h4>
-            {task.responsavel ? (
+            {Array.isArray(task.responsaveis) && task.responsaveis.length > 0 ? (
+              <div className="flex -space-x-2">
+                {task.responsaveis.slice(0,3).map(u => (
+                  <Avatar key={u.user_id} className="h-8 w-8 border-2 border-background shadow-sm">
+                    <AvatarImage src={u.avatar_url} />
+                    <AvatarFallback className="text-xs bg-primary text-primary-foreground">
+                      {u.full_name?.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2) || u.username?.slice(0,2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                ))}
+              </div>
+            ) : task.responsavel ? (
               <Avatar className="h-8 w-8 border-2 border-background shadow-sm">
                 <AvatarImage src={task.responsavel.avatar_url} />
                 <AvatarFallback className="text-xs bg-primary text-primary-foreground">
@@ -310,12 +321,17 @@ const TaskCard = ({ task, handleDragStart, onTaskClick }: TaskCardProps) => {
             </p>
           )}
           
-          {/* Responsible user name */}
-          {task.responsavel && (
+          {/* Responsible names */}
+          {Array.isArray(task.responsaveis) && task.responsaveis.length > 0 ? (
+            <p className="text-xs font-medium text-foreground/80">
+              {task.responsaveis.map(u => u.full_name || u.username).slice(0,2).join(', ')}
+              {task.responsaveis.length > 2 ? ' +' + (task.responsaveis.length - 2) : ''}
+            </p>
+          ) : task.responsavel ? (
             <p className="text-xs font-medium text-foreground/80">
               {task.responsavel.full_name || task.responsavel.username}
             </p>
-          )}
+          ) : null}
           
           {/* Tags */}
           <div className="flex items-center gap-2 flex-wrap">

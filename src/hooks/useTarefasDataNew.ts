@@ -26,7 +26,7 @@ export function useTarefasData() {
     }
   }, []);
 
-  // Fetch tarefas with user data
+  // Fetch tarefas with user data and multi-assignees
   const fetchTarefas = useCallback(async () => {
     try {
       setLoading(true);
@@ -40,32 +40,52 @@ export function useTarefasData() {
 
       if (tarefasError) throw tarefasError;
 
-      // Buscar dados dos usuários responsáveis
-      const responsavelIds = [...new Set(
-        tarefasData
-          ?.filter(t => t.responsavel_id)
-          ?.map(t => t.responsavel_id)
-          ?.filter(Boolean) || []
-      )];
+      const taskIds = (tarefasData || []).map(t => t.id);
+
+      // Buscar relações de responsáveis múltiplos
+      let relacoes: Array<{ tarefa_id: string; user_id: string }> = [];
+      if (taskIds.length > 0) {
+        const { data: trData, error: trErr } = await (supabase as any)
+          .from('tarefa_responsaveis')
+          .select('tarefa_id, user_id')
+          .in('tarefa_id', taskIds);
+        if (trErr) throw trErr;
+        relacoes = trData || [];
+      }
+
+      const uniqueUserIds = [
+        ...new Set([
+          ...(relacoes?.map(r => r.user_id) || []),
+          ...(tarefasData?.map(t => t.responsavel_id).filter(Boolean) as string[]),
+        ]),
+      ];
 
       let responsaveisData: UserProfile[] = [];
-      if (responsavelIds.length > 0) {
+      if (uniqueUserIds.length > 0) {
         const { data: usersData, error: usersError } = await supabase
           .from('profiles')
           .select('user_id, full_name, username, avatar_url, is_active')
-          .in('user_id', responsavelIds);
+          .in('user_id', uniqueUserIds);
 
         if (usersError) throw usersError;
         responsaveisData = usersData || [];
       }
 
-      // Combinar dados
-      const tarefasWithUsers: TarefaWithUser[] = tarefasData?.map(tarefa => ({
-        ...tarefa,
-        responsavel: tarefa.responsavel_id 
-          ? responsaveisData.find(user => user.user_id === tarefa.responsavel_id)
-          : undefined
-      })) || [];
+      // Combinar dados com múltiplos responsáveis
+      const tarefasWithUsers: TarefaWithUser[] = (tarefasData || []).map(tarefa => {
+        const responsaveisIds = relacoes.filter(r => r.tarefa_id === tarefa.id).map(r => r.user_id);
+        const responsaveis = responsaveisIds
+          .map(uid => responsaveisData.find(u => u.user_id === uid))
+          .filter(Boolean) as UserProfile[];
+
+        return {
+          ...tarefa,
+          responsavel: tarefa.responsavel_id
+            ? responsaveisData.find(user => user.user_id === tarefa.responsavel_id)
+            : undefined,
+          responsaveis,
+        } as TarefaWithUser;
+      });
 
       setTarefas(tarefasWithUsers);
     } catch (err) {
@@ -187,7 +207,7 @@ export function useTarefasData() {
   // Delete tarefa
   const deleteTarefa = useCallback(async (id: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('tarefas')
         .delete()
         .eq('id', id);
@@ -210,10 +230,54 @@ export function useTarefasData() {
     }
   }, [toast]);
 
+  // Add responsavel to tarefa (multi-assignee)
+  const addResponsavelToTarefa = useCallback(async (tarefaId: string, userId: string) => {
+    try {
+      const { error } = await (supabase as any)
+        .from('tarefa_responsaveis')
+        .insert({ tarefa_id: tarefaId, user_id: userId });
+      if (error) throw error;
+
+      const user = users.find(u => u.user_id === userId);
+      if (!user) return;
+      setTarefas(prev => prev.map(t => {
+        if (t.id !== tarefaId) return t;
+        const exists = (t.responsaveis || []).some(r => r.user_id === userId);
+        if (exists) return t;
+        return { ...t, responsaveis: [...(t.responsaveis || []), user] } as TarefaWithUser;
+      }));
+    } catch (err) {
+      console.error('Erro ao adicionar responsável:', err);
+      toast({ title: 'Erro', description: 'Não foi possível adicionar o responsável', variant: 'destructive' });
+      throw err;
+    }
+  }, [toast, users]);
+
+  // Remove responsavel from tarefa (multi-assignee)
+  const removeResponsavelFromTarefa = useCallback(async (tarefaId: string, userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('tarefa_responsaveis')
+        .delete()
+        .eq('tarefa_id', tarefaId)
+        .eq('user_id', userId);
+      if (error) throw error;
+
+      setTarefas(prev => prev.map(t => {
+        if (t.id !== tarefaId) return t;
+        return { ...t, responsaveis: (t.responsaveis || []).filter(r => r.user_id !== userId) } as TarefaWithUser;
+      }));
+    } catch (err) {
+      console.error('Erro ao remover responsável:', err);
+      toast({ title: 'Erro', description: 'Não foi possível remover o responsável', variant: 'destructive' });
+      throw err;
+    }
+  }, [toast]);
+
   // Reorder tasks using Supabase function
   const reorderTasks = useCallback(async (taskId: string, newStatus: TaskStatus, newOrder: number) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .rpc('reorder_tasks_in_column', {
           p_task_id: taskId,
           p_new_status: newStatus,
@@ -324,5 +388,7 @@ export function useTarefasData() {
     filterTarefas,
     calculateKPIs,
     refreshTarefas: fetchTarefas,
+    addResponsavelToTarefa,
+    removeResponsavelFromTarefa,
   };
 }

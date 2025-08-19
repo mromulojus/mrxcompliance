@@ -14,6 +14,7 @@ import { TaskFormData } from '@/types/tarefas';
 interface FloatingTaskButtonProps {
   onTaskCreate: (task: TaskFormData) => void;
   users: any[];
+  empresas?: Array<{ id: string; nome: string }>;
   contextData?: {
     empresa_id?: string;
     modulo_origem?: 'ouvidoria' | 'auditoria' | 'cobrancas' | 'geral';
@@ -24,7 +25,7 @@ interface FloatingTaskButtonProps {
   };
 }
 
-export function FloatingTaskButton({ onTaskCreate, users, contextData }: FloatingTaskButtonProps) {
+export function FloatingTaskButton({ onTaskCreate, users, empresas = [], contextData }: FloatingTaskButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleTaskSubmit = (taskData: TaskFormData) => {
@@ -65,6 +66,7 @@ export function FloatingTaskButton({ onTaskCreate, users, contextData }: Floatin
         onOpenChange={setIsModalOpen}
         onSubmit={handleTaskSubmit}
         users={users}
+        empresas={empresas}
         defaultValues={contextData}
       />
     </>

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { KanbanSquare, LayoutGrid, Filter, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +10,7 @@ import { TaskDetailsModal } from '@/components/tarefas/TaskDetailsModal';
 import { FloatingTaskButton } from '@/components/tarefas/FloatingTaskButton';
 import { useTarefasData } from '@/hooks/useTarefasDataNew';
 import { TaskFilters, TaskFormData, TaskStatus, TarefaWithUser } from '@/types/tarefas';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function TarefasDashboard() {
   const [view, setView] = useState<'kanban' | 'grid'>('kanban');
@@ -19,6 +20,7 @@ export default function TarefasDashboard() {
   const [showTaskDetails, setShowTaskDetails] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TarefaWithUser | null>(null);
   const [selectedColumnStatus, setSelectedColumnStatus] = useState<TaskStatus>('a_fazer');
+  const [empresas, setEmpresas] = useState<Array<{ id: string; nome: string }>>([]);
 
   const {
     tarefas,
@@ -30,11 +32,21 @@ export default function TarefasDashboard() {
     reorderTasks,
     filterTarefas,
     refreshTarefas,
+    addResponsavelToTarefa,
+    removeResponsavelFromTarefa,
   } = useTarefasData();
 
   const filteredTarefas = useMemo(() => {
     return filterTarefas(tarefas, filters);
   }, [tarefas, filters, filterTarefas]);
+
+  useEffect(() => {
+    const fetchEmpresas = async () => {
+      const { data } = await supabase.from('empresas').select('id, nome').order('nome');
+      setEmpresas(data || []);
+    };
+    fetchEmpresas();
+  }, []);
 
   
 
@@ -184,6 +196,7 @@ export default function TarefasDashboard() {
       <FloatingTaskButton
         onTaskCreate={handleTaskCreate}
         users={users}
+        empresas={empresas}
         contextData={{
           modulo_origem: 'geral',
         }}
@@ -195,6 +208,7 @@ export default function TarefasDashboard() {
         onOpenChange={setShowTaskModal}
         onSubmit={handleTaskCreate}
         users={users}
+        empresas={empresas}
         defaultValues={{
           status: selectedColumnStatus,
           modulo_origem: 'geral',
@@ -208,6 +222,9 @@ export default function TarefasDashboard() {
         tarefa={selectedTask}
         onEdit={handleTaskEdit}
         onUpdate={updateTarefa}
+        users={users}
+        onAddResponsavel={addResponsavelToTarefa}
+        onRemoveResponsavel={removeResponsavelFromTarefa}
       />
     </div>
   );

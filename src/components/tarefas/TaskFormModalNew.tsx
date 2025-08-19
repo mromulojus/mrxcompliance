@@ -29,6 +29,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { TaskFormData, UserProfile } from '@/types/tarefas';
+import { Select as SelectPrimitive } from '@/components/ui/select';
 
 const taskFormSchema = z.object({
   titulo: z.string().min(1, 'Título é obrigatório'),
@@ -46,6 +47,7 @@ interface TaskFormModalProps {
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: TaskFormData) => void;
   users: UserProfile[];
+  empresas?: Array<{ id: string; nome: string }>
   defaultValues?: Partial<TaskFormData> & {
     denuncia_id?: string;
     divida_id?: string;
@@ -60,6 +62,7 @@ export function TaskFormModal({
   onOpenChange, 
   onSubmit, 
   users,
+  empresas = [],
   defaultValues,
   editData 
 }: TaskFormModalProps) {
@@ -103,7 +106,7 @@ export function TaskFormModal({
     form.reset();
   };
 
-  const selectedUser = users.find(user => user.user_id === form.watch('responsavel_id'));
+  // selectedUser removed as atribuição agora acontece após a criação
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -149,6 +152,30 @@ export function TaskFormModal({
                       {...field}
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Empresa, Module and Priority */}
+            <FormField
+              control={form.control}
+              name="empresa_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Empresa</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a empresa" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {empresas.map((e) => (
+                        <SelectItem key={e.id} value={e.id}>{e.nome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -204,55 +231,8 @@ export function TaskFormModal({
               />
             </div>
 
-            {/* Responsible and Status */}
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="responsavel_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Responsável</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || 'none'}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o responsável" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="none">
-                          <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-full bg-muted border border-dashed flex items-center justify-center">
-                              <span className="text-xs">?</span>
-                            </div>
-                            <span>Não atribuído</span>
-                          </div>
-                        </SelectItem>
-                        {users.map((user) => (
-                          <SelectItem key={user.user_id} value={user.user_id}>
-                            <div className="flex items-center gap-2">
-                              <Avatar className="w-6 h-6">
-                                <AvatarImage src={user.avatar_url} />
-                                <AvatarFallback className="text-xs">
-                                  {user.full_name
-                                    ?.split(' ')
-                                    .map(n => n[0])
-                                    .join('')
-                                    .toUpperCase()
-                                    .slice(0, 2) || 
-                                   user.username?.slice(0, 2).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="text-sm">{user.full_name || user.username}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
+            {/* Status */}
+            <div className="grid grid-cols-1 gap-4">
               <FormField
                 control={form.control}
                 name="status"
@@ -293,32 +273,7 @@ export function TaskFormModal({
               )}
             />
 
-            {/* Selected User Preview */}
-            {selectedUser && (
-              <div className="p-3 bg-muted/50 rounded-lg border">
-                <p className="text-sm font-medium mb-2">Responsável selecionado:</p>
-                <div className="flex items-center gap-3">
-                  <Avatar className="w-8 h-8">
-                    <AvatarImage src={selectedUser.avatar_url} />
-                    <AvatarFallback className="text-xs">
-                      {selectedUser.full_name
-                        ?.split(' ')
-                        .map(n => n[0])
-                        .join('')
-                        .toUpperCase()
-                        .slice(0, 2) || 
-                       selectedUser.username?.slice(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="text-sm font-medium">{selectedUser.full_name || selectedUser.username}</p>
-                    <Badge variant="secondary" className="text-xs">
-                      {selectedUser.username}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* Sem seleção de responsável neste formulário */}
 
             {/* Actions */}
             <div className="flex justify-end space-x-3 pt-4 border-t">
