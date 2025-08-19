@@ -206,7 +206,7 @@ const Column = ({
   const filteredTasks = tasks.filter((t) => t.status === column);
 
   return (
-    <div className="w-80 shrink-0">
+    <div className="w-80 shrink-0 h-full flex flex-col">
       <div className="mb-3 flex items-center justify-between">
         <h3 className={`font-medium ${headingColor}`}>{title}</h3>
         <Badge variant="secondary" className="text-xs">
@@ -217,7 +217,7 @@ const Column = ({
         onDrop={handleDragEnd}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
-        className={`h-full w-full transition-colors rounded-lg ${
+        className={`flex-1 min-h-0 w-full overflow-y-auto transition-colors rounded-lg ${
           active ? "bg-neutral-300/60" : "bg-neutral-200"
         } min-h-[360px] border-2 border-dashed ${active ? "border-primary" : "border-neutral-300"}`}
       >
