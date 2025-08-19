@@ -65,10 +65,10 @@ export function AppSidebar() {
               className="px-2"
               link={{
                 label: profile.full_name || "Usuário",
-                href: "/profile",
+                href: `/admin/users/${profile.user_id}`,
                 icon: (
                   <img
-                    src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=64&q=80&auto=format&fit=crop&crop=faces"
+                    src={profile.avatar_url || "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=64&q=80&auto=format&fit=crop&crop=faces"}
                     className="h-7 w-7 flex-shrink-0 rounded-full object-cover"
                     width={28}
                     height={28}
