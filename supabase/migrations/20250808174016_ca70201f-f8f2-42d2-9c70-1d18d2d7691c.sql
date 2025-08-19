@@ -336,16 +336,67 @@ RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER SET search_path = public
 AS $$
+DECLARE
+  v_username TEXT;
+  v_role public.user_role;
+  v_emp_ids UUID[];
+  v_single_emp UUID;
+  v_dept_slug TEXT;
+  v_dept_id UUID;
+  v_made_primary BOOLEAN := false;
+  v_emp UUID;
 BEGIN
+  v_username := COALESCE(NEW.raw_user_meta_data ->> 'username', NEW.email);
+  v_role := CASE WHEN NEW.email = 'mrxbr@example.com' THEN 'superuser'::public.user_role ELSE 'operacional'::public.user_role END;
+
   INSERT INTO public.profiles (user_id, username, role)
-  VALUES (
-    NEW.id,
-    COALESCE(NEW.raw_user_meta_data ->> 'username', NEW.email),
-    CASE 
-      WHEN NEW.email = 'mrxbr@example.com' THEN 'superuser'::public.user_role
-      ELSE 'operacional'::public.user_role
-    END
-  );
+  VALUES (NEW.id, v_username, v_role);
+
+  -- Vincular usuário a um departamento na criação
+  v_single_emp := NULL;
+  v_emp_ids := NULL;
+  v_dept_slug := COALESCE(NEW.raw_user_meta_data ->> 'department_slug', 'administrativo');
+
+  IF (NEW.raw_user_meta_data ? 'company_id') THEN
+    v_single_emp := (NEW.raw_user_meta_data ->> 'company_id')::uuid;
+  END IF;
+
+  IF v_single_emp IS NULL THEN
+    IF (NEW.raw_user_meta_data ? 'empresa_ids') THEN
+      SELECT ARRAY(
+        SELECT (jsonb_array_elements_text(NEW.raw_user_meta_data -> 'empresa_ids'))::uuid
+      ) INTO v_emp_ids;
+    END IF;
+  END IF;
+
+  IF v_single_emp IS NOT NULL THEN
+    SELECT d.id INTO v_dept_id FROM public.departments d WHERE d.company_id = v_single_emp AND d.slug = v_dept_slug LIMIT 1;
+    IF v_dept_id IS NULL THEN
+      SELECT d.id INTO v_dept_id FROM public.departments d WHERE d.company_id = v_single_emp AND d.slug = 'administrativo' LIMIT 1;
+    END IF;
+    IF v_dept_id IS NOT NULL THEN
+      INSERT INTO public.user_departments(user_id, department_id, role_in_department, is_primary)
+      VALUES (NEW.id, v_dept_id, 'member', true)
+      ON CONFLICT (user_id, department_id) DO NOTHING;
+      v_made_primary := true;
+    END IF;
+  ELSIF v_emp_ids IS NOT NULL AND array_length(v_emp_ids, 1) IS NOT NULL THEN
+    FOREACH v_emp IN ARRAY v_emp_ids LOOP
+      SELECT d.id INTO v_dept_id FROM public.departments d WHERE d.company_id = v_emp AND d.slug = v_dept_slug LIMIT 1;
+      IF v_dept_id IS NULL THEN
+        SELECT d.id INTO v_dept_id FROM public.departments d WHERE d.company_id = v_emp AND d.slug = 'administrativo' LIMIT 1;
+      END IF;
+      IF v_dept_id IS NOT NULL THEN
+        INSERT INTO public.user_departments(user_id, department_id, role_in_department, is_primary)
+        VALUES (NEW.id, v_dept_id, 'member', COALESCE(NOT v_made_primary, false))
+        ON CONFLICT (user_id, department_id) DO NOTHING;
+        IF NOT v_made_primary THEN
+          v_made_primary := true;
+        END IF;
+      END IF;
+    END LOOP;
+  END IF;
+
   RETURN NEW;
 END;
 $$;
