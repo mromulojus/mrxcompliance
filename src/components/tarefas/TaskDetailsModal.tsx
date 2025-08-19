@@ -62,17 +62,59 @@ export function TaskDetailsModal({
   const [isAddingChecklistItem, setIsAddingChecklistItem] = useState(false);
   const { toast } = useToast();
 
+  // Helpers to serialize metadata (temporary until dedicated tables)
+  type SerializedComment = { id: string; text: string; author: string; createdAt: string };
+
+  const parseDescricaoMeta = (descricao?: string) => {
+    const safe = descricao || '';
+    const keys = ['checklist:', 'comments:'] as const;
+    let base = safe;
+    let checklistJson = '[]';
+    let commentsJson = '[]';
+
+    const positions = keys
+      .map(key => ({ key, index: safe.indexOf(key) }))
+      .filter(k => k.index !== -1)
+      .sort((a, b) => a.index - b.index);
+
+    if (positions.length > 0) {
+      base = safe.slice(0, positions[0].index);
+      for (let i = 0; i < positions.length; i++) {
+        const current = positions[i];
+        const next = positions[i + 1];
+        const value = safe.slice(current.index + current.key.length, next ? next.index : safe.length);
+        if (current.key === 'checklist:') checklistJson = value.trim();
+        if (current.key === 'comments:') commentsJson = value.trim();
+      }
+    }
+
+    let parsedChecklist: ChecklistItem[] = [];
+    let parsedComments: Comment[] = [];
+    try { parsedChecklist = JSON.parse(checklistJson || '[]'); } catch {}
+    try {
+      const temp: SerializedComment[] = JSON.parse(commentsJson || '[]');
+      parsedComments = (temp || []).map(c => ({ ...c, createdAt: new Date(c.createdAt) }));
+    } catch {}
+
+    return { baseDescription: base, parsedChecklist, parsedComments };
+  };
+
+  const buildDescricaoWithMeta = (baseDescription: string, checklistToSave: ChecklistItem[], commentsToSave: Comment[]) => {
+    const serialized: SerializedComment[] = commentsToSave.map(c => ({
+      id: c.id,
+      text: c.text,
+      author: c.author,
+      createdAt: c.createdAt.toISOString(),
+    }));
+    return `${baseDescription}checklist:${JSON.stringify(checklistToSave)}comments:${JSON.stringify(serialized)}`;
+  };
+
   // Load checklist and comments when tarefa changes
   useEffect(() => {
     if (tarefa) {
-      // Parse checklist from tarefa data (you might want to store this in a separate field)
-      const savedChecklist = tarefa.descricao?.includes('checklist:') 
-        ? JSON.parse(tarefa.descricao.split('checklist:')[1] || '[]')
-        : [];
-      setChecklist(savedChecklist);
-      
-      // Load comments (you might want to create a separate table for this)
-      setComments([]);
+      const { parsedChecklist, parsedComments } = parseDescricaoMeta(tarefa.descricao);
+      setChecklist(parsedChecklist);
+      setComments(parsedComments);
     }
   }, [tarefa]);
 
@@ -107,9 +149,8 @@ export function TaskDetailsModal({
       setChecklist(prev => [...prev, newItem]);
       setNewChecklistItem('');
       setIsAddingChecklistItem(false);
-      
-      // Update task with new checklist
-      updateTaskChecklist([...checklist, newItem]);
+      // persist
+      updateTaskMeta([...checklist, newItem], comments);
     }
   };
 
@@ -118,24 +159,24 @@ export function TaskDetailsModal({
       item.id === id ? { ...item, completed: !item.completed } : item
     );
     setChecklist(updatedChecklist);
-    updateTaskChecklist(updatedChecklist);
+    updateTaskMeta(updatedChecklist, comments);
   };
 
   const removeChecklistItem = (id: string) => {
     const updatedChecklist = checklist.filter(item => item.id !== id);
     setChecklist(updatedChecklist);
-    updateTaskChecklist(updatedChecklist);
+    updateTaskMeta(updatedChecklist, comments);
   };
 
-  const updateTaskChecklist = async (newChecklist: ChecklistItem[]) => {
+  const updateTaskMeta = async (newChecklist: ChecklistItem[], newComments: Comment[]) => {
     try {
-      const baseDescription = tarefa.descricao?.split('checklist:')[0] || '';
-      const updatedDescription = `${baseDescription}checklist:${JSON.stringify(newChecklist)}`;
+      const { baseDescription } = parseDescricaoMeta(tarefa.descricao);
+      const updatedDescription = buildDescricaoWithMeta(baseDescription, newChecklist, newComments);
       await onUpdate(tarefa.id, { descricao: updatedDescription });
     } catch (error) {
       toast({
         title: 'Erro',
-        description: 'Não foi possível atualizar o checklist',
+        description: 'Não foi possível salvar as alterações',
         variant: 'destructive',
       });
     }
@@ -146,12 +187,13 @@ export function TaskDetailsModal({
       const comment: Comment = {
         id: Date.now().toString(),
         text: newComment.trim(),
-        author: 'Usuário Atual', // Replace with actual user
+        author: tarefa.responsavel?.full_name || tarefa.responsavel?.username || 'Usuário',
         createdAt: new Date()
       };
-      setComments(prev => [comment, ...prev]);
+      const updatedComments = [comment, ...comments];
+      setComments(updatedComments);
       setNewComment('');
-      
+      updateTaskMeta(checklist, updatedComments);
       toast({
         title: 'Comentário adicionado',
         description: 'Seu comentário foi adicionado com sucesso',
