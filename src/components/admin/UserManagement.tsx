@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -13,6 +13,7 @@ type DatabaseRole = UserRole;
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import UserDepartmentsModal from "@/components/admin/UserDepartmentsModal";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type UserFormData = {
   username: string;
@@ -56,6 +57,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   const [deptModalOpen, setDeptModalOpen] = useState(false);
   const [deptSelected, setDeptSelected] = useState<string[]>([]);
   const { toast } = useToast();
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
+  const [selectedAvatarFile, setSelectedAvatarFile] = useState<File | null>(null);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchEmpresas = async () => {
@@ -129,7 +133,27 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         return;
       }
 
-      // Update the profile with the correct role
+      // Optional: upload avatar if provided
+      let uploadedAvatarUrl: string | undefined;
+      if (selectedAvatarFile && authData.user) {
+        try {
+          const fileExt = selectedAvatarFile.name.split('.').pop();
+          const filePath = `${authData.user.id}/${Date.now()}.${fileExt}`;
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('avatars')
+            .upload(filePath, selectedAvatarFile, {
+              cacheControl: '3600',
+              upsert: true
+            });
+          if (uploadError) throw uploadError;
+          const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(uploadData.path);
+          uploadedAvatarUrl = publicUrlData.publicUrl;
+        } catch (e: any) {
+          console.warn('Falha ao enviar avatar. Prosseguindo sem avatar.', e?.message || e);
+        }
+      }
+
+      // Update the profile with the correct role (and avatar if uploaded)
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
@@ -138,6 +162,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
           role: data.role as DatabaseRole,
           is_active: true,
           empresa_ids: data.empresa_ids,
+          ...(uploadedAvatarUrl ? { avatar_url: uploadedAvatarUrl } : {}),
           updated_at: new Date().toISOString()
         })
         .eq('user_id', authData.user.id);
@@ -167,6 +192,11 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
       createForm.reset();
       setDeptSelected([]);
+      setSelectedAvatarFile(null);
+      if (avatarPreviewUrl) {
+        URL.revokeObjectURL(avatarPreviewUrl);
+        setAvatarPreviewUrl(null);
+      }
       setIsCreateOpen(false);
       onUserChange();
     } catch (error) {
@@ -385,6 +415,51 @@ export const UserManagement: React.FC<UserManagementProps> = ({
           </DialogHeader>
           <Form {...createForm}>
             <form onSubmit={createForm.handleSubmit(handleCreateUser)} className="space-y-4">
+              {/* Avatar selector */}
+              <div className="flex items-center gap-4">
+                <Avatar className="h-14 w-14">
+                  <AvatarImage src={avatarPreviewUrl || undefined} />
+                  <AvatarFallback>
+                    {createForm.watch('username')?.slice(0, 2).toUpperCase() || '?'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files && e.target.files[0];
+                      if (!file) return;
+                      if (avatarPreviewUrl) URL.revokeObjectURL(avatarPreviewUrl);
+                      setSelectedAvatarFile(file);
+                      const objectUrl = URL.createObjectURL(file);
+                      setAvatarPreviewUrl(objectUrl);
+                    }}
+                  />
+                  <Button type="button" variant="secondary" onClick={() => avatarInputRef.current?.click()}>
+                    Adicionar foto
+                  </Button>
+                  {selectedAvatarFile && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => {
+                        setSelectedAvatarFile(null);
+                        if (avatarPreviewUrl) {
+                          URL.revokeObjectURL(avatarPreviewUrl);
+                          setAvatarPreviewUrl(null);
+                        }
+                        if (avatarInputRef.current) avatarInputRef.current.value = '';
+                      }}
+                    >
+                      Remover
+                    </Button>
+                  )}
+                </div>
+              </div>
+
               <FormField
                 control={createForm.control}
                 name="username"
