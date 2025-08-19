@@ -4,6 +4,7 @@ import { useTaskBoards } from '@/hooks/useTaskBoards';
 import { KanbanDynamic } from '@/components/ui/kanban-dynamic';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TaskFormModal } from '@/components/tarefas/TaskFormModalNew';
 import { TaskFormData } from '@/types/tarefas';
@@ -20,6 +21,7 @@ export default function TarefaBoardView() {
     createColumn,
     updateColumn,
     deleteColumn,
+    moveColumn,
     reorderTask,
   } = useTaskBoards(boardId);
   const { users, createTarefa } = useTarefasData();
@@ -83,13 +85,43 @@ export default function TarefaBoardView() {
         </CardHeader>
         <CardContent>
           <div className="flex gap-4 flex-wrap">
-            {columns.map((col) => (
+            {columns.map((col, idx) => (
               <div key={col.id} className="flex items-center gap-2 border rounded-md p-2 bg-muted/40">
                 <Input
                   value={col.name}
                   onChange={(e) => void updateColumn(col.id, { name: e.target.value })}
                   className="w-56"
                 />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" style={{ backgroundColor: col.color || undefined }}>Cor</Button>
+                  </PopoverTrigger>
+                  <PopoverContent>
+                    <div className="grid grid-cols-6 gap-2">
+                      {['#f97316','#ef4444','#22c55e','#3b82f6','#a855f7','#eab308','#06b6d4','#64748b'].map(c => (
+                        <button key={c} className="h-6 w-6 rounded" style={{ backgroundColor: c }} onClick={(e) => { e.preventDefault(); void updateColumn(col.id, { color: c }); }} />
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm">Padrão</Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80">
+                    <textarea
+                      defaultValue={col.card_default ? JSON.stringify(col.card_default, null, 2) : ''}
+                      onBlur={async (e) => { try { const json = e.currentTarget.value ? JSON.parse(e.currentTarget.value) : null; await updateColumn(col.id, { } as any); const sb = (await import('@/integrations/supabase/client')).supabase as any; await sb.from('task_columns').update({ card_default: json }).eq('id', col.id); } catch {} }}
+                      className="w-full h-40 text-xs font-mono border rounded p-2"
+                      placeholder='{"prioridade":"media"}'
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-1">Ao sair do campo salvamos automaticamente.</p>
+                  </PopoverContent>
+                </Popover>
+                <div className="flex items-center gap-1">
+                  <Button variant="ghost" size="sm" onClick={() => void moveColumn(boardId as string, col.id, Math.max(0, idx - 1))}>◀</Button>
+                  <Button variant="ghost" size="sm" onClick={() => void moveColumn(boardId as string, col.id, Math.min(columns.length - 1, idx + 1))}>▶</Button>
+                </div>
                 <Button variant="ghost" size="sm" onClick={() => void deleteColumn(col.id)}>Excluir</Button>
               </div>
             ))}

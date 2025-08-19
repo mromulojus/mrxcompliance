@@ -21,6 +21,7 @@ export interface TaskColumn {
   color?: string | null;
   order_index: number;
   created_at: string;
+  card_default?: any | null;
 }
 
 export function useTaskBoards(boardId?: string) {
@@ -178,6 +179,18 @@ export function useTaskBoards(boardId?: string) {
       toast({ title: 'Erro', description: 'Não foi possível excluir a coluna', variant: 'destructive' });
     }
   }, [toast]);
+
+  const moveColumn = useCallback(async (bId: string, columnId: string, newIndex: number) => {
+    try {
+      const sb = supabase as any;
+      const { error } = await sb.rpc('move_task_column', { p_board_id: bId, p_column_id: columnId, p_new_index: newIndex });
+      if (error) throw error;
+      await fetchColumns(bId);
+    } catch (err) {
+      console.error('Erro ao mover coluna:', err);
+      toast({ title: 'Erro', description: 'Não foi possível reordenar as colunas', variant: 'destructive' });
+    }
+  }, [fetchColumns, toast]);
 
   const fetchBoardTasks = useCallback(async (bId: string) => {
     try {

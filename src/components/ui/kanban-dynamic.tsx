@@ -134,7 +134,7 @@ const Column = ({ title, headingColor, tasks, columnId, onTaskUpdate, onTaskClic
   return (
     <div className="flex-1 min-w-0 h-full flex flex-col">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className={`font-medium ${headingColor || ''}`}>{title}</h3>
+        <h3 className={`font-medium`} style={{ color: headingColor || undefined }}>{title}</h3>
         <Badge variant="secondary" className="text-xs">{filteredTasks.length}</Badge>
       </div>
       <div
