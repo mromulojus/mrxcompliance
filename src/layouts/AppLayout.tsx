@@ -2,9 +2,12 @@ import React from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Logo } from "@/components/ui/logo";
+import { FloatingTaskButton } from "@/components/tarefas/FloatingTaskButton";
+import { useTarefasData } from "@/hooks/useTarefasDataNew";
 
 const AppLayout: React.FC = () => {
   const location = useLocation();
+  const { createTarefa, users } = useTarefasData();
 
   React.useEffect(() => {
     const path = location.pathname;
@@ -60,6 +63,7 @@ const AppLayout: React.FC = () => {
         <div className="p-2 md:p-4">
           <Outlet />
         </div>
+        <FloatingTaskButton onTaskCreate={createTarefa} users={users} />
       </main>
     </div>
   );
