@@ -4,6 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 import { Kanban } from '@/components/ui/kanban-new';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
 import { TaskFiltersComponent } from '@/components/tarefas/TaskFiltersNew';
 import { TaskFormModal } from '@/components/tarefas/TaskFormModalNew';
 import { TaskDetailsModal } from '@/components/tarefas/TaskDetailsModal';
@@ -171,9 +178,41 @@ export default function TarefasDashboard() {
               />
             </div>
           ) : (
-            <div className="p-6">
-              <div className="text-center text-muted-foreground">
-                Visualização em grade será implementada em breve
+            <div className="p-4 space-y-4">
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-muted-foreground">Responsável:</span>
+                <Select
+                  value={filters.responsavel || 'all'}
+                  onValueChange={(value) => {
+                    setFilters({
+                      ...filters,
+                      responsavel: value === 'all' ? undefined : value,
+                    });
+                  }}
+                >
+                  <SelectTrigger className="w-[260px]">
+                    <SelectValue placeholder="Escolher responsável" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="unassigned">Não atribuídas</SelectItem>
+                    {users.map((user) => (
+                      <SelectItem key={user.user_id} value={user.user_id}>
+                        {user.full_name || user.username}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="h-[calc(100vh-480px)] min-h-[520px]">
+                <Kanban
+                  tasks={filteredTarefas}
+                  onTaskUpdate={handleTaskReorder}
+                  onTaskCreate={handleTaskCreateFromColumn}
+                  onTaskDelete={deleteTarefa}
+                  onTaskClick={handleTaskClick}
+                  loading={loading}
+                />
               </div>
             </div>
           )}
