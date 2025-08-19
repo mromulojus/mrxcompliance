@@ -24,19 +24,13 @@ const AvatarImage = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Image>,
   React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>
 >(({ className, ...props }, ref) => {
-  const { src, alt, onError, ...rest } = props as any;
+  const { src: _ignoredSrc, alt, ...rest } = props as any;
   return (
     <AvatarPrimitive.Image
       ref={ref}
       className={cn("aspect-square h-full w-full", className)}
-      src={src}
-      alt={alt ?? "Foto do usuário"}
-      onError={(event) => {
-        try {
-          (event.currentTarget as HTMLImageElement).src = DEFAULT_MRX_LOGO_SRC
-        } catch {}
-        if (typeof onError === "function") onError(event)
-      }}
+      src={DEFAULT_MRX_LOGO_SRC}
+      alt={alt ?? "MRX logo"}
       {...rest}
     />
   );
