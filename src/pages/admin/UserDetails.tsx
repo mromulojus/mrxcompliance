@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Legend, Rectangle, XAxis, YAxis } from "recharts";
 
 type DatabaseRole = "operacional" | "empresarial" | "administrador" | "superuser";
 
@@ -36,6 +38,13 @@ const UserDetails: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
+  const [loginWeekCount, setLoginWeekCount] = useState(0);
+  const [loginMonthCount, setLoginMonthCount] = useState(0);
+  const [timeWeekHours, setTimeWeekHours] = useState(0);
+  const [timeMonthHours, setTimeMonthHours] = useState(0);
+  const [tasksDoneWeek, setTasksDoneWeek] = useState(0);
+  const [tasksDoneMonth, setTasksDoneMonth] = useState(0);
+  const [weeklyActivitySeries, setWeeklyActivitySeries] = useState<{ day: string; logins: number; horas: number; concluidas: number }[]>([]);
 
   useEffect(() => {
     document.title = "Detalhes do Usuário - MRx Compliance";
@@ -66,6 +75,86 @@ const UserDetails: React.FC = () => {
         } else {
           setEmpresas([]);
         }
+        // Fetch metrics: activity_logs for login/logout; tarefas for completed tasks
+        const now = new Date();
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - 7);
+        const startOfMonth = new Date(now);
+        startOfMonth.setDate(now.getDate() - 30);
+
+        // Logins in last week/month
+        const [loginsWeekRes, loginsMonthRes] = await Promise.all([
+          supabase.from('activity_logs').select('id, action, created_at')
+            .gte('created_at', startOfWeek.toISOString())
+            .eq('action', 'login')
+            .contains('meta', { user_id: userId }),
+          supabase.from('activity_logs').select('id, action, created_at')
+            .gte('created_at', startOfMonth.toISOString())
+            .eq('action', 'login')
+            .contains('meta', { user_id: userId }),
+        ]);
+        setLoginWeekCount(loginsWeekRes.data?.length || 0);
+        setLoginMonthCount(loginsMonthRes.data?.length || 0);
+
+        // Approx time in system: pair login-logout events and sum session durations
+        const { data: actsMonth } = await supabase.from('activity_logs')
+          .select('action, created_at')
+          .gte('created_at', startOfMonth.toISOString())
+          .or('action.eq.login,action.eq.logout')
+          .contains('meta', { user_id: userId })
+          .order('created_at', { ascending: true });
+        const sessions: { start: Date; end?: Date }[] = [];
+        (actsMonth || []).forEach((a) => {
+          if (a.action === 'login') sessions.push({ start: new Date(a.created_at) });
+          if (a.action === 'logout') {
+            const lastOpen = [...sessions].reverse().find((s) => !s.end);
+            if (lastOpen) lastOpen.end = new Date(a.created_at);
+          }
+        });
+        const totalMsMonth = sessions.reduce((acc, s) => acc + Math.max(0, (s.end?.getTime() || now.getTime()) - s.start.getTime()), 0);
+        const totalHoursMonth = totalMsMonth / 36e5;
+        setTimeMonthHours(Number(totalHoursMonth.toFixed(2)));
+        const totalMsWeek = sessions
+          .filter((s) => s.start >= startOfWeek)
+          .reduce((acc, s) => acc + Math.max(0, (s.end?.getTime() || now.getTime()) - s.start.getTime()), 0);
+        setTimeWeekHours(Number((totalMsWeek / 36e5).toFixed(2)));
+
+        // Tasks completed by this user (responsavel_id) in last week/month
+        const [doneWeek, doneMonth] = await Promise.all([
+          supabase.from('tarefas').select('id').eq('responsavel_id', userId).eq('status', 'concluido').gte('data_conclusao', startOfWeek.toISOString()),
+          supabase.from('tarefas').select('id').eq('responsavel_id', userId).eq('status', 'concluido').gte('data_conclusao', startOfMonth.toISOString()),
+        ]);
+        setTasksDoneWeek(doneWeek.data?.length || 0);
+        setTasksDoneMonth(doneMonth.data?.length || 0);
+
+        // Weekly series (last 7 days)
+        const seriesDays = Array.from({ length: 7 }).map((_, i) => {
+          const d = new Date(startOfWeek);
+          d.setDate(startOfWeek.getDate() + i);
+          return d;
+        });
+        const loginsByDay: Record<string, number> = {};
+        (loginsWeekRes.data || []).forEach((l) => {
+          const k = new Date(l.created_at).toISOString().slice(0, 10);
+          loginsByDay[k] = (loginsByDay[k] || 0) + 1;
+        });
+        const concluidasWeek = await supabase.from('tarefas').select('id, data_conclusao')
+          .eq('responsavel_id', userId).eq('status', 'concluido').gte('data_conclusao', startOfWeek.toISOString());
+        const concluidasByDay: Record<string, number> = {};
+        (concluidasWeek.data || []).forEach((t) => {
+          const k = (t.data_conclusao as string).slice(0, 10);
+          concluidasByDay[k] = (concluidasByDay[k] || 0) + 1;
+        });
+        const weeklySeries = seriesDays.map((d) => {
+          const k = d.toISOString().slice(0, 10);
+          return {
+            day: k,
+            logins: loginsByDay[k] || 0,
+            horas: 0, // detailed per-day session breakdown could be added later
+            concluidas: concluidasByDay[k] || 0,
+          };
+        });
+        setWeeklyActivitySeries(weeklySeries);
       } catch (e) {
         console.error("Erro ao carregar usuário:", e);
       } finally {
@@ -186,6 +275,60 @@ const UserDetails: React.FC = () => {
                 )}
               </TableBody>
             </Table>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="mt-4 grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle>Logins</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-sm">Última semana: <span className="font-semibold">{loginWeekCount}</span></div>
+            <div className="text-sm">Últimos 30 dias: <span className="font-semibold">{loginMonthCount}</span></div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Tempo no Sistema</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-sm">Última semana: <span className="font-semibold">{timeWeekHours}h</span></div>
+            <div className="text-sm">Últimos 30 dias: <span className="font-semibold">{timeMonthHours}h</span></div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Tarefas Concluídas</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-sm">Última semana: <span className="font-semibold">{tasksDoneWeek}</span></div>
+            <div className="text-sm">Últimos 30 dias: <span className="font-semibold">{tasksDoneMonth}</span></div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="mt-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Atividade (últimos 7 dias)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer
+              config={{ logins: { label: 'Logins', color: 'hsl(var(--primary))' }, concluidas: { label: 'Concluídas', color: 'hsl(var(--success))' } }}
+              className="h-[260px]"
+            >
+              <BarChart data={weeklyActivitySeries}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="day" tickLine={false} axisLine={false} />
+                <YAxis allowDecimals={false} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Legend />
+                <Bar dataKey="logins" fill="var(--color-logins)" radius={4} activeBar={<Rectangle fillOpacity={0.9} />} />
+                <Bar dataKey="concluidas" fill="var(--color-concluidas)" radius={4} activeBar={<Rectangle fillOpacity={0.9} />} />
+              </BarChart>
+            </ChartContainer>
           </CardContent>
         </Card>
       </div>
