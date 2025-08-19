@@ -11,7 +11,11 @@ import {
   Plus,
   X,
   Send,
-  History
+  History,
+  Building2,
+  Paperclip,
+  FileText,
+  Download
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,9 +27,11 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { TarefaWithUser, TaskPriority, TaskStatus, UserProfile } from '@/types/tarefas';
+import { TarefaWithUser, TaskPriority, TaskStatus } from '@/types/tarefas';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { EmpresaSelectModal } from '@/components/empresas/EmpresaSelectModal';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TaskDetailsModalProps {
   open: boolean;
@@ -61,6 +67,9 @@ export function TaskDetailsModal({
   const [newChecklistItem, setNewChecklistItem] = useState('');
   const [isAddingChecklistItem, setIsAddingChecklistItem] = useState(false);
   const { toast } = useToast();
+  const [empresaModalOpen, setEmpresaModalOpen] = useState(false);
+  const [uploadingAnexos, setUploadingAnexos] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Helpers to serialize metadata (temporary until dedicated tables)
   type SerializedComment = { id: string; text: string; author: string; createdAt: string };
@@ -220,6 +229,10 @@ export function TaskDetailsModal({
                 <Badge className={getStatusColor(tarefa.status)}>
                   {tarefa.status.replace('_', ' ')}
                 </Badge>
+                <Button size="sm" variant="outline" onClick={() => setEmpresaModalOpen(true)}>
+                  <Building2 className="h-4 w-4 mr-2" />
+                  {tarefa.empresa_id ? 'Alterar empresa' : 'Vincular empresa'}
+                </Button>
               </div>
             </div>
             <Button 
@@ -285,6 +298,11 @@ export function TaskDetailsModal({
                       </span>
                     </div>
                   )}
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">Empresa:</span>
+                    <span className="text-sm text-muted-foreground">{tarefa.empresa_id || 'Não vinculada'}</span>
+                  </div>
                 </div>
 
                 {tarefa.descricao && !tarefa.descricao.includes('checklist:') && (
@@ -294,6 +312,75 @@ export function TaskDetailsModal({
                       {tarefa.descricao.split('checklist:')[0]}
                     </p>
                   </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Anexos */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center justify-between">
+                  <span>Anexos</span>
+                  <div>
+                    <input ref={fileInputRef} type="file" multiple className="hidden" onChange={async (e) => {
+                      const files = Array.from(e.target.files || []);
+                      if (!tarefa) return;
+                      if (files.length === 0) return;
+                      try {
+                        setUploadingAnexos(true);
+                        const folder = `empresa_${tarefa.empresa_id || 'sem_empresa'}/${tarefa.id}`;
+                        const novos: string[] = [];
+                        for (const f of files) {
+                          const safe = f.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
+                          const path = `${folder}/${Date.now()}_${safe}`;
+                          const { data: up, error } = await supabase.storage.from('tarefas-anexos').upload(path, f, { cacheControl: '3600' });
+                          if (error) throw error;
+                          novos.push(up.path);
+                        }
+                        await onUpdate(tarefa.id, { anexos: [ ...(tarefa.anexos || []), ...novos ] });
+                        toast({ title: 'Anexos enviados', description: `${files.length} arquivo(s) anexado(s).` });
+                      } catch (e: any) {
+                        console.error('Erro ao anexar arquivos da tarefa:', e);
+                        toast({ title: 'Erro ao anexar', description: e.message || 'Falha ao enviar anexos', variant: 'destructive' });
+                      } finally {
+                        setUploadingAnexos(false);
+                        if (fileInputRef.current) fileInputRef.current.value = '';
+                      }
+                    }} />
+                    <Button size="sm" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={uploadingAnexos}>
+                      <Paperclip className="h-4 w-4 mr-2" />
+                      {uploadingAnexos ? 'Enviando...' : 'Anexar arquivos'}
+                    </Button>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {(tarefa.anexos && tarefa.anexos.length > 0) ? (
+                  <div className="space-y-2">
+                    {tarefa.anexos.map((path, idx) => (
+                      <div key={`${path}-${idx}`} className="flex items-center gap-2 p-2 bg-muted rounded">
+                        <FileText className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm flex-1 truncate">{path.split('/').slice(-1)[0]}</span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={async () => {
+                            try {
+                              const { data, error } = await supabase.storage.from('tarefas-anexos').createSignedUrl(path, 60 * 5);
+                              if (error) throw error;
+                              if (data?.signedUrl) {
+                                window.open(data.signedUrl, '_blank');
+                              }
+                            } catch {}
+                          }}
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-sm text-muted-foreground">Nenhum anexo</div>
                 )}
               </CardContent>
             </Card>
@@ -446,6 +533,21 @@ export function TaskDetailsModal({
             </Card>
           </div>
         </ScrollArea>
+
+        {/* Modal de seleção de empresa */}
+        <EmpresaSelectModal
+          open={empresaModalOpen}
+          onOpenChange={setEmpresaModalOpen}
+          selectedEmpresaId={tarefa.empresa_id || undefined}
+          onSelect={async (empresa) => {
+            try {
+              await onUpdate(tarefa.id, { empresa_id: empresa ? empresa.id : null as unknown as any });
+              toast({ title: 'Empresa atualizada', description: empresa ? 'Vínculo alterado.' : 'Vínculo removido.' });
+            } catch (e: any) {
+              toast({ title: 'Erro', description: e.message || 'Falha ao vincular empresa', variant: 'destructive' });
+            }
+          }}
+        />
       </DialogContent>
     </Dialog>
   );

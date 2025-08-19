@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -30,8 +30,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { TaskFormData, UserProfile } from '@/types/tarefas';
 import { supabase } from '@/integrations/supabase/client';
-import { useState } from 'react';
 import type { Department } from '@/types/departments';
+import { EmpresaSelectModal } from '@/components/empresas/EmpresaSelectModal';
+import { Label } from '@/components/ui/label';
+import { Paperclip } from 'lucide-react';
 
 const taskFormSchema = z.object({
   titulo: z.string().min(1, 'Título é obrigatório'),
@@ -72,6 +74,11 @@ export function TaskFormModal({
   const [departments, setDepartments] = useState<Department[]>([]);
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
   const [primaryDepartmentId, setPrimaryDepartmentId] = useState<string | undefined>(undefined);
+  const [empresaModalOpen, setEmpresaModalOpen] = useState(false);
+  const [selectedEmpresa, setSelectedEmpresa] = useState<{ id: string; nome: string } | null>(null);
+  const [anexoArquivos, setAnexoArquivos] = useState<File[]>([]);
+  const [uploadingAnexos, setUploadingAnexos] = useState(false);
+
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
@@ -112,8 +119,14 @@ export function TaskFormModal({
       }
     };
     void loadDepartments();
+
     if (editData) {
       form.reset(editData);
+      if ((editData as any)?.empresa_id) {
+        setSelectedEmpresa({ id: (editData as any).empresa_id as string, nome: 'Empresa selecionada' });
+      } else {
+        setSelectedEmpresa(null);
+      }
     } else if (defaultValues) {
       form.reset({
         titulo: '',
@@ -125,13 +138,43 @@ export function TaskFormModal({
         responsavel_id: defaultValues.responsavel_id,
         data_vencimento: defaultValues.data_vencimento,
       });
+      if (defaultValues.empresa_id) {
+        setSelectedEmpresa({ id: defaultValues.empresa_id, nome: 'Empresa selecionada' });
+      } else {
+        setSelectedEmpresa(null);
+      }
     }
   }, [editData, defaultValues, form, open]);
 
-  const handleSubmit = (data: TaskFormData) => {
+  const uploadAnexos = async (files: File[], empresaId?: string): Promise<string[]> => {
+    const paths: string[] = [];
+    if (!files || files.length === 0) return paths;
+    const folderRoot = empresaId ? `empresa_${empresaId}` : 'sem_empresa';
+    setUploadingAnexos(true);
+    try {
+      for (const file of files) {
+        const safe = file.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
+        const path = `${folderRoot}/${Date.now()}_${safe}`;
+        const { data: up, error } = await supabase.storage
+          .from('tarefas-anexos')
+          .upload(path, file, { cacheControl: '3600' });
+        if (error) throw error;
+        paths.push(up.path);
+      }
+    } finally {
+      setUploadingAnexos(false);
+    }
+    return paths;
+  };
+
+  const handleSubmit = async (data: TaskFormData) => {
+    const empresaId = selectedEmpresa?.id || data.empresa_id;
+    const anexosPaths = await uploadAnexos(anexoArquivos, empresaId);
     onSubmit({
       ...data,
+      empresa_id: empresaId,
       ...contextData,
+      anexos: anexosPaths.length ? anexosPaths : undefined,
       department_ids: selectedDepartments,
       primary_department_id: primaryDepartmentId,
     });
@@ -141,6 +184,7 @@ export function TaskFormModal({
   const handleClose = () => {
     onOpenChange(false);
     form.reset();
+    setAnexoArquivos([]);
   };
 
   const selectedUser = users.find(user => user.user_id === form.watch('responsavel_id'));
@@ -244,6 +288,29 @@ export function TaskFormModal({
               />
             </div>
 
+            {/* Empresa vinculada */}
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="empresa_id"
+                render={() => (
+                  <FormItem>
+                    <FormLabel>Empresa</FormLabel>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        readOnly
+                        value={selectedEmpresa ? `${selectedEmpresa.nome} (${selectedEmpresa.id})` : ''}
+                        placeholder="Nenhuma empresa vinculada"
+                      />
+                      <Button type="button" variant="outline" onClick={() => setEmpresaModalOpen(true)}>
+                        Selecionar
+                      </Button>
+                    </div>
+                  </FormItem>
+                )}
+              />
+            </div>
+
             {/* Responsible and Status */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
@@ -333,6 +400,27 @@ export function TaskFormModal({
               )}
             />
 
+            {/* Anexos */}
+            <div className="space-y-2">
+              <Label>Anexos</Label>
+              <div className="flex items-center gap-2">
+                <Button type="button" variant="outline" onClick={() => document.getElementById('tarefa-anexos-input')?.click()}>
+                  <Paperclip className="h-4 w-4 mr-2" />
+                  {uploadingAnexos ? 'Enviando...' : 'Selecionar arquivos'}
+                </Button>
+                <input
+                  id="tarefa-anexos-input"
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => setAnexoArquivos(Array.from(e.target.files || []))}
+                />
+                {anexoArquivos.length > 0 && (
+                  <span className="text-sm text-muted-foreground">{anexoArquivos.length} arquivo(s) selecionado(s)</span>
+                )}
+              </div>
+            </div>
+
             {/* Departments selection */}
             <div className="grid grid-cols-2 gap-4">
               <FormItem>
@@ -418,12 +506,28 @@ export function TaskFormModal({
               <Button type="button" variant="outline" onClick={handleClose}>
                 Cancelar
               </Button>
-              <Button type="submit" className="min-w-[100px]">
+              <Button type="submit" className="min-w-[100px]" disabled={uploadingAnexos}>
                 {editData ? 'Atualizar' : 'Criar'} Tarefa
               </Button>
             </div>
           </form>
         </Form>
+
+        {/* Modal de seleção de empresa */}
+        <EmpresaSelectModal
+          open={empresaModalOpen}
+          onOpenChange={(o) => setEmpresaModalOpen(o)}
+          selectedEmpresaId={selectedEmpresa?.id}
+          onSelect={(empresa) => {
+            if (empresa) {
+              setSelectedEmpresa({ id: empresa.id, nome: empresa.nome });
+              form.setValue('empresa_id', empresa.id);
+            } else {
+              setSelectedEmpresa(null);
+              form.setValue('empresa_id', undefined as any);
+            }
+          }}
+        />
       </DialogContent>
     </Dialog>
   );
