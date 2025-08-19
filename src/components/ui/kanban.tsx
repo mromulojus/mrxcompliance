@@ -12,6 +12,7 @@ import { motion } from "framer-motion";
 import { FaFire } from "react-icons/fa";
 import { cn } from "@/lib/utils";
 import { Tarefa, TaskStatus, TASK_STATUS_LABELS } from "@/types/tarefas";
+import { ProjectStatusCard } from "@/components/ui/expandable-card";
 
 interface KanbanProps {
   tasks: Tarefa[];
@@ -238,51 +239,41 @@ const TaskCard = ({ task, handleDragStart }: TaskCardProps) => {
         layoutId={task.id}
         draggable="true"
         onDragStart={(e) => handleDragStart(e, task)}
-        className="cursor-grab rounded-lg border bg-card text-card-foreground shadow-sm p-4 mb-3 active:cursor-grabbing hover:shadow-md transition-shadow"
+        className="cursor-grab mb-3 active:cursor-grabbing"
       >
-        <div className="space-y-3">
-          <div className="flex items-start justify-between gap-2">
-            <h4 className="font-medium text-sm flex-1">{task.titulo}</h4>
-            {task.responsavel_id && (
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground text-xs font-medium">
-                {task.responsavel_id.slice(0, 2).toUpperCase()}
-              </div>
-            )}
-          </div>
-          
-          {task.descricao && (
-            <p className="text-xs text-muted-foreground line-clamp-2">{task.descricao}</p>
-          )}
-          
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-              task.prioridade === 'alta' ? 'bg-red-100 text-red-600' :
-              task.prioridade === 'media' ? 'bg-yellow-100 text-yellow-600' :
-              'bg-green-100 text-green-600'
-            }`}>
-              {task.prioridade === 'alta' ? '🔴 Alta' :
-               task.prioridade === 'media' ? '🟡 Média' : '🟢 Baixa'}
-            </span>
-            
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-              task.modulo_origem === 'ouvidoria' ? 'bg-purple-100 text-purple-600' :
-              task.modulo_origem === 'auditoria' ? 'bg-blue-100 text-blue-600' :
-              task.modulo_origem === 'cobrancas' ? 'bg-orange-100 text-orange-600' :
-              'bg-gray-100 text-gray-600'
-            }`}>
-              {task.modulo_origem === 'ouvidoria' ? 'Ouvidoria' :
-               task.modulo_origem === 'auditoria' ? 'Auditoria' :
-               task.modulo_origem === 'cobrancas' ? 'Cobranças' : 'Geral'}
-            </span>
-          </div>
-          
-          {task.data_vencimento && (
-            <div className={`text-xs ${isOverdue ? 'text-red-600 font-medium' : 'text-muted-foreground'}`}>
-              📅 {new Date(task.data_vencimento).toLocaleDateString('pt-BR')}
-              {isOverdue && ' ⚠️'}
-            </div>
-          )}
-        </div>
+        {(() => {
+          const statusToProgress: Record<TaskStatus, number> = {
+            a_fazer: 0,
+            em_andamento: 50,
+            em_revisao: 75,
+            concluido: 100,
+          };
+          const progress = statusToProgress[task.status];
+          const dueDate = task.data_vencimento
+            ? new Date(task.data_vencimento).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })
+            : "Sem prazo";
+          const contributors = task.responsavel_id
+            ? [{ name: task.responsavel_id }]
+            : [{ name: "Sem responsável" }];
+          const tasksForCard = [
+            { title: task.descricao || "Sem descrição", completed: task.status === "concluido" },
+          ];
+          return (
+            <ProjectStatusCard
+              title={task.titulo}
+              progress={progress}
+              dueDate={dueDate}
+              contributors={contributors}
+              tasks={tasksForCard}
+              githubStars={0}
+              openIssues={isOverdue ? 1 : 0}
+            />
+          );
+        })()}
       </motion.div>
     </>
   );
