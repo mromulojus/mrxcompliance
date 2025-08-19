@@ -18,6 +18,9 @@ export interface Tarefa {
   data_vencimento?: string;
   data_conclusao?: string;
   ordem_na_coluna: number;
+  // Departamentos
+  department_ids?: string[]; // preenchido via join no front
+  primary_department_id?: string; // preenchido via join no front
   
   // Vinculações com outros módulos
   denuncia_id?: string;
@@ -63,6 +66,8 @@ export interface TaskFormData {
   prioridade: TaskPriority;
   data_vencimento?: string;
   anexos?: string[];
+  department_ids?: string[];
+  primary_department_id?: string;
 }
 
 export interface TaskFilters {
@@ -72,6 +77,7 @@ export interface TaskFilters {
   modulo?: TaskModule;
   status?: TaskStatus;
   busca?: string;
+  department?: string; // filtro por 1 departamento; extendemos depois para múltiplos
 }
 
 export interface TaskKPIs {

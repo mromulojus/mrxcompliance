@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Tarefa, TarefaWithUser, TaskFormData, TaskFilters, TaskKPIs, UserProfile, TaskStatus } from '@/types/tarefas';
+import type { DepartmentAssignment } from '@/types/departments';
 import { useToast } from '@/hooks/use-toast';
 
 export function useTarefasData() {
@@ -59,13 +60,36 @@ export function useTarefasData() {
         responsaveisData = usersData || [];
       }
 
+      // Buscar department assignments das tarefas
+      const tarefaIds = (tarefasData || []).map(t => t.id);
+      let assignmentsByTask: Record<string, DepartmentAssignment[]> = {};
+      if (tarefaIds.length > 0) {
+        const { data: assignments } = await supabase
+          .from('department_assignments')
+          .select('resource_id, department_id, is_primary')
+          .eq('resource_type', 'tarefas')
+          .in('resource_id', tarefaIds);
+        assignmentsByTask = (assignments || []).reduce((acc, a) => {
+          const list = acc[a.resource_id as string] || [];
+          list.push(a as unknown as DepartmentAssignment);
+          acc[a.resource_id as string] = list;
+          return acc;
+        }, {} as Record<string, DepartmentAssignment[]>);
+      }
+
       // Combinar dados
-      const tarefasWithUsers: TarefaWithUser[] = tarefasData?.map(tarefa => ({
-        ...tarefa,
-        responsavel: tarefa.responsavel_id 
-          ? responsaveisData.find(user => user.user_id === tarefa.responsavel_id)
-          : undefined
-      })) || [];
+      const tarefasWithUsers: TarefaWithUser[] = tarefasData?.map(tarefa => {
+        const assigns = assignmentsByTask[tarefa.id] || [];
+        const primary = assigns.find(a => a.is_primary)?.department_id;
+        return {
+          ...tarefa,
+          department_ids: assigns.map(a => a.department_id),
+          primary_department_id: primary,
+          responsavel: tarefa.responsavel_id 
+            ? responsaveisData.find(user => user.user_id === tarefa.responsavel_id)
+            : undefined
+        };
+      }) || [];
 
       setTarefas(tarefasWithUsers);
     } catch (err) {
@@ -99,6 +123,16 @@ export function useTarefasData() {
         .insert(processedData)
         .select()
         .single();
+      // Atribuir departamentos via RPC se fornecidos
+      if (tarefaData.department_ids && tarefaData.primary_department_id && data.empresa_id) {
+        await supabase.rpc('assign_departments_to_resource', {
+          p_resource_type: 'tarefas',
+          p_resource_id: data.id,
+          p_company_id: data.empresa_id,
+          p_department_ids: tarefaData.department_ids,
+          p_primary_department_id: tarefaData.primary_department_id,
+        });
+      }
 
       if (error) throw error;
 
@@ -145,6 +179,16 @@ export function useTarefasData() {
         .eq('id', id)
         .select()
         .single();
+      // Atualizar departamentos se informado
+      if (updates.department_ids && updates.primary_department_id && data.empresa_id) {
+        await supabase.rpc('assign_departments_to_resource', {
+          p_resource_type: 'tarefas',
+          p_resource_id: id,
+          p_company_id: data.empresa_id,
+          p_department_ids: updates.department_ids,
+          p_primary_department_id: updates.primary_department_id,
+        });
+      }
 
       if (error) throw error;
 
@@ -261,6 +305,11 @@ export function useTarefasData() {
 
       if (filters.empresa && tarefa.empresa_id !== filters.empresa) {
         return false;
+      }
+
+      if (filters.department) {
+        const ids = tarefa.department_ids || [];
+        if (!ids.includes(filters.department)) return false;
       }
 
       if (filters.responsavel) {

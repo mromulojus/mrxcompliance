@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { TaskFilters, UserProfile } from '@/types/tarefas';
 import { supabase } from '@/integrations/supabase/client';
+import type { Department } from '@/types/departments';
 
 interface TaskFiltersProps {
   filters: TaskFilters;
@@ -29,6 +30,7 @@ export function TaskFiltersComponent({
 }: TaskFiltersProps) {
   const [currentUser, setCurrentUser] = useState<string | null>(null);
   const [searchValue, setSearchValue] = useState(filters.busca || '');
+  const [departments, setDepartments] = useState<Department[]>([]);
 
   // Debounced search effect
   useEffect(() => {
@@ -62,6 +64,26 @@ export function TaskFiltersComponent({
     getCurrentUser();
   }, []);
 
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      const { data } = await supabase.rpc('my_departments');
+      const unique: Record<string, Department> = {};
+      (data || []).forEach((d: any) => {
+        unique[d.department_id] = {
+          id: d.department_id,
+          company_id: d.company_id,
+          name: d.name,
+          slug: d.slug,
+          color: d.color,
+          business_unit: d.business_unit,
+          is_active: d.is_active,
+        } as Department;
+      });
+      setDepartments(Object.values(unique));
+    };
+    void fetchDepartments();
+  }, []);
+
   // Count active filters
   const activeFiltersCount = useMemo(() => {
     let count = 0;
@@ -71,6 +93,7 @@ export function TaskFiltersComponent({
     if (filters.status) count++;
     if (filters.responsavel) count++;
     if (filters.empresa) count++;
+    if (filters.department) count++;
     return count;
   }, [filters]);
 
@@ -197,6 +220,22 @@ export function TaskFiltersComponent({
                 ))}
               </SelectContent>
             </Select>
+
+            {/* Department Filter */}
+            <Select
+              value={filters.department || 'all'}
+              onValueChange={(value) => handleFilterChange('department', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Departamento" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                {departments.map((dept) => (
+                  <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Active Filter Tags */}
@@ -272,6 +311,20 @@ export function TaskFiltersComponent({
                     variant="ghost"
                     size="sm"
                     onClick={() => handleFilterChange('responsavel', 'all')}
+                    className="h-4 w-4 p-0 hover:bg-transparent"
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </Badge>
+              )}
+
+              {filters.department && (
+                <Badge variant="secondary" className="gap-1">
+                  Departamento: {departments.find(d => d.id === filters.department)?.name || 'Selecionado'}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleFilterChange('department', 'all')}
                     className="h-4 w-4 p-0 hover:bg-transparent"
                   >
                     <X className="h-3 w-3" />
