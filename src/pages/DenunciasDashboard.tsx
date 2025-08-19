@@ -114,7 +114,7 @@ export default function DenunciasDashboard() {
         const path = `${folder}/${Date.now()}_${safeName}`;
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('denuncia-anexos')
-          .upload(path, file, { cacheControl: '3600', upsert: true });
+          .upload(path, file, { cacheControl: '3600' });
         if (uploadError) throw uploadError;
         anexosPaths.push(uploadData.path);
       }
