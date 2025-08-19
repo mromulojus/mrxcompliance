@@ -221,13 +221,13 @@ const Column = ({
           active ? "bg-neutral-300/60" : "bg-neutral-200"
         } min-h-[360px] border-2 border-dashed ${active ? "border-primary" : "border-neutral-300"}`}
       >
+        <AddCard column={column} onTaskCreate={onTaskCreate} />
         {!hideCards && filteredTasks
           .sort((a, b) => a.ordem_na_coluna - b.ordem_na_coluna)
           .map((task) => (
             <TaskCard key={task.id} task={task} handleDragStart={handleDragStart} />
           ))}
         <DropIndicator beforeId={null} column={column} />
-        <AddCard column={column} onTaskCreate={onTaskCreate} />
       </div>
     </div>
   );
@@ -411,7 +411,7 @@ const AddCard = ({ column, onTaskCreate }: AddCardProps) => {
     <motion.button
       layout
       onClick={() => onTaskCreate(column)}
-      className="flex w-full items-center gap-1.5 px-3 py-3 text-xs text-neutral-300 transition-colors hover:text-white rounded-lg hover:bg-neutral-700/50 border-2 border-dashed border-neutral-700 hover:border-primary/50"
+      className="sticky top-0 z-10 mb-2 flex w-full items-center gap-1.5 px-3 py-2 text-xs font-semibold text-neutral-900 rounded-lg bg-neutral-300/80 hover:bg-neutral-300 backdrop-blur"
     >
       <FiPlus className="h-4 w-4" />
       <span>Adicionar tarefa</span>

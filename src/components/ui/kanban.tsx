@@ -213,11 +213,11 @@ const Column = ({
           active ? "bg-muted/50" : "bg-background"
         } min-h-[500px] border-2 border-dashed ${active ? "border-primary" : "border-transparent"}`}
       >
+        <AddCard column={column} onTaskCreate={onTaskCreate} />
         {filteredTasks.map((task) => {
           return <TaskCard key={task.id} task={task} handleDragStart={handleDragStart} />;
         })}
         <DropIndicator beforeId={null} column={column} />
-        <AddCard column={column} onTaskCreate={onTaskCreate} />
       </div>
     </div>
   );
@@ -342,7 +342,7 @@ const AddCard = ({ column, onTaskCreate }: AddCardProps) => {
     <motion.button
       layout
       onClick={() => onTaskCreate(column)}
-      className="flex w-full items-center gap-1.5 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground rounded-lg hover:bg-muted/50"
+      className="sticky top-0 z-10 mb-2 flex w-full items-center gap-1.5 px-3 py-2 text-xs font-semibold text-foreground rounded-lg bg-muted/40 hover:bg-muted/60 backdrop-blur"
     >
       <span>Adicionar tarefa</span>
       <FiPlus />
