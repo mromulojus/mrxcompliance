@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { KanbanSquare, LayoutGrid, Filter, RefreshCw } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
@@ -20,6 +20,7 @@ import { useTarefasData } from '@/hooks/useTarefasDataNew';
 import { TaskFilters, TaskFormData, TaskStatus, TarefaWithUser } from '@/types/tarefas';
 
 export default function TarefasDashboard() {
+  const navigate = useNavigate();
   const [view, setView] = useState<'kanban' | 'grid'>('kanban');
   const [filters, setFilters] = useState<TaskFilters>({});
   const [showFilters, setShowFilters] = useState(false);
@@ -102,9 +103,7 @@ export default function TarefasDashboard() {
         </div>
         
         <div className="flex items-center gap-2">
-          <Link to="/tarefas/quadros">
-            <Button variant="outline" size="sm">Ver Quadros</Button>
-          </Link>
+          {/* Removido botão "Ver Quadros" em favor do botão Grade */}
           <Button
             variant="outline"
             size="sm"
@@ -135,9 +134,9 @@ export default function TarefasDashboard() {
               Kanban
             </Button>
             <Button
-              variant={view === 'grid' ? 'default' : 'ghost'}
+              variant="ghost"
               size="sm"
-              onClick={() => setView('grid')}
+              onClick={() => navigate('/tarefas/quadros')}
               className="rounded-l-none"
             >
               <LayoutGrid className="h-4 w-4 mr-2" />
