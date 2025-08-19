@@ -90,6 +90,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
+  const logActivity = async (action: string, meta?: Record<string, any>) => {
+    try {
+      await supabase
+        .from('activity_logs')
+        .insert({
+          action,
+          by_user: (profile?.username as string) || (user?.email as string) || 'unknown',
+          meta: meta || null,
+        });
+    } catch (error) {
+      console.error('Error logging activity:', error);
+    }
+  };
+
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -105,6 +119,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             
             if (event === 'SIGNED_IN') {
               await updateLastLogin();
+              await logActivity('login', { user_id: session.user.id });
               toast({
                 title: 'Login realizado com sucesso',
                 description: `Bem-vindo(a), ${profileData?.full_name || session.user.email}!`
@@ -241,7 +256,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const signOut = async () => {
     try {
       setLoading(true);
+      const currentUserId = user?.id;
       const { error } = await supabase.auth.signOut();
+      if (!error && currentUserId) {
+        await logActivity('logout', { user_id: currentUserId });
+      }
       
       if (!error) {
         toast({
