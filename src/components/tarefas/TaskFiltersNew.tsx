@@ -72,6 +72,7 @@ export function TaskFiltersComponent({
         unique[d.department_id] = {
           id: d.department_id,
           company_id: d.company_id,
+          module_id: d.module_id,
           name: d.name,
           slug: d.slug,
           color: d.color,
