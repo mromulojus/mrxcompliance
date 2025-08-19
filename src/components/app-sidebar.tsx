@@ -34,7 +34,7 @@ export function AppSidebar() {
     { title: "Empresas", url: "/empresas", icon: Building2, show: true },
     { title: "Debto - Cobranças", url: "/debto", icon: DollarSign, show: true },
     { title: "Dashboard Denúncias", url: "/denuncias/dashboard", icon: Shield, show: true },
-    { title: "Log de Atividades", url: "/admin/activity-log", icon: Activity, show: true },
+    { title: "Log de Atividades", url: "/admin/activity-log", icon: Activity, show: profile?.role === 'superuser' },
     { title: "Dados do Sistema", url: "/admin/system-data", icon: Settings2, show: true },
     { title: "Estrutura", url: "/admin/structure", icon: ListTree, show: true },
     { title: "Usuários", url: "/admin/users", icon: Users, show: true },

@@ -2,19 +2,64 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
-const LOGS_KEY = "activityLogs";
-
-type Log = { id: string; ts: string; action: string; by: string; meta?: Record<string, unknown> };
+type ActivityLogRow = Database["public"]["Tables"]["activity_logs"]["Row"];
 
 const ActivityLog: React.FC = () => {
-  const [logs, setLogs] = useState<Log[]>([]);
+  const [logs, setLogs] = useState<ActivityLogRow[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     document.title = "Logs de Atividades - MRx Compliance";
     const el = document.querySelector('meta[name="description"]');
     if (el) el.setAttribute("content", "Log de atividades dos usuários no sistema MRx Compliance.");
-    setLogs(JSON.parse(localStorage.getItem(LOGS_KEY) || "[]"));
+
+    const fetchLogs = async () => {
+      setLoading(true);
+      setErrorMessage(null);
+      const { data, error } = await supabase
+        .from("activity_logs")
+        .select("id, action, by_user, created_at, meta")
+        .order("created_at", { ascending: false })
+        .limit(200);
+
+      if (error) {
+        setErrorMessage(error.message);
+        setLogs([]);
+      } else {
+        setLogs(data || []);
+      }
+
+      setLoading(false);
+    };
+
+    void fetchLogs();
+
+    const channel = supabase
+      .channel("activity_logs_live")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "activity_logs" },
+        () => {
+          // Recarrega quando houver novas inserções
+          void (async () => {
+            const { data } = await supabase
+              .from("activity_logs")
+              .select("id, action, by_user, created_at, meta")
+              .order("created_at", { ascending: false })
+              .limit(200);
+            setLogs(data || []);
+          })();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
   }, []);
 
   return (
@@ -39,15 +84,23 @@ const ActivityLog: React.FC = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {logs.length === 0 ? (
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-muted-foreground">Carregando…</TableCell>
+                  </TableRow>
+                ) : errorMessage ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-red-600">Erro ao carregar: {errorMessage}</TableCell>
+                  </TableRow>
+                ) : logs.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center text-muted-foreground">Sem registros.</TableCell>
                   </TableRow>
                 ) : (
                   logs.map((l) => (
                     <TableRow key={l.id}>
-                      <TableCell>{new Date(l.ts).toLocaleString()}</TableCell>
-                      <TableCell>{l.by}</TableCell>
+                      <TableCell>{new Date(l.created_at).toLocaleString()}</TableCell>
+                      <TableCell>{l.by_user}</TableCell>
                       <TableCell>{l.action}</TableCell>
                       <TableCell className="font-mono text-xs text-muted-foreground">{l.meta ? JSON.stringify(l.meta) : "-"}</TableCell>
                     </TableRow>
