@@ -1,3 +1,52 @@
+import AvatarGroup from "@/components/ui/avatar-group";
+
+export default function DemoOne() {
+  return (
+    <AvatarGroup
+      items={[
+        {
+          id: 1,
+          name: "John Doe",
+          designation: "Software Engineer",
+          image: "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=256&q=80&auto=format&fit=facearea&facepad=2",
+        },
+        {
+          id: 2,
+          name: "Jane Smith",
+          designation: "Product Manager",
+          image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=256&q=80&auto=format&fit=facearea&facepad=2",
+        },
+        {
+          id: 3,
+          name: "Jim Beam",
+          designation: "Marketing Manager",
+          image: "https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?w=256&q=80&auto=format&fit=facearea&facepad=2",
+        },
+        {
+          id: 4,
+          name: "John Doe",
+          designation: "Software Engineer",
+          image: "https://images.unsplash.com/photo-1542206395-9feb3edaa68e?w=256&q=80&auto=format&fit=facearea&facepad=2",
+        },
+        {
+          id: 5,
+          name: "John Doe",
+          designation: "Software Engineer",
+          image: "https://images.unsplash.com/photo-1541532713592-79a0317b6b77?w=256&q=80&auto=format&fit=facearea&facepad=2",
+        },
+        {
+          id: 6,
+          name: "John Doe",
+          designation: "Software Engineer",
+          image: "https://images.unsplash.com/photo-1545996124-0501ebae84d0?w=256&q=80&auto=format&fit=facearea&facepad=2",
+        },
+      ]}
+      maxVisible={5}
+      size="md"
+    />
+  );
+}
+
 "use client";
 
 import { motion } from "framer-motion";

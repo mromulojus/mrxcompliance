@@ -12,6 +12,8 @@ export interface Tarefa {
   modulo_origem: TaskModule;
   empresa_id?: string;
   responsavel_id?: string;
+  // Optional support for multiple responsibles (backward compatible)
+  responsavel_ids?: string[];
   created_by: string;
   data_vencimento?: string;
   data_conclusao?: string;
@@ -38,6 +40,8 @@ export interface TarefaWithUser extends Tarefa {
     username: string;
     avatar_url?: string;
   };
+  // Optional list of responsibles for multi-assignment UIs
+  responsaveis?: UserProfile[];
 }
 
 // Interface para dados de usuário

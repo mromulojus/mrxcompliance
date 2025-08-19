@@ -203,7 +203,21 @@ export function TaskDetailsModal({
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm font-medium">Responsável:</span>
-                    {tarefa.responsavel ? (
+                    {tarefa.responsaveis && tarefa.responsaveis.length > 0 ? (
+                      <div className="flex items-center -space-x-2">
+                        {tarefa.responsaveis.slice(0, 5).map(u => (
+                          <Avatar key={u.user_id} className="h-6 w-6 border-2 border-background">
+                            <AvatarImage src={u.avatar_url} />
+                            <AvatarFallback>
+                              {(u.full_name || u.username)?.[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                        ))}
+                        {tarefa.responsaveis.length > 5 && (
+                          <div className="h-6 w-6 rounded-full bg-muted text-[10px] flex items-center justify-center">+{tarefa.responsaveis.length - 5}</div>
+                        )}
+                      </div>
+                    ) : tarefa.responsavel ? (
                       <div className="flex items-center gap-2">
                         <Avatar className="h-6 w-6">
                           <AvatarImage src={tarefa.responsavel.avatar_url} />
