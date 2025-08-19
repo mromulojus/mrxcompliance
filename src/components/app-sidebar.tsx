@@ -28,27 +28,18 @@ export function AppSidebar() {
     <Logo variant="icon" size="sm" className={className} />
   );
 
-  // Itens principais fora de "Opções"
   const items: Item[] = [
     { title: "Painel", url: "/", icon: MrxIcon as unknown as LucideIcon, show: true },
     { title: "Tarefas", url: "/tarefas", icon: KanbanSquare, show: true },
     { title: "Empresas", url: "/empresas", icon: Building2, show: true },
     { title: "Debto - Cobranças", url: "/debto", icon: DollarSign, show: true },
     { title: "Dashboard Denúncias", url: "/denuncias/dashboard", icon: Shield, show: true },
-  ];
-
-  // Submenus agrupados em "Opções"
-  const optionItems: Item[] = [
     { title: "Log de Atividades", url: "/admin/activity-log", icon: Activity, show: profile?.role === 'superuser' },
     { title: "Dados do Sistema", url: "/admin/system-data", icon: Settings2, show: true },
     { title: "Estrutura", url: "/admin/structure", icon: ListTree, show: true },
     { title: "Usuários", url: "/admin/users", icon: Users, show: true },
     { title: "Documentação", url: "/admin/docs", icon: BookText, show: true },
   ];
-
-  const [optionsOpen, setOptionsOpen] = React.useState(false);
-  const optionsHasActive = optionItems.some((i) => i.show && path === i.url);
-  const optionsVisible = optionItems.some((i) => i.show);
 
   return (
     <Sidebar>
@@ -66,39 +57,6 @@ export function AppSidebar() {
                 }}
               />
             ))}
-
-            {optionsVisible && (
-              <>
-                <SidebarLink
-                  className={(optionsHasActive ? "bg-neutral-200/60 dark:bg-neutral-700/60 rounded-md " : "") + "px-2"}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setOptionsOpen((prev) => !prev);
-                  }}
-                  link={{
-                    label: "Opções",
-                    href: "#",
-                    icon: <Settings2 className="text-neutral-700 dark:text-neutral-200 h-4 w-4 flex-shrink-0" />,
-                  }}
-                />
-
-                {optionsOpen && (
-                  <div className="ml-6 flex flex-col gap-1">
-                    {optionItems.filter((i) => i.show).map((item) => (
-                      <SidebarLink
-                        key={item.title}
-                        className={path === item.url ? "bg-neutral-200/60 dark:bg-neutral-700/60 rounded-md px-2" : "px-2"}
-                        link={{
-                          label: item.title,
-                          href: item.url,
-                          icon: <item.icon className="text-neutral-700 dark:text-neutral-200 h-4 w-4 flex-shrink-0" />,
-                        }}
-                      />
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
           </div>
         </div>
         <div className="mb-2">
