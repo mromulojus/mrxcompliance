@@ -14,7 +14,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { TaskFilters, UserProfile } from '@/types/tarefas';
 import { supabase } from '@/integrations/supabase/client';
 import type { Department } from '@/types/departments';
-import type { Department } from '@/types/departments';
 
 interface TaskFiltersProps {
   filters: TaskFilters;
@@ -31,7 +30,6 @@ export function TaskFiltersComponent({
 }: TaskFiltersProps) {
   const [currentUser, setCurrentUser] = useState<string | null>(null);
   const [searchValue, setSearchValue] = useState(filters.busca || '');
-  const [departments, setDepartments] = useState<Department[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
 
   // Debounced search effect
@@ -64,26 +62,6 @@ export function TaskFiltersComponent({
       }
     };
     getCurrentUser();
-  }, []);
-
-  useEffect(() => {
-    const fetchDepartments = async () => {
-      const { data } = await supabase.rpc('my_departments');
-      const unique: Record<string, Department> = {};
-      (data || []).forEach((d: any) => {
-        unique[d.department_id] = {
-          id: d.department_id,
-          company_id: d.company_id,
-          name: d.name,
-          slug: d.slug,
-          color: d.color,
-          business_unit: d.business_unit,
-          is_active: d.is_active,
-        } as Department;
-      });
-      setDepartments(Object.values(unique));
-    };
-    void fetchDepartments();
   }, []);
 
   useEffect(() => {
