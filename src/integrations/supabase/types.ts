@@ -1324,6 +1324,87 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      },
+      task_boards: {
+        Row: {
+          card_default: Json | null
+          created_at: string
+          created_by: string
+          empresa_id: string | null
+          id: string
+          is_archived: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          card_default?: Json | null
+          created_at?: string
+          created_by: string
+          empresa_id?: string | null
+          id?: string
+          is_archived?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          card_default?: Json | null
+          created_at?: string
+          created_by?: string
+          empresa_id?: string | null
+          id?: string
+          is_archived?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      },
+      task_columns: {
+        Row: {
+          board_id: string
+          color: string | null
+          created_at: string
+          id: string
+          name: string
+          order_index: number
+        }
+        Insert: {
+          board_id: string
+          color?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          order_index?: number
+        }
+        Update: {
+          board_id?: string
+          color?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          order_index?: number
+        }
+        Relationships: []
+      },
+      task_board_members: {
+        Row: {
+          added_at: string
+          board_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          added_at?: string
+          board_id: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          added_at?: string
+          board_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
@@ -1376,6 +1457,10 @@ export type Database = {
           p_new_status: Database["public"]["Enums"]["task_status"]
           p_task_id: string
         }
+        Returns: undefined
+      }
+      move_task_column: {
+        Args: { p_board_id: string; p_column_id: string; p_new_index: number }
         Returns: undefined
       }
       update_last_login: {
