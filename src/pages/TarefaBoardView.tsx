@@ -195,6 +195,7 @@ export default function TarefaBoardView() {
 					tasks={tasks}
 					onTaskUpdate={(taskId, newColumnId, newOrder) => reorderTask(taskId, newColumnId, newOrder)}
 					onCreateTask={onCreateTask}
+					onRenameColumn={async (columnId, newName) => { await updateColumn(columnId, { name: newName }); }}
 				/>
 			</div>
 
