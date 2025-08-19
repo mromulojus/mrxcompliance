@@ -1,20 +1,23 @@
 import { useEffect } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, useParams } from 'react-router-dom';
 import { useAuth, UserRole } from '@/context/AuthContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredRole?: UserRole;
   allowedRoles?: UserRole[];
+  allowSelfParamKey?: string;
 }
 
 export default function ProtectedRoute({ 
   children, 
   requiredRole, 
-  allowedRoles 
+  allowedRoles,
+  allowSelfParamKey
 }: ProtectedRouteProps) {
   const { user, profile, loading, hasRole, hasAnyRole } = useAuth();
   const location = useLocation();
+  const params = useParams();
 
   useEffect(() => {
     // Log para debug
@@ -69,6 +72,11 @@ export default function ProtectedRoute({
         </div>
       </div>
     );
+  }
+
+  // If allowed, let the user access their own resource regardless of role
+  if (allowSelfParamKey && profile && params && params[allowSelfParamKey] === profile.user_id) {
+    return <>{children}</>;
   }
 
   // Check role-based access

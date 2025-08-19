@@ -18,6 +18,7 @@ type Profile = {
   created_at: string;
   updated_at: string | null;
   empresa_ids: string[] | null;
+  avatar_url?: string | null;
 };
 
 type Empresa = { id: string; nome: string };
@@ -47,7 +48,7 @@ const UserDetails: React.FC = () => {
       try {
         const { data: prof, error } = await supabase
           .from("profiles")
-          .select("user_id, username, full_name, role, is_active, created_at, updated_at, empresa_ids")
+          .select("user_id, username, full_name, role, is_active, created_at, updated_at, empresa_ids, avatar_url")
           .eq("user_id", userId)
           .maybeSingle();
 
@@ -115,7 +116,7 @@ const UserDetails: React.FC = () => {
           <CardContent>
             <div className="flex items-center gap-4">
               <Avatar className="h-12 w-12">
-                <AvatarImage alt={profile.full_name ?? profile.username} />
+                <AvatarImage src={profile.avatar_url || undefined} alt={profile.full_name ?? profile.username} />
                 <AvatarFallback>
                   {profile.username?.slice(0, 2).toUpperCase()}
                 </AvatarFallback>

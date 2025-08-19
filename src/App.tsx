@@ -84,7 +84,7 @@ const App = () => (
                   </ProtectedRoute>
                 } />
                 <Route path="/admin/users/:userId" element={
-                  <ProtectedRoute allowedRoles={['superuser', 'administrador']}>
+                  <ProtectedRoute allowedRoles={['superuser', 'administrador']} allowSelfParamKey="userId">
                     <UserDetails />
                   </ProtectedRoute>
                 } />
