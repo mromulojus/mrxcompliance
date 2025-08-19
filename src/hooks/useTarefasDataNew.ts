@@ -137,7 +137,7 @@ export function useTarefasData() {
   }, [toast]);
 
   // Update tarefa
-  const updateTarefa = useCallback(async (id: string, updates: Partial<Tarefa>) => {
+  const updateTarefa = useCallback(async (id: string, updates: Partial<TarefaWithUser>): Promise<void> => {
     try {
       const { data, error } = await supabase
         .from('tarefas')
@@ -173,8 +173,6 @@ export function useTarefasData() {
         title: 'Sucesso',
         description: 'Tarefa atualizada com sucesso',
       });
-
-      return data;
     } catch (err) {
       console.error('Erro ao atualizar tarefa:', err);
       toast({

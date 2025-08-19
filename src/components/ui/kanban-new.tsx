@@ -17,12 +17,13 @@ interface KanbanProps {
   onTaskUpdate: (taskId: string, newStatus: TaskStatus, newOrder: number) => void;
   onTaskCreate: (columnStatus: TaskStatus) => void;
   onTaskDelete: (taskId: string) => void;
+  onTaskClick?: (task: TarefaWithUser) => void;
   loading?: boolean;
   /** When true, task cards are hidden (columns stay visible). */
   hideCards?: boolean;
 }
 
-export const Kanban = ({ tasks, onTaskUpdate, onTaskCreate, onTaskDelete, loading = false, hideCards = false }: KanbanProps) => {
+export const Kanban = ({ tasks, onTaskUpdate, onTaskCreate, onTaskDelete, onTaskClick, loading = false, hideCards = false }: KanbanProps) => {
   return (
     <div className={cn("h-full w-full bg-transparent text-foreground")}>
       <Board 
@@ -30,6 +31,7 @@ export const Kanban = ({ tasks, onTaskUpdate, onTaskCreate, onTaskDelete, loadin
         onTaskUpdate={onTaskUpdate}
         onTaskCreate={onTaskCreate}
         onTaskDelete={onTaskDelete}
+        onTaskClick={onTaskClick}
         loading={loading}
         hideCards={hideCards}
       />
@@ -42,11 +44,12 @@ interface BoardProps {
   onTaskUpdate: (taskId: string, newStatus: TaskStatus, newOrder: number) => void;
   onTaskCreate: (columnStatus: TaskStatus) => void;
   onTaskDelete: (taskId: string) => void;
+  onTaskClick?: (task: TarefaWithUser) => void;
   loading: boolean;
   hideCards: boolean;
 }
 
-const Board = ({ tasks, onTaskUpdate, onTaskCreate, onTaskDelete, loading, hideCards }: BoardProps) => {
+const Board = ({ tasks, onTaskUpdate, onTaskCreate, onTaskDelete, onTaskClick, loading, hideCards }: BoardProps) => {
   const columns: { status: TaskStatus; title: string; color: string }[] = [
     { status: 'a_fazer', title: TASK_STATUS_LABELS.a_fazer, color: 'text-yellow-600' },
     { status: 'em_andamento', title: TASK_STATUS_LABELS.em_andamento, color: 'text-blue-600' },
@@ -85,6 +88,7 @@ const Board = ({ tasks, onTaskUpdate, onTaskCreate, onTaskDelete, loading, hideC
           tasks={tasks}
           onTaskUpdate={onTaskUpdate}
           onTaskCreate={onTaskCreate}
+          onTaskClick={onTaskClick}
           hideCards={hideCards}
         />
       ))}
@@ -100,6 +104,7 @@ type ColumnProps = {
   column: TaskStatus;
   onTaskUpdate: (taskId: string, newStatus: TaskStatus, newOrder: number) => void;
   onTaskCreate: (columnStatus: TaskStatus) => void;
+  onTaskClick?: (task: TarefaWithUser) => void;
   hideCards: boolean;
 };
 
@@ -110,6 +115,7 @@ const Column = ({
   column,
   onTaskUpdate,
   onTaskCreate,
+  onTaskClick,
   hideCards,
 }: ColumnProps) => {
   const [active, setActive] = useState(false);
@@ -225,7 +231,7 @@ const Column = ({
         {!hideCards && filteredTasks
           .sort((a, b) => a.ordem_na_coluna - b.ordem_na_coluna)
           .map((task) => (
-            <TaskCard key={task.id} task={task} handleDragStart={handleDragStart} />
+            <TaskCard key={task.id} task={task} handleDragStart={handleDragStart} onTaskClick={onTaskClick} />
           ))}
         <DropIndicator beforeId={null} column={column} />
       </div>
@@ -236,9 +242,10 @@ const Column = ({
 type TaskCardProps = {
   task: TarefaWithUser;
   handleDragStart: (e: DragEvent, task: TarefaWithUser) => void;
+  onTaskClick?: (task: TarefaWithUser) => void;
 };
 
-const TaskCard = ({ task, handleDragStart }: TaskCardProps) => {
+const TaskCard = ({ task, handleDragStart, onTaskClick }: TaskCardProps) => {
   const isOverdue = task.data_vencimento && new Date(task.data_vencimento) < new Date();
   
   const getPriorityColor = (priority: string) => {
@@ -267,6 +274,7 @@ const TaskCard = ({ task, handleDragStart }: TaskCardProps) => {
         layoutId={task.id}
         draggable="true"
         onDragStart={(e: any) => handleDragStart(e, task)}
+        onClick={() => onTaskClick?.(task)}
         className="cursor-grab rounded-lg border border-neutral-300 bg-white text-neutral-800 shadow-sm p-4 mb-3 active:cursor-grabbing hover:shadow-md transition-all hover:border-primary/50 group"
       >
         <div className="space-y-3">

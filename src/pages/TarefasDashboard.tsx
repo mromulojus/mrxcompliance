@@ -6,15 +6,18 @@ import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 import { Kanban } from '@/components/ui/kanban-new';
 import { TaskFiltersComponent } from '@/components/tarefas/TaskFiltersNew';
 import { TaskFormModal } from '@/components/tarefas/TaskFormModalNew';
+import { TaskDetailsModal } from '@/components/tarefas/TaskDetailsModal';
 import { FloatingTaskButton } from '@/components/tarefas/FloatingTaskButton';
 import { useTarefasData } from '@/hooks/useTarefasDataNew';
-import { TaskFilters, TaskFormData, TaskStatus } from '@/types/tarefas';
+import { TaskFilters, TaskFormData, TaskStatus, TarefaWithUser } from '@/types/tarefas';
 
 export default function TarefasDashboard() {
   const [view, setView] = useState<'kanban' | 'grid'>('kanban');
   const [filters, setFilters] = useState<TaskFilters>({});
   const [showFilters, setShowFilters] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
+  const [showTaskDetails, setShowTaskDetails] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<TarefaWithUser | null>(null);
   const [selectedColumnStatus, setSelectedColumnStatus] = useState<TaskStatus>('a_fazer');
 
   const {
@@ -47,6 +50,17 @@ export default function TarefasDashboard() {
 
   const handleTaskReorder = (taskId: string, newStatus: TaskStatus, newOrder: number) => {
     reorderTasks(taskId, newStatus, newOrder);
+  };
+
+  const handleTaskClick = (task: TarefaWithUser) => {
+    setSelectedTask(task);
+    setShowTaskDetails(true);
+  };
+
+  const handleTaskEdit = (task: TarefaWithUser) => {
+    setSelectedTask(task);
+    setShowTaskDetails(false);
+    // TODO: Open edit modal
   };
 
   const handleFiltersChange = (newFilters: TaskFilters) => {
@@ -152,6 +166,7 @@ export default function TarefasDashboard() {
                 onTaskUpdate={handleTaskReorder}
                 onTaskCreate={handleTaskCreateFromColumn}
                 onTaskDelete={deleteTarefa}
+                onTaskClick={handleTaskClick}
                 loading={loading}
               />
             </div>
@@ -184,6 +199,15 @@ export default function TarefasDashboard() {
           status: selectedColumnStatus,
           modulo_origem: 'geral',
         }}
+      />
+
+      {/* Task Details Modal */}
+      <TaskDetailsModal
+        open={showTaskDetails}
+        onOpenChange={setShowTaskDetails}
+        tarefa={selectedTask}
+        onEdit={handleTaskEdit}
+        onUpdate={updateTarefa}
       />
     </div>
   );
