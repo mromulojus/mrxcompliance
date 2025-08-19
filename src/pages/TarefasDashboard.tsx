@@ -2,10 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { KanbanSquare, LayoutGrid, Filter, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 import { Kanban } from '@/components/ui/kanban-new';
-import { TaskKPICards } from '@/components/tarefas/TaskKPICards';
 import { TaskFiltersComponent } from '@/components/tarefas/TaskFiltersNew';
 import { TaskFormModal } from '@/components/tarefas/TaskFormModalNew';
 import { FloatingTaskButton } from '@/components/tarefas/FloatingTaskButton';
@@ -28,7 +26,6 @@ export default function TarefasDashboard() {
     deleteTarefa,
     reorderTasks,
     filterTarefas,
-    calculateKPIs,
     refreshTarefas,
   } = useTarefasData();
 
@@ -36,9 +33,7 @@ export default function TarefasDashboard() {
     return filterTarefas(tarefas, filters);
   }, [tarefas, filters, filterTarefas]);
 
-  const kpis = useMemo(() => {
-    return calculateKPIs(filteredTarefas);
-  }, [filteredTarefas, calculateKPIs]);
+  
 
   const handleTaskCreate = async (taskData: TaskFormData) => {
     await createTarefa(taskData);
@@ -127,8 +122,7 @@ export default function TarefasDashboard() {
         </div>
       </div>
 
-      {/* KPIs (compactos) */}
-      <TaskKPICards kpis={kpis} />
+      
 
       {/* Filters */}
       <Collapsible open={showFilters} onOpenChange={setShowFilters}>
