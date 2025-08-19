@@ -26,6 +26,15 @@ CREATE POLICY user_timesheets_select_self ON public.user_timesheets
   FOR SELECT TO authenticated
   USING (auth.uid() = user_id);
 
+-- Admin/superuser can view all timesheets
+DROP POLICY IF EXISTS user_timesheets_select_admin ON public.user_timesheets;
+CREATE POLICY user_timesheets_select_admin ON public.user_timesheets
+  FOR SELECT TO authenticated
+  USING (
+    public.has_role(auth.uid(), 'administrador'::public.user_role)
+    OR public.has_role(auth.uid(), 'superuser'::public.user_role)
+  );
+
 DROP POLICY IF EXISTS user_timesheets_insert_self ON public.user_timesheets;
 CREATE POLICY user_timesheets_insert_self ON public.user_timesheets
   FOR INSERT TO authenticated

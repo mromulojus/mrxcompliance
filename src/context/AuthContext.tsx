@@ -98,6 +98,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           action,
           by_user: (profile?.username as string) || (user?.email as string) || 'unknown',
           meta: meta || null,
+          user_id: user?.id || null,
         });
     } catch (error) {
       console.error('Error logging activity:', error);
@@ -120,6 +121,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             if (event === 'SIGNED_IN') {
               await updateLastLogin();
               await logActivity('login', { user_id: session.user.id });
+              // Start timesheet entry for this session
+              try {
+                await supabase.from('user_timesheets').insert({ user_id: session.user.id });
+              } catch (_) {}
               toast({
                 title: 'Login realizado com sucesso',
                 description: `Bem-vindo(a), ${profileData?.full_name || session.user.email}!`
@@ -257,6 +262,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       setLoading(true);
       const currentUserId = user?.id;
+      // Close open timesheet before sign out
+      if (currentUserId) {
+        try {
+          await supabase
+            .from('user_timesheets')
+            .update({ ended_at: new Date().toISOString() })
+            .eq('user_id', currentUserId)
+            .is('ended_at', null);
+        } catch (_) {}
+      }
       const { error } = await supabase.auth.signOut();
       if (!error && currentUserId) {
         await logActivity('logout', { user_id: currentUserId });

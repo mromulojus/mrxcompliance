@@ -113,6 +113,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_timesheets: {
+        Row: {
+          id: string
+          user_id: string
+          started_at: string
+          ended_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          started_at?: string
+          ended_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          started_at?: string
+          ended_at?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       colaboradores: {
         Row: {
           agencia: string | null

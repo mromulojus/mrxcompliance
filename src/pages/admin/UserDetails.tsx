@@ -45,6 +45,7 @@ const UserDetails: React.FC = () => {
   const [tasksDoneWeek, setTasksDoneWeek] = useState(0);
   const [tasksDoneMonth, setTasksDoneMonth] = useState(0);
   const [weeklyActivitySeries, setWeeklyActivitySeries] = useState<{ day: string; logins: number; horas: number; concluidas: number }[]>([]);
+  const [liveSessionSeconds, setLiveSessionSeconds] = useState<number>(0);
 
   useEffect(() => {
     document.title = "Detalhes do Usuário - MRx Compliance";
@@ -84,14 +85,8 @@ const UserDetails: React.FC = () => {
 
         // Logins in last week/month
         const [loginsWeekRes, loginsMonthRes] = await Promise.all([
-          supabase.from('activity_logs').select('id, action, created_at')
-            .gte('created_at', startOfWeek.toISOString())
-            .eq('action', 'login')
-            .contains('meta', { user_id: userId }),
-          supabase.from('activity_logs').select('id, action, created_at')
-            .gte('created_at', startOfMonth.toISOString())
-            .eq('action', 'login')
-            .contains('meta', { user_id: userId }),
+          supabase.from('activity_logs').select('id, action, created_at').gte('created_at', startOfWeek.toISOString()).eq('action', 'login').eq('user_id', userId),
+          supabase.from('activity_logs').select('id, action, created_at').gte('created_at', startOfMonth.toISOString()).eq('action', 'login').eq('user_id', userId),
         ]);
         setLoginWeekCount(loginsWeekRes.data?.length || 0);
         setLoginMonthCount(loginsMonthRes.data?.length || 0);
@@ -101,7 +96,7 @@ const UserDetails: React.FC = () => {
           .select('action, created_at')
           .gte('created_at', startOfMonth.toISOString())
           .or('action.eq.login,action.eq.logout')
-          .contains('meta', { user_id: userId })
+          .eq('user_id', userId)
           .order('created_at', { ascending: true });
         const sessions: { start: Date; end?: Date }[] = [];
         (actsMonth || []).forEach((a) => {
@@ -155,6 +150,22 @@ const UserDetails: React.FC = () => {
           };
         });
         setWeeklyActivitySeries(weeklySeries);
+
+        // Live session time: check open timesheet entry
+        const { data: openTs } = await supabase
+          .from('user_timesheets')
+          .select('id, started_at')
+          .eq('user_id', userId)
+          .is('ended_at', null)
+          .order('started_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (openTs?.started_at) {
+          const start = new Date(openTs.started_at).getTime();
+          setLiveSessionSeconds(Math.max(0, Math.floor((Date.now() - start) / 1000)));
+        } else {
+          setLiveSessionSeconds(0);
+        }
       } catch (e) {
         console.error("Erro ao carregar usuário:", e);
       } finally {
@@ -164,6 +175,15 @@ const UserDetails: React.FC = () => {
 
     fetchData();
   }, [userId]);
+
+  // Tick live timer each second if there is an open session
+  useEffect(() => {
+    if (!liveSessionSeconds) return;
+    const i = setInterval(() => {
+      setLiveSessionSeconds((s) => s + 1);
+    }, 1000);
+    return () => clearInterval(i);
+  }, [liveSessionSeconds]);
 
   const empresasResumo = useMemo(() => {
     if (!profile) return "";
@@ -296,6 +316,7 @@ const UserDetails: React.FC = () => {
           <CardContent>
             <div className="text-sm">Última semana: <span className="font-semibold">{timeWeekHours}h</span></div>
             <div className="text-sm">Últimos 30 dias: <span className="font-semibold">{timeMonthHours}h</span></div>
+            <div className="text-sm mt-2">Sessão atual: <span className="font-semibold">{Math.floor(liveSessionSeconds/3600)}h {Math.floor((liveSessionSeconds%3600)/60)}m {liveSessionSeconds%60}s</span></div>
           </CardContent>
         </Card>
         <Card>
