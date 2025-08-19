@@ -126,7 +126,7 @@ const Index = () => {
               const complianceRate = getComplianceRateFromAuditoria(empresa.id);
               
               return (
-                <Card key={empresa.id} className="transition-all hover:shadow-lg cursor-pointer">
+                <Card key={empresa.id} className="transition-all hover:shadow-lg cursor-pointer" onClick={() => navigate(`/empresa/${empresa.id}`)}>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
                     <div className="flex items-center space-x-3">
                       <div className="p-2 bg-primary text-primary-foreground rounded-lg">
@@ -140,7 +140,7 @@ const Index = () => {
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => navigate(`/empresa/${empresa.id}`)}
+                      onClick={(e) => { e.stopPropagation(); navigate(`/empresa/${empresa.id}`); }}
                       className="flex items-center gap-2"
                     >
                       <Eye className="h-4 w-4" />
