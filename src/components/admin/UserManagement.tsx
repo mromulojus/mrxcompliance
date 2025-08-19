@@ -12,6 +12,7 @@ import { UserRole } from "@/context/AuthContext";
 type DatabaseRole = UserRole;
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
+import UserDepartmentsModal from "@/components/admin/UserDepartmentsModal";
 
 type UserFormData = {
   username: string;
@@ -52,6 +53,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [changingPasswordUser, setChangingPasswordUser] = useState<User | null>(null);
   const [empresas, setEmpresas] = useState<Array<{id: string; nome: string}>>([]);
+  const [deptModalOpen, setDeptModalOpen] = useState(false);
+  const [deptSelected, setDeptSelected] = useState<string[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -144,12 +147,26 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         // Don't show error to user since the user was created successfully
       }
 
+      // Persistir departamentos selecionados (se houver) para o novo usuário
+      try {
+        if (deptSelected.length > 0 && authData.user) {
+          const rows = deptSelected.map((id) => ({
+            user_id: authData.user!.id,
+            department_id: id,
+            role_in_department: "member",
+            is_primary: false,
+          }));
+          await supabase.from("user_departments").insert(rows);
+        }
+      } catch {}
+
       toast({
         title: "Usuário criado",
         description: `Usuário ${data.username} criado com sucesso.`
       });
 
       createForm.reset();
+      setDeptSelected([]);
       setIsCreateOpen(false);
       onUserChange();
     } catch (error) {
@@ -186,12 +203,40 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         return;
       }
 
+      // Após salvar perfil, opcionalmente abrir modal de departamentos se houver seleção pendente
+      if (editingUser && deptSelected.length > 0) {
+        try {
+          // Buscar departamentos existentes do escopo de empresas selecionadas
+          const { data: departments } = await supabase
+            .from('departments')
+            .select('id')
+            .in('company_id', data.empresa_ids);
+          const scoped = (departments || []).map((d: any) => d.id as string);
+          const { data: existing } = await supabase
+            .from('user_departments')
+            .select('department_id')
+            .eq('user_id', editingUser.id)
+            .in('department_id', scoped);
+          const existingIds = (existing || []).map((e: any) => e.department_id as string);
+          const toAdd = deptSelected.filter((id) => !existingIds.includes(id));
+          const toRemove = existingIds.filter((id) => !deptSelected.includes(id));
+          if (toRemove.length > 0) {
+            await supabase.from('user_departments').delete().eq('user_id', editingUser.id).in('department_id', toRemove);
+          }
+          if (toAdd.length > 0) {
+            const rows = toAdd.map((id) => ({ user_id: editingUser.id, department_id: id, role_in_department: 'member', is_primary: false }));
+            await supabase.from('user_departments').insert(rows);
+          }
+        } catch {}
+      }
+
       toast({
         title: "Usuário editado",
         description: `Usuário ${data.username} editado com sucesso.`
       });
 
       editForm.reset();
+      setDeptSelected([]);
       setIsEditOpen(false);
       setEditingUser(null);
       onUserChange();
@@ -248,6 +293,18 @@ export const UserManagement: React.FC<UserManagementProps> = ({
       empresa_ids: user.empresa_ids || []
     });
     setIsEditOpen(true);
+    // Carregar seleção de departamentos atual do usuário
+    (async () => {
+      const { data } = await supabase
+        .from('user_departments')
+        .select('department_id, departments(company_id)')
+        .eq('user_id', user.id);
+      if (data) {
+        setDeptSelected((data as any).map((r: any) => r.department_id as string));
+      } else {
+        setDeptSelected([]);
+      }
+    })();
   };
 
   const openChangePasswordDialog = (user: User) => {
@@ -436,6 +493,19 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                   )}
                 />
               )}
+              <div className="flex justify-between">
+                <div className="text-xs text-muted-foreground">
+                  Vincule departamentos após escolher empresas.
+                </div>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setDeptModalOpen(true)}
+                  disabled={(createForm.watch('empresa_ids') || []).length === 0}
+                >
+                  Vincular Departamentos
+                </Button>
+              </div>
               
               <div className="flex justify-end space-x-2">
                 <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
@@ -600,6 +670,19 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                   )}
                 />
               )}
+              <div className="flex justify-between">
+                <div className="text-xs text-muted-foreground">
+                  Vincule departamentos após escolher empresas.
+                </div>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setDeptModalOpen(true)}
+                  disabled={(editForm.watch('empresa_ids') || []).length === 0 || !editingUser}
+                >
+                  Vincular Departamentos
+                </Button>
+              </div>
               
               <div className="flex justify-end space-x-2">
                 <Button type="button" variant="outline" onClick={() => setIsEditOpen(false)}>
@@ -665,6 +748,20 @@ export const UserManagement: React.FC<UserManagementProps> = ({
           </AlertDialog>
         </div>
       ))}
+
+      {/* Modal de Departamentos para criação/edição */}
+      <UserDepartmentsModal
+        open={deptModalOpen}
+        onOpenChange={setDeptModalOpen}
+        userId={isEditOpen && editingUser ? editingUser.id : undefined}
+        empresaIds={isEditOpen ? (editForm.watch('empresa_ids') || []) : (createForm.watch('empresa_ids') || [])}
+        empresas={empresas}
+        selectedDepartmentIds={deptSelected}
+        onSelectedChange={setDeptSelected}
+        onSaved={() => {
+          onUserChange();
+        }}
+      />
     </>
   );
 };
