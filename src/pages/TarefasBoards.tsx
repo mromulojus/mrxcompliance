@@ -93,7 +93,7 @@ export default function TarefasBoards() {
           />
           <Button onClick={handleCreate} disabled={creating || !newBoardName.trim()}>
             <PlusCircle className="h-4 w-4 mr-2" />
-            Criar
+            Criar Quadro
           </Button>
         </div>
       </div>
