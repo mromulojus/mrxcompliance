@@ -110,7 +110,7 @@ export function AppSidebar() {
                 href: `/admin/users/${profile.user_id}`,
                 icon: (
                   <img
-                    src={profile.avatar_url || "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=64&q=80&auto=format&fit=crop&crop=faces"}
+                    src={profile.avatar_url || "/lovable-uploads/0bb1fa68-8f72-4b82-aa3a-0707d95cd69a.png"}
                     className="h-7 w-7 flex-shrink-0 rounded-full object-cover"
                     width={28}
                     height={28}
