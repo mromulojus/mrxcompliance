@@ -278,12 +278,33 @@ const TaskCard = ({ task, handleDragStart, onTaskClick }: TaskCardProps) => {
         className="cursor-grab rounded-lg border border-neutral-300 bg-white text-neutral-800 shadow-sm p-4 mb-3 active:cursor-grabbing hover:shadow-md transition-all hover:border-primary/50 group"
       >
         <div className="space-y-3">
-          {/* Header with title and avatar */}
+          {/* Header with title and avatar(s) */}
           <div className="flex items-start justify-between gap-3">
             <h4 className="font-medium text-sm flex-1 line-clamp-2 group-hover:text-primary transition-colors">
               {task.titulo}
             </h4>
-            {task.responsavel ? (
+            {task.responsaveis && task.responsaveis.length > 0 ? (
+              <div className="flex items-center">
+                <div className="flex -space-x-2">
+                  {task.responsaveis.slice(0, 5).map((u, idx) => (
+                    <Avatar key={u.user_id} className="h-8 w-8 border-2 border-background shadow-sm">
+                      <AvatarImage src={u.avatar_url} />
+                      <AvatarFallback className="text-xs bg-primary text-primary-foreground">
+                        {(u.full_name || u.username)
+                          ?.split(' ')
+                          .map(n => n[0])
+                          .join('')
+                          .toUpperCase()
+                          .slice(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                  ))}
+                  {task.responsaveis.length > 5 && (
+                    <div className="h-8 w-8 rounded-full border-2 border-background bg-muted text-xs flex items-center justify-center">+{task.responsaveis.length - 5}</div>
+                  )}
+                </div>
+              </div>
+            ) : task.responsavel ? (
               <Avatar className="h-8 w-8 border-2 border-background shadow-sm">
                 <AvatarImage src={task.responsavel.avatar_url} />
                 <AvatarFallback className="text-xs bg-primary text-primary-foreground">
@@ -310,12 +331,17 @@ const TaskCard = ({ task, handleDragStart, onTaskClick }: TaskCardProps) => {
             </p>
           )}
           
-          {/* Responsible user name */}
-          {task.responsavel && (
+          {/* Responsible user name(s) */}
+          {task.responsaveis && task.responsaveis.length > 0 ? (
+            <p className="text-xs font-medium text-foreground/80">
+              {task.responsaveis.slice(0, 2).map(u => u.full_name || u.username).join(', ')}
+              {task.responsaveis.length > 2 ? ` e +${task.responsaveis.length - 2}` : ''}
+            </p>
+          ) : task.responsavel ? (
             <p className="text-xs font-medium text-foreground/80">
               {task.responsavel.full_name || task.responsavel.username}
             </p>
-          )}
+          ) : null}
           
           {/* Tags */}
           <div className="flex items-center gap-2 flex-wrap">
