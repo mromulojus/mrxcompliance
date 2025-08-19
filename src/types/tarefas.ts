@@ -12,6 +12,9 @@ export interface Tarefa {
   modulo_origem: TaskModule;
   empresa_id?: string;
   responsavel_id?: string;
+  // Boards/Columns (opcional)
+  board_id?: string;
+  column_id?: string;
   // Optional support for multiple responsibles (backward compatible)
   responsavel_ids?: string[];
   created_by: string;
@@ -68,6 +71,9 @@ export interface TaskFormData {
   anexos?: string[];
   department_ids?: string[];
   primary_department_id?: string;
+  // Contexto de criação em quadros/colunas
+  board_id?: string;
+  column_id?: string;
 }
 
 export interface TaskFilters {

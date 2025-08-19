@@ -56,6 +56,8 @@ interface TaskFormModalProps {
     colaborador_id?: string;
   };
   editData?: TaskFormData;
+  /** Campos de contexto adicionais que serão mesclados no submit (ex.: board_id, column_id) */
+  contextData?: Partial<TaskFormData>;
 }
 
 export function TaskFormModal({ 
@@ -64,7 +66,8 @@ export function TaskFormModal({
   onSubmit, 
   users,
   defaultValues,
-  editData 
+  editData,
+  contextData
 }: TaskFormModalProps) {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
@@ -127,6 +130,7 @@ export function TaskFormModal({
   const handleSubmit = (data: TaskFormData) => {
     onSubmit({
       ...data,
+      ...contextData,
       department_ids: selectedDepartments,
       primary_department_id: primaryDepartmentId,
     });

@@ -25,6 +25,8 @@ import DebtosDashboard from "@/pages/DebtosDashboard";
 import DevedorDetalhes from "./pages/DevedorDetalhes";
 import DividaDetalhes from "./pages/DividaDetalhes";
 import TarefasDashboard from "./pages/TarefasDashboard";
+import TarefasBoards from "./pages/TarefasBoards";
+import TarefaBoardView from "./pages/TarefaBoardView";
 import Homepage from "@/pages/Homepage";
 import UserDetails from "@/pages/admin/UserDetails";
 
@@ -54,6 +56,8 @@ const App = () => (
               }>
                 <Route path="/" element={<Index />} />
                 <Route path="/tarefas" element={<TarefasDashboard />} />
+                <Route path="/tarefas/quadros" element={<TarefasBoards />} />
+                <Route path="/tarefas/quadros/:boardId" element={<TarefaBoardView />} />
                 <Route path="/dashboard" element={<Index />} />
                 <Route path="/empresas" element={<Empresas />} />
                 <Route path="/empresa/:empresaId" element={<EmpresaDetalhes />} />
