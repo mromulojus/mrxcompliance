@@ -123,7 +123,8 @@ export function AcordoManager({ dividaId, devedorId, valorOriginal, onAcordoCria
         dividaId,
         {
           status: 'acordado',
-          data_vencimento: format(acordo.data_entrada, 'yyyy-MM-dd')
+          data_vencimento: format(acordo.data_entrada, 'yyyy-MM-dd'),
+          valor_atualizado: acordo.valor_total
         },
         false
       );
@@ -135,7 +136,7 @@ export function AcordoManager({ dividaId, devedorId, valorOriginal, onAcordoCria
         tipo_acao: 'acordo',
         canal: 'sistema',
         descricao: `Acordo criado: ${formatCurrency(acordo.valor_total)} em ${acordo.numero_parcelas} parcelas. Nova data de vencimento: ${format(acordo.data_entrada, 'dd/MM/yyyy')}`,
-        resultado: 'sucesso',
+        resultado: 'acordo_fechado',
         valor_negociado: acordo.valor_total,
         observacoes: `Forma de pagamento: ${acordo.forma_pagamento}. ${acordo.observacoes || ''}`
       });
