@@ -63,7 +63,7 @@ const App = () => (
                 
                 {/* Admin only routes */}
                 <Route path="/admin/activity-log" element={
-                  <ProtectedRoute requiredRole="administrador">
+                  <ProtectedRoute requiredRole="superuser">
                     <ActivityLog />
                   </ProtectedRoute>
                 } />
