@@ -315,7 +315,22 @@ const Column = ({
     setActive(false);
   };
 
-  const columnTasks = tasks.filter((t) => t.column_id === column.id);
+  const columnTasks = tasks.filter((t) => {
+    // When using default columns (no board selected), filter by status
+    if (!board) {
+      return t.status === column.id;
+    }
+    // When using board columns, filter by column_id
+    return t.column_id === column.id;
+  });
+
+  console.log(`Column ${column.name} (${column.id}):`, {
+    totalTasks: tasks.length,
+    columnTasks: columnTasks.length,
+    hasBoard: !!board,
+    columnId: column.id,
+    taskStatuses: tasks.map(t => t.status)
+  });
 
   return (
     <div className="flex-1 min-w-0 h-full flex flex-col">
