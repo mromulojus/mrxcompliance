@@ -30,6 +30,8 @@ import TarefaBoardView from "./pages/TarefaBoardView";
 import Homepage from "@/pages/Homepage";
 import UserDetails from "@/pages/admin/UserDetails";
 import Indicadores from "@/pages/Indicadores";
+import Calendario from "@/pages/Calendario";
+import Calendario from "@/pages/Calendario";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +69,8 @@ const App = () => (
                 <Route path="/divida/:dividaId" element={<DividaDetalhes />} />
                 <Route path="/denuncias/dashboard" element={<DenunciasDashboard />} />
                 <Route path="/indicadores" element={<Indicadores />} />
+                <Route path="/calendario" element={<Calendario />} />
+                <Route path="/calendario" element={<Calendario />} />
                 
                 {/* Admin only routes */}
                 <Route path="/admin/activity-log" element={
@@ -75,7 +79,7 @@ const App = () => (
                   </ProtectedRoute>
                 } />
                 <Route path="/admin/system-data" element={
-                  <ProtectedRoute allowedRoles={['superuser', 'administrador']}>
+                  <ProtectedRoute allowedRoles={["superuser", "administrador"]}>
                     <SystemData />
                   </ProtectedRoute>
                 } />
@@ -85,12 +89,12 @@ const App = () => (
                   </ProtectedRoute>
                 } />
                 <Route path="/admin/users" element={
-                  <ProtectedRoute allowedRoles={['superuser', 'administrador']}>
+                  <ProtectedRoute allowedRoles={["superuser", "administrador"]}>
                     <UsersPage />
                   </ProtectedRoute>
                 } />
                 <Route path="/admin/users/:userId" element={
-                  <ProtectedRoute allowedRoles={['superuser', 'administrador']} allowSelfParamKey="userId">
+                  <ProtectedRoute allowedRoles={["superuser", "administrador"]} allowSelfParamKey="userId">
                     <UserDetails />
                   </ProtectedRoute>
                 } />
