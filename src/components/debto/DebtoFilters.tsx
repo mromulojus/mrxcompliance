@@ -13,12 +13,12 @@ export function DebtoFilters({ empresas, selectedEmpresa, onEmpresaChange }: Deb
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div className="space-y-2">
         <Label htmlFor="empresa">Empresa</Label>
-        <Select value={selectedEmpresa} onValueChange={onEmpresaChange}>
+        <Select value={selectedEmpresa === '' ? 'all' : selectedEmpresa} onValueChange={(value) => onEmpresaChange(value === 'all' ? '' : value)}>
           <SelectTrigger>
             <SelectValue placeholder="Todas as empresas" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todas as empresas</SelectItem>
+            <SelectItem value="all">Todas as empresas</SelectItem>
             {empresas.map((empresa) => (
               <SelectItem key={empresa.id} value={empresa.id}>
                 {empresa.nome}
@@ -35,7 +35,7 @@ export function DebtoFilters({ empresas, selectedEmpresa, onEmpresaChange }: Deb
             <SelectValue placeholder="Todos os status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos os status</SelectItem>
+            <SelectItem value="all">Todos os status</SelectItem>
             <SelectItem value="pendente">Pendente</SelectItem>
             <SelectItem value="negociacao">Negociação</SelectItem>
             <SelectItem value="acordado">Acordado</SelectItem>
@@ -54,7 +54,7 @@ export function DebtoFilters({ empresas, selectedEmpresa, onEmpresaChange }: Deb
             <SelectValue placeholder="Todos os estágios" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos os estágios</SelectItem>
+            <SelectItem value="all">Todos os estágios</SelectItem>
             <SelectItem value="vencimento_proximo">Vencimento Próximo</SelectItem>
             <SelectItem value="vencido">Vencido</SelectItem>
             <SelectItem value="negociacao">Negociação</SelectItem>
@@ -71,7 +71,7 @@ export function DebtoFilters({ empresas, selectedEmpresa, onEmpresaChange }: Deb
             <SelectValue placeholder="Todas as urgências" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todas as urgências</SelectItem>
+            <SelectItem value="all">Todas as urgências</SelectItem>
             <SelectItem value="critico">Crítico (80-100)</SelectItem>
             <SelectItem value="alto">Alto (60-79)</SelectItem>
             <SelectItem value="medio">Médio (40-59)</SelectItem>

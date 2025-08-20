@@ -12,7 +12,7 @@ import { UserRole } from "@/context/AuthContext";
 type DatabaseRole = UserRole;
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
-import UserDepartmentsModal from "@/components/admin/UserDepartmentsModal";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type UserFormData = {
@@ -181,7 +181,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
             role_in_department: "member",
             is_primary: false,
           }));
-          await supabase.from("user_departments").insert(rows);
+          // await supabase.from("user_departments").insert(rows);
         }
       } catch {}
 
@@ -235,29 +235,29 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
       // Após salvar perfil, opcionalmente abrir modal de departamentos se houver seleção pendente
       if (editingUser && deptSelected.length > 0) {
-        try {
-          // Buscar departamentos existentes do escopo de empresas selecionadas
-          const { data: departments } = await supabase
-            .from('departments')
-            .select('id')
-            .in('company_id', data.empresa_ids);
-          const scoped = (departments || []).map((d: any) => d.id as string);
-          const { data: existing } = await supabase
-            .from('user_departments')
-            .select('department_id')
-            .eq('user_id', editingUser.id)
-            .in('department_id', scoped);
-          const existingIds = (existing || []).map((e: any) => e.department_id as string);
-          const toAdd = deptSelected.filter((id) => !existingIds.includes(id));
-          const toRemove = existingIds.filter((id) => !deptSelected.includes(id));
-          if (toRemove.length > 0) {
-            await supabase.from('user_departments').delete().eq('user_id', editingUser.id).in('department_id', toRemove);
-          }
-          if (toAdd.length > 0) {
-            const rows = toAdd.map((id) => ({ user_id: editingUser.id, department_id: id, role_in_department: 'member', is_primary: false }));
-            await supabase.from('user_departments').insert(rows);
-          }
-        } catch {}
+        // Department management removed - tables not available
+        // try {
+        //   const { data: departments } = await supabase
+        //     .from('departments')
+        //     .select('id')
+        //     .in('company_id', data.empresa_ids);
+        //   const scoped = (departments || []).map((d: any) => d.id as string);
+        //   const { data: existing } = await supabase
+        //     .from('user_departments')
+        //     .select('department_id')
+        //     .eq('user_id', editingUser.id)
+        //     .in('department_id', scoped);
+        //   const existingIds = (existing || []).map((e: any) => e.department_id as string);
+        //   const toAdd = deptSelected.filter((id) => !existingIds.includes(id));
+        //   const toRemove = existingIds.filter((id) => !deptSelected.includes(id));
+        //   if (toRemove.length > 0) {
+        //     await supabase.from('user_departments').delete().eq('user_id', editingUser.id).in('department_id', toRemove);
+        //   }
+        //   if (toAdd.length > 0) {
+        //     const rows = toAdd.map((id) => ({ user_id: editingUser.id, department_id: id, role_in_department: 'member', is_primary: false }));
+        //     await supabase.from('user_departments').insert(rows);
+        //   }
+        // } catch {}
       }
 
       toast({
@@ -323,18 +323,18 @@ export const UserManagement: React.FC<UserManagementProps> = ({
       empresa_ids: user.empresa_ids || []
     });
     setIsEditOpen(true);
-    // Carregar seleção de departamentos atual do usuário
-    (async () => {
-      const { data } = await supabase
-        .from('user_departments')
-        .select('department_id, departments(company_id)')
-        .eq('user_id', user.id);
-      if (data) {
-        setDeptSelected((data as any).map((r: any) => r.department_id as string));
-      } else {
-        setDeptSelected([]);
-      }
-    })();
+    // Department loading removed - table not available
+    // (async () => {
+    //   const { data } = await supabase
+    //     .from('user_departments')
+    //     .select('department_id, departments(company_id)')
+    //     .eq('user_id', user.id);
+    //   if (data) {
+    //     setDeptSelected((data as any).map((r: any) => r.department_id as string));
+    //   } else {
+    //     setDeptSelected([]);
+    //   }
+    // })();
   };
 
   const openChangePasswordDialog = (user: User) => {
@@ -824,19 +824,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         </div>
       ))}
 
-      {/* Modal de Departamentos para criação/edição */}
-      <UserDepartmentsModal
-        open={deptModalOpen}
-        onOpenChange={setDeptModalOpen}
-        userId={isEditOpen && editingUser ? editingUser.id : undefined}
-        empresaIds={isEditOpen ? (editForm.watch('empresa_ids') || []) : (createForm.watch('empresa_ids') || [])}
-        empresas={empresas}
-        selectedDepartmentIds={deptSelected}
-        onSelectedChange={setDeptSelected}
-        onSaved={() => {
-          onUserChange();
-        }}
-      />
+      {/* Department modal removed - tables not available */}
     </>
   );
 };

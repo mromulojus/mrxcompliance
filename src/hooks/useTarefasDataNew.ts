@@ -92,11 +92,13 @@ export function useTarefasData() {
       const tarefaIds = (tarefasData || []).map(t => t.id);
       let assignmentsByTask: Record<string, DepartmentAssignment[]> = {};
       if (tarefaIds.length > 0) {
-        const { data: assignments } = await supabase
-          .from('department_assignments')
-          .select('resource_id, department_id, is_primary')
-          .eq('resource_type', 'tarefas')
-          .in('resource_id', tarefaIds);
+      // Department assignments table removed - not available
+      // const { data: assignments } = await supabase
+      //   .from('department_assignments')
+      //   .select('resource_id, department_id, is_primary')
+      //   .eq('resource_type', 'tarefas')
+      //   .in('resource_id', tarefaIds);
+      const assignments: any[] = [];
         assignmentsByTask = (assignments || []).reduce((acc, a) => {
           const list = acc[a.resource_id as string] || [];
           list.push(a as unknown as DepartmentAssignment);
@@ -151,16 +153,14 @@ export function useTarefasData() {
         .insert(processedData)
         .select()
         .single();
-      // Atribuir departamentos via RPC se fornecidos
-      if (tarefaData.department_ids && tarefaData.primary_department_id && data.empresa_id) {
-        await supabase.rpc('assign_departments_to_resource', {
-          p_resource_type: 'tarefas',
-          p_resource_id: data.id,
-          p_company_id: data.empresa_id,
-          p_department_ids: tarefaData.department_ids,
-          p_primary_department_id: tarefaData.primary_department_id,
-        });
-      }
+      // Department assignment removed - function not available
+      // if (tarefaData.departments && tarefaData.departments.length > 0) {
+      //   await supabase.rpc('assign_departments_to_resource', {
+      //     resource_id: data.id,
+      //     resource_type: 'task',
+      //     department_ids: tarefaData.departments || []
+      //   });
+      // }
 
       if (error) throw error;
 
@@ -207,16 +207,14 @@ export function useTarefasData() {
         .eq('id', id)
         .select()
         .single();
-      // Atualizar departamentos se informado
-      if (updates.department_ids && updates.primary_department_id && data.empresa_id) {
-        await supabase.rpc('assign_departments_to_resource', {
-          p_resource_type: 'tarefas',
-          p_resource_id: id,
-          p_company_id: data.empresa_id,
-          p_department_ids: updates.department_ids,
-          p_primary_department_id: updates.primary_department_id,
-        });
-      }
+      // Department assignment removed - function not available
+      // if (updates.departments && updates.departments.length > 0) {
+      //   await supabase.rpc('assign_departments_to_resource', {
+      //     resource_id: id,
+      //     resource_type: 'task',
+      //     department_ids: updates.departments || []
+      //   });
+      // }
 
       if (error) throw error;
 

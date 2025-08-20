@@ -82,12 +82,12 @@ export default function TarefasBoards() {
             <PopoverContent className="w-72">
               <div className="space-y-3">
                 <Label>Escolha um template</Label>
-                <Select value={selectedTemplate || ''} onValueChange={(v) => setSelectedTemplate(v as TemplateKey)}>
+                <Select value={selectedTemplate || 'none'} onValueChange={(v) => setSelectedTemplate(v === 'none' ? null : v as TemplateKey)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Nenhum (em branco)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhum</SelectItem>
+                    <SelectItem value="none">Nenhum</SelectItem>
                     <SelectItem value="VENDAS">Vendas (xGROWTH)</SelectItem>
                     <SelectItem value="COMPLIANCE">Compliance (Mrx Compliance)</SelectItem>
                     <SelectItem value="JURIDICO">Jurídico (MR Advocacia)</SelectItem>

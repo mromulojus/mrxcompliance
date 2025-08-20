@@ -66,7 +66,9 @@ export function TaskFiltersComponent({
 
   useEffect(() => {
     const fetchDepartments = async () => {
-      const { data } = await supabase.rpc('my_departments');
+      // Department function removed - not available
+      // const { data } = await supabase.rpc('my_departments');
+      const data: any[] = [];
       const unique: Record<string, Department> = {};
       (data || []).forEach((d: any) => {
         unique[d.department_id] = {

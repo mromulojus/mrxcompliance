@@ -32,7 +32,6 @@ import Homepage from "@/pages/Homepage";
 import UserDetails from "@/pages/admin/UserDetails";
 import Indicadores from "@/pages/Indicadores";
 import Calendario from "@/pages/Calendario";
-import Calendario from "@/pages/Calendario";
 
 const queryClient = new QueryClient();
 

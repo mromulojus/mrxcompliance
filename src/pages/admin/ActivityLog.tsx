@@ -30,7 +30,7 @@ const ActivityLog: React.FC = () => {
         setErrorMessage(error.message);
         setLogs([]);
       } else {
-        setLogs(data || []);
+        setLogs(data?.map((log: any) => ({ ...log, user_id: log.by_user || log.user_id })) || []);
       }
 
       setLoading(false);
@@ -51,7 +51,7 @@ const ActivityLog: React.FC = () => {
               .select("id, action, by_user, created_at, meta")
               .order("created_at", { ascending: false })
               .limit(200);
-            setLogs(data || []);
+            setLogs(data?.map((log: any) => ({ ...log, user_id: log.by_user || log.user_id })) || []);
           })();
         }
       )

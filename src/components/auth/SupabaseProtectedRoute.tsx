@@ -1,11 +1,11 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth, UserRole } from "@/context/AuthContext";
 
 type ProtectedRouteProps = {
   children: React.ReactNode;
   requireAnyOf?: Array<
-    | { type: "role"; value: Role }
+    | { type: "role"; value: UserRole }
     | { type: "perm"; value: string }
   >;
 };
