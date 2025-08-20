@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { TarefaWithUser, TaskStatus, TASK_STATUS_LABELS, TASK_PRIORITY_LABELS, TASK_MODULE_LABELS } from "@/types/tarefas";
+import { Progress } from "@/components/ui/progress";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -267,6 +268,37 @@ type TaskCardProps = {
   onCloseTask?: () => void;
 };
 
+type ChecklistItem = { id: string; text: string; completed: boolean };
+
+const parseDescricaoForChecklist = (descricao?: string): { baseDescription: string; parsedChecklist: ChecklistItem[] } => {
+  const safe = descricao || "";
+  const keys = ["checklist:", "comments:"] as const;
+  let base = safe;
+  let checklistJson = "[]";
+
+  const positions = keys
+    .map((key) => ({ key, index: safe.indexOf(key) }))
+    .filter((p) => p.index >= 0)
+    .sort((a, b) => a.index - b.index);
+
+  if (positions.length > 0) {
+    base = safe.slice(0, positions[0].index);
+    for (let i = 0; i < positions.length; i++) {
+      const current = positions[i];
+      const next = positions[i + 1];
+      const value = safe.slice(current.index + current.key.length, next ? next.index : safe.length);
+      if (current.key === "checklist:") checklistJson = value.trim();
+    }
+  }
+
+  let parsedChecklist: ChecklistItem[] = [];
+  try {
+    parsedChecklist = JSON.parse(checklistJson || "[]");
+  } catch {}
+
+  return { baseDescription: base.trim(), parsedChecklist };
+};
+
 const TaskCard = ({ task, handleDragStart, onTaskClick, onCloseTask }: TaskCardProps) => {
   const isOverdue = task.data_vencimento && new Date(task.data_vencimento) < new Date();
   
@@ -376,11 +408,29 @@ const TaskCard = ({ task, handleDragStart, onTaskClick, onCloseTask }: TaskCardP
           </div>
           
           {/* Description */}
-          {task.descricao && (
-            <p className="text-xs text-muted-foreground line-clamp-2">
-              {task.descricao}
-            </p>
-          )}
+          {(() => {
+            const { baseDescription, parsedChecklist } = parseDescricaoForChecklist(task.descricao);
+            const completedItems = parsedChecklist.filter(item => item.completed).length;
+            const progress = parsedChecklist.length > 0 ? (completedItems / parsedChecklist.length) * 100 : 0;
+            return (
+              <>
+                {baseDescription && (
+                  <p className="text-xs text-muted-foreground line-clamp-2">
+                    {baseDescription}
+                  </p>
+                )}
+                {parsedChecklist.length > 0 && (
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-muted-foreground">Checklist</span>
+                      <span className="text-[10px] text-muted-foreground">{completedItems}/{parsedChecklist.length}</span>
+                    </div>
+                    <Progress value={progress} className="h-2" />
+                  </div>
+                )}
+              </>
+            );
+          })()}
           
           {/* Responsible user name(s) */}
           {task.responsaveis && task.responsaveis.length > 0 ? (
