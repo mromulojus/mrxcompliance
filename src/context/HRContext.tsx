@@ -132,7 +132,12 @@ const convertColaboradorFromSupabase = (colaborador: SupabaseColaborador): Colab
   },
   foto_perfil: colaborador.foto_perfil,
   documentos_arquivos: [],
-  historico: [],
+  historico: (colaborador.historico_colaborador || []).map(h => ({
+    id: h.id,
+    data: h.created_at,
+    observacao: h.observacao,
+    usuario: h.profiles?.full_name || ''
+  })),
   auditoria: {
     created_at: colaborador.created_at,
     updated_at: colaborador.updated_at,

@@ -16,6 +16,16 @@ export type Empresa = {
   created_by?: string;
 };
 
+export type HistoricoColaborador = {
+  id: string;
+  observacao: string;
+  created_at: string;
+  created_by: string;
+  profiles?: {
+    full_name: string | null;
+  };
+};
+
 export type Colaborador = {
   id: string;
   nome: string;
@@ -68,6 +78,7 @@ export type Colaborador = {
   created_at: string;
   updated_at: string;
   created_by?: string;
+  historico_colaborador?: HistoricoColaborador[];
 };
 
 export type Denuncia = {
@@ -132,11 +143,11 @@ export const useSupabaseData = () => {
     try {
       const { data, error } = await supabase
         .from('colaboradores')
-        .select('*')
+        .select('*, historico_colaborador(*, profiles:created_by(full_name))')
         .order('nome');
 
       if (error) throw error;
-      setColaboradores(data || []);
+      setColaboradores((data || []) as Colaborador[]);
     } catch (error) {
       console.error('Error fetching colaboradores:', error);
       toast({
