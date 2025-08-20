@@ -1312,6 +1312,8 @@ export type Database = {
           divida_id: string | null
           empresa_id: string | null
           id: string
+          is_archived: boolean
+          archived_at: string | null
           modulo_origem: Database["public"]["Enums"]["task_module"]
           ordem_na_coluna: number | null
           prioridade: Database["public"]["Enums"]["task_priority"]
@@ -1333,6 +1335,8 @@ export type Database = {
           divida_id?: string | null
           empresa_id?: string | null
           id?: string
+          is_archived?: boolean
+          archived_at?: string | null
           modulo_origem?: Database["public"]["Enums"]["task_module"]
           ordem_na_coluna?: number | null
           prioridade?: Database["public"]["Enums"]["task_priority"]
@@ -1354,6 +1358,8 @@ export type Database = {
           divida_id?: string | null
           empresa_id?: string | null
           id?: string
+          is_archived?: boolean
+          archived_at?: string | null
           modulo_origem?: Database["public"]["Enums"]["task_module"]
           ordem_na_coluna?: number | null
           prioridade?: Database["public"]["Enums"]["task_priority"]
