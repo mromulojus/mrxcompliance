@@ -143,7 +143,7 @@ export const useSupabaseData = () => {
     try {
       const { data, error } = await supabase
         .from('colaboradores')
-        .select('*, historico_colaborador(*, profiles:created_by(full_name))')
+        .select('*')
         .order('nome');
 
       if (error) throw error;
