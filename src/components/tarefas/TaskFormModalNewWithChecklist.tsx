@@ -29,6 +29,24 @@ export function TaskFormModal({ open, onOpenChange, onSubmit, users, defaultValu
   });
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [initialChecklist, setInitialChecklist] = useState<string[]>(['']);
+  const [targetBoard, setTargetBoard] = useState<string>('');
+
+  // Module to board mapping
+  const getModuleToBoardMapping = () => ({
+    'geral': 'ADMINISTRATIVO',
+    'ouvidoria': 'OUVIDORIA (Ouve.ai)',
+    'auditoria': 'COMPLIANCE (Mrx Compliance)',
+    'compliance': 'COMPLIANCE (Mrx Compliance)',
+    'cobrancas': 'COBRANÇA (Debto)',
+    'vendas': 'VENDAS (xGROWTH)',
+    'juridico': 'JURIDICO (MR Advocacia)'
+  });
+
+  // Update target board when module changes
+  useEffect(() => {
+    const moduleMapping = getModuleToBoardMapping();
+    setTargetBoard(moduleMapping[formData.modulo_origem] || 'ADMINISTRATIVO');
+  }, [formData.modulo_origem]);
 
   const addChecklistItem = () => {
     setInitialChecklist(prev => [...prev, '']);
@@ -181,12 +199,20 @@ export function TaskFormModal({ open, onOpenChange, onSubmit, users, defaultValu
                   <SelectValue placeholder="Selecione o módulo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="geral">📋 Geral</SelectItem>
+                  <SelectItem value="geral">📋 Administrativo</SelectItem>
                   <SelectItem value="ouvidoria">📢 Ouvidoria</SelectItem>
-                  <SelectItem value="auditoria">🔍 Auditoria</SelectItem>
+                  <SelectItem value="auditoria">🔍 Compliance</SelectItem>
                   <SelectItem value="cobrancas">💰 Cobranças</SelectItem>
+                  <SelectItem value="vendas">🚀 Vendas</SelectItem>
+                  <SelectItem value="juridico">⚖️ Jurídico</SelectItem>
+                  <SelectItem value="compliance">✅ Compliance</SelectItem>
                 </SelectContent>
               </Select>
+              {targetBoard && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  🎯 Será direcionada para: <span className="font-medium text-primary">{targetBoard}</span>
+                </p>
+              )}
             </div>
           </div>
 

@@ -76,6 +76,18 @@ export function TaskFormModal({
   const [anexoArquivos, setAnexoArquivos] = useState<File[]>([]);
   const [uploadingAnexos, setUploadingAnexos] = useState(false);
   const [selectedResponsaveis, setSelectedResponsaveis] = useState<string[]>([]);
+  const [targetBoard, setTargetBoard] = useState<string>('');
+
+  // Module to board mapping
+  const getModuleToBoardMapping = () => ({
+    'geral': 'ADMINISTRATIVO',
+    'ouvidoria': 'OUVIDORIA (Ouve.ai)',
+    'auditoria': 'COMPLIANCE (Mrx Compliance)',
+    'compliance': 'COMPLIANCE (Mrx Compliance)',
+    'cobrancas': 'COBRANÇA (Debto)',
+    'vendas': 'VENDAS (xGROWTH)',
+    'juridico': 'JURIDICO (MR Advocacia)'
+  });
 
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskFormSchema),
@@ -118,7 +130,19 @@ export function TaskFormModal({
     // preset multi-select from single if provided
     const single = (editData?.responsavel_id || defaultValues?.responsavel_id);
     setSelectedResponsaveis(single && single !== 'none' ? [single] : []);
+    
+    // Update target board based on module
+    const moduleMapping = getModuleToBoardMapping();
+    const currentModule = editData?.modulo_origem || defaultValues?.modulo_origem || 'geral';
+    setTargetBoard(moduleMapping[currentModule] || 'ADMINISTRATIVO');
   }, [editData, defaultValues, form, open]);
+
+  // Watch for module changes to update target board
+  const watchedModule = form.watch('modulo_origem');
+  useEffect(() => {
+    const moduleMapping = getModuleToBoardMapping();
+    setTargetBoard(moduleMapping[watchedModule] || 'ADMINISTRATIVO');
+  }, [watchedModule]);
 
   const uploadAnexos = async (files: File[], empresaId?: string): Promise<string[]> => {
     const paths: string[] = [];
@@ -244,6 +268,11 @@ export function TaskFormModal({
                       </SelectContent>
                     </Select>
                     <FormMessage />
+                    {targetBoard && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        🎯 Será direcionada para: <span className="font-medium text-primary">{targetBoard}</span>
+                      </p>
+                    )}
                   </FormItem>
                 )}
               />
