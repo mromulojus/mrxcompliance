@@ -29,12 +29,14 @@ interface KanbanProps {
   onTaskCreate: (columnStatus: TaskStatus) => void;
   onTaskDelete: (taskId: string) => void;
   onTaskClick?: (task: TarefaWithUser) => void;
+  /** Optional callback to close/archive a task (used by /tarefas). If provided, close button triggers this instead of moving to concluido */
+  onTaskClose?: (task: TarefaWithUser) => void;
   loading?: boolean;
   /** When true, task cards are hidden (columns stay visible). */
   hideCards?: boolean;
 }
 
-export const Kanban = ({ tasks, onTaskUpdate, onTaskCreate, onTaskDelete, onTaskClick, loading = false, hideCards = false }: KanbanProps) => {
+export const Kanban = ({ tasks, onTaskUpdate, onTaskCreate, onTaskDelete, onTaskClick, onTaskClose, loading = false, hideCards = false }: KanbanProps) => {
   return (
     <div className={cn("h-full w-full bg-transparent text-foreground")}>
       <Board 
@@ -43,6 +45,7 @@ export const Kanban = ({ tasks, onTaskUpdate, onTaskCreate, onTaskDelete, onTask
         onTaskCreate={onTaskCreate}
         onTaskDelete={onTaskDelete}
         onTaskClick={onTaskClick}
+        onTaskClose={onTaskClose}
         loading={loading}
         hideCards={hideCards}
       />
@@ -56,11 +59,12 @@ interface BoardProps {
   onTaskCreate: (columnStatus: TaskStatus) => void;
   onTaskDelete: (taskId: string) => void;
   onTaskClick?: (task: TarefaWithUser) => void;
+  onTaskClose?: (task: TarefaWithUser) => void;
   loading: boolean;
   hideCards: boolean;
 }
 
-const Board = ({ tasks, onTaskUpdate, onTaskCreate, onTaskDelete, onTaskClick, loading, hideCards }: BoardProps) => {
+const Board = ({ tasks, onTaskUpdate, onTaskCreate, onTaskDelete, onTaskClick, onTaskClose, loading, hideCards }: BoardProps) => {
   const columns: { status: TaskStatus; title: string; color: string }[] = [
     { status: 'a_fazer', title: TASK_STATUS_LABELS.a_fazer, color: 'text-yellow-600' },
     { status: 'em_andamento', title: TASK_STATUS_LABELS.em_andamento, color: 'text-blue-600' },
@@ -100,6 +104,7 @@ const Board = ({ tasks, onTaskUpdate, onTaskCreate, onTaskDelete, onTaskClick, l
           onTaskUpdate={onTaskUpdate}
           onTaskCreate={onTaskCreate}
           onTaskClick={onTaskClick}
+          onTaskClose={onTaskClose}
           hideCards={hideCards}
         />
       ))}
@@ -116,6 +121,7 @@ type ColumnProps = {
   onTaskUpdate: (taskId: string, newStatus: TaskStatus, newOrder: number) => void;
   onTaskCreate: (columnStatus: TaskStatus) => void;
   onTaskClick?: (task: TarefaWithUser) => void;
+  onTaskClose?: (task: TarefaWithUser) => void;
   hideCards: boolean;
 };
 
@@ -127,6 +133,7 @@ const Column = ({
   onTaskUpdate,
   onTaskCreate,
   onTaskClick,
+  onTaskClose,
   hideCards,
 }: ColumnProps) => {
   const [active, setActive] = useState(false);
@@ -248,9 +255,13 @@ const Column = ({
               handleDragStart={handleDragStart}
               onTaskClick={onTaskClick}
               onCloseTask={() => {
-                const concluidos = tasks.filter(t => t.status === 'concluido');
-                const newOrder = concluidos.length;
-                onTaskUpdate(task.id, 'concluido', newOrder);
+                if (onTaskClose) {
+                  onTaskClose(task);
+                } else {
+                  const concluidos = tasks.filter(t => t.status === 'concluido');
+                  const newOrder = concluidos.length;
+                  onTaskUpdate(task.id, 'concluido', newOrder);
+                }
               }}
             />
           ))}
@@ -362,7 +373,9 @@ const TaskCard = ({ task, handleDragStart, onTaskClick, onCloseTask }: TaskCardP
                     <AlertDialogHeader>
                       <AlertDialogTitle>Fechar cartão?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Esta ação marcará a tarefa como concluída e a moverá para a coluna Concluído.
+                        {onCloseTask
+                          ? 'Esta ação arquivará a tarefa. Você poderá encontrá-la em registros/relatórios.'
+                          : 'Esta ação marcará a tarefa como concluída e a moverá para a coluna Concluído.'}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
