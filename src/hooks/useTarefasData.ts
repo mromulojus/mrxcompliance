@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Tarefa, TaskFormData, TaskFilters, TaskKPIs } from '@/types/tarefas';
+import { TarefaWithUser, Tarefa, TaskFormData, TaskFilters, TaskKPIs } from '@/types/tarefas';
 import { useToast } from '@/hooks/use-toast';
 
 export function useTarefasData() {
-  const [tarefas, setTarefas] = useState<Tarefa[]>([]);
+  const [tarefas, setTarefas] = useState<TarefaWithUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
@@ -13,15 +13,44 @@ export function useTarefasData() {
   const fetchTarefas = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      // First fetch tasks
+      const { data: tasksData, error: tasksError } = await supabase
         .from('tarefas')
         .select('*')
         .eq('is_archived', false)
         .order('ordem_na_coluna', { ascending: true })
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setTarefas(data || []);
+      if (tasksError) throw tasksError;
+
+      // Then fetch profiles for responsáveis
+      const responsavelIds = tasksData
+        ?.filter(task => task.responsavel_id)
+        .map(task => task.responsavel_id) || [];
+
+      let profilesMap: Record<string, any> = {};
+      
+      if (responsavelIds.length > 0) {
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('user_id, full_name, username, avatar_url')
+          .in('user_id', responsavelIds);
+
+        if (!profilesError && profilesData) {
+          profilesMap = profilesData.reduce((acc, profile) => {
+            acc[profile.user_id] = profile;
+            return acc;
+          }, {} as Record<string, any>);
+        }
+      }
+
+      // Combine tasks with profiles
+      const tarefasWithUsers: TarefaWithUser[] = (tasksData || []).map(task => ({
+        ...task,
+        responsavel: task.responsavel_id ? profilesMap[task.responsavel_id] : undefined
+      }));
+
+      setTarefas(tarefasWithUsers);
     } catch (err) {
       console.error('Erro ao buscar tarefas:', err);
       setError('Erro ao carregar tarefas');
@@ -140,7 +169,7 @@ export function useTarefasData() {
   };
 
   // Update tarefa
-  const updateTarefa = async (id: string, updates: Partial<Tarefa>) => {
+  const updateTarefa = async (id: string, updates: Partial<TarefaWithUser>) => {
     try {
       const { data, error } = await supabase
         .from('tarefas')
@@ -227,7 +256,7 @@ export function useTarefasData() {
   };
 
   // Bulk update tarefas (for drag and drop)
-  const updateTarefas = async (updatedTarefas: Tarefa[]) => {
+  const updateTarefas = async (updatedTarefas: TarefaWithUser[]) => {
     try {
       const updates = updatedTarefas.map((tarefa, index) => ({
         id: tarefa.id,
@@ -257,7 +286,7 @@ export function useTarefasData() {
   };
 
   // Filter tarefas
-  const filterTarefas = (tarefas: Tarefa[], filters: TaskFilters): Tarefa[] => {
+  const filterTarefas = (tarefas: TarefaWithUser[], filters: TaskFilters): TarefaWithUser[] => {
     return tarefas.filter(tarefa => {
       if (filters.busca) {
         const searchTerm = filters.busca.toLowerCase();
@@ -296,7 +325,7 @@ export function useTarefasData() {
   };
 
   // Calculate KPIs
-  const calculateKPIs = (tarefas: Tarefa[]): TaskKPIs => {
+  const calculateKPIs = (tarefas: TarefaWithUser[]): TaskKPIs => {
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
 

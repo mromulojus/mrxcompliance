@@ -141,7 +141,9 @@ export const DepartmentalKanban = ({
 
   // Filter tasks that belong to this board
   const boardTasks = useMemo(() => {
+    // Show all tasks when no board is selected (fallback mode)
     if (!board) return tasks;
+    // Filter tasks by board when board is selected
     return tasks.filter(task => task.board_id === board.id);
   }, [tasks, board]);
 
