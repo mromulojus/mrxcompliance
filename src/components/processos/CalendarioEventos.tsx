@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
+import { buttonVariants } from '@/components/ui/button';
 import { Plus, Calendar as CalendarIcon, Clock, MapPin, Users, List } from 'lucide-react';
 import { useProcessosData } from '@/hooks/useProcessosData';
 import { FormEvento } from './FormEvento';
@@ -139,6 +141,15 @@ export function CalendarioEventos({ empresaId }: CalendarioEventosProps) {
                   selected={selectedDate}
                   onSelect={(date) => date && setSelectedDate(date)}
                   className="w-full"
+                  classNames={{
+                    caption_label: "text-base font-semibold",
+                    head_cell: "text-muted-foreground rounded-md w-12 font-medium text-[0.9rem]",
+                    cell: "h-12 w-12 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+                    day: cn(
+                      buttonVariants({ variant: "ghost" }),
+                      "h-12 w-12 p-0 font-normal aria-selected:opacity-100"
+                    )
+                  }}
                   modifiers={{
                     hasEvento: (date) => hasEventoNoDia(date)
                   }}
