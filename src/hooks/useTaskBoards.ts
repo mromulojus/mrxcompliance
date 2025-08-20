@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import type { Database } from '@/integrations/supabase/types';
 
 export interface TaskBoard {
   id: string;
@@ -254,8 +255,9 @@ export function useTaskBoards(boardId?: string) {
 
   const fetchBoardTasks = async (bId: string) => {
     try {
+      type Tarefa = Database['public']['Tables']['tarefas']['Row'];
       const { data: tasksData, error } = await supabase
-        .from('tarefas')
+        .from<Tarefa>('tarefas')
         .select('*')
         .eq('board_id', bId)
         .order('ordem_na_coluna', { ascending: true })
