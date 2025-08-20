@@ -54,11 +54,12 @@ type FormData = z.infer<typeof formSchema>;
 interface FormEventoProps {
   empresaId: string;
   dataInicial?: Date;
+  horaInicial?: string;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export function FormEvento({ empresaId, dataInicial, onClose, onSuccess }: FormEventoProps) {
+export function FormEvento({ empresaId, dataInicial, horaInicial, onClose, onSuccess }: FormEventoProps) {
   const { adicionarEvento } = useProcessosData();
   const { user } = useSupabaseAuth();
   const [loading, setLoading] = useState(false);
@@ -68,7 +69,7 @@ export function FormEvento({ empresaId, dataInicial, onClose, onSuccess }: FormE
     defaultValues: {
       tipo: 'outro',
       data_inicio: dataInicial || new Date(),
-      hora_inicio: '09:00',
+      hora_inicio: horaInicial || '09:00',
     },
   });
 
