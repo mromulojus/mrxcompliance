@@ -93,7 +93,6 @@ export type Database = {
           created_at: string
           id: string
           meta: Json | null
-          user_id: string | null
         }
         Insert: {
           action: string
@@ -101,7 +100,6 @@ export type Database = {
           created_at?: string
           id?: string
           meta?: Json | null
-          user_id?: string | null
         }
         Update: {
           action?: string
@@ -109,33 +107,81 @@ export type Database = {
           created_at?: string
           id?: string
           meta?: Json | null
-          user_id?: string | null
         }
         Relationships: []
       }
-      user_timesheets: {
+      board_columns: {
         Row: {
-          id: string
-          user_id: string
-          started_at: string
-          ended_at: string | null
+          board_id: string
           created_at: string
+          id: string
+          name: string
+          position: number
+          updated_at: string
         }
         Insert: {
-          id?: string
-          user_id: string
-          started_at?: string
-          ended_at?: string | null
+          board_id: string
           created_at?: string
+          id?: string
+          name: string
+          position?: number
+          updated_at?: string
         }
         Update: {
-          id?: string
-          user_id?: string
-          started_at?: string
-          ended_at?: string | null
+          board_id?: string
           created_at?: string
+          id?: string
+          name?: string
+          position?: number
+          updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "board_columns_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      boards: {
+        Row: {
+          card_default: Json | null
+          created_at: string
+          created_by: string | null
+          empresa_id: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          card_default?: Json | null
+          created_at?: string
+          created_by?: string | null
+          empresa_id?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          card_default?: Json | null
+          created_at?: string
+          created_by?: string | null
+          empresa_id?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "boards_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       colaboradores: {
         Row: {
@@ -403,44 +449,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "denuncias_empresa_id_fkey"
-            columns: ["empresa_id"]
-            isOneToOne: false
-            referencedRelation: "empresas"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      historico_empresa: {
-        Row: {
-          id: string
-          empresa_id: string
-          tipo: string
-          descricao: string
-          meta: Json | null
-          created_at: string
-          created_by: string
-        }
-        Insert: {
-          id?: string
-          empresa_id: string
-          tipo: string
-          descricao: string
-          meta?: Json | null
-          created_at?: string
-          created_by?: string
-        }
-        Update: {
-          id?: string
-          empresa_id?: string
-          tipo?: string
-          descricao?: string
-          meta?: Json | null
-          created_at?: string
-          created_by?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "historico_empresa_empresa_id_fkey"
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresas"
@@ -1389,87 +1397,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      },
-      task_boards: {
-        Row: {
-          card_default: Json | null
-          created_at: string
-          created_by: string
-          empresa_id: string | null
-          id: string
-          is_archived: boolean
-          name: string
-          updated_at: string
-        }
-        Insert: {
-          card_default?: Json | null
-          created_at?: string
-          created_by: string
-          empresa_id?: string | null
-          id?: string
-          is_archived?: boolean
-          name: string
-          updated_at?: string
-        }
-        Update: {
-          card_default?: Json | null
-          created_at?: string
-          created_by?: string
-          empresa_id?: string | null
-          id?: string
-          is_archived?: boolean
-          name?: string
-          updated_at?: string
-        }
-        Relationships: []
-      },
-      task_columns: {
-        Row: {
-          board_id: string
-          color: string | null
-          created_at: string
-          id: string
-          name: string
-          order_index: number
-        }
-        Insert: {
-          board_id: string
-          color?: string | null
-          created_at?: string
-          id?: string
-          name: string
-          order_index?: number
-        }
-        Update: {
-          board_id?: string
-          color?: string | null
-          created_at?: string
-          id?: string
-          name?: string
-          order_index?: number
-        }
-        Relationships: []
-      },
-      task_board_members: {
-        Row: {
-          added_at: string
-          board_id: string
-          role: string
-          user_id: string
-        }
-        Insert: {
-          added_at?: string
-          board_id: string
-          role?: string
-          user_id: string
-        }
-        Update: {
-          added_at?: string
-          board_id?: string
-          role?: string
-          user_id?: string
-        }
-        Relationships: []
       }
     }
     Views: {
@@ -1522,10 +1449,6 @@ export type Database = {
           p_new_status: Database["public"]["Enums"]["task_status"]
           p_task_id: string
         }
-        Returns: undefined
-      }
-      move_task_column: {
-        Args: { p_board_id: string; p_column_id: string; p_new_index: number }
         Returns: undefined
       }
       update_last_login: {
