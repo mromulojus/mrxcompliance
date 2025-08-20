@@ -1,9 +1,10 @@
 import { supabase } from '@/integrations/supabase/client';
-import type { Database } from '@/integrations/supabase/types';
+import type { HistoricoColaborador } from '@/types/hr';
 
-export type HistoricoColaboradorRow = Database['public']['Tables']['historico_colaborador']['Row'];
-
-export async function saveObservacao(colaboradorId: string, observacao: string): Promise<HistoricoColaboradorRow> {
+export async function saveObservacao(
+  colaboradorId: string,
+  observacao: string
+): Promise<HistoricoColaborador> {
   const { data: userData, error: authError } = await supabase.auth.getUser();
   if (authError) {
     throw new Error(authError.message || 'Falha ao obter usuário autenticado');
@@ -20,13 +21,18 @@ export async function saveObservacao(colaboradorId: string, observacao: string):
       observacao,
       created_by: user.id
     })
-    .select()
+    .select('*, profiles:created_by(full_name)')
     .single();
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return data;
+  return {
+    id: data.id,
+    data: data.created_at,
+    observacao: data.observacao,
+    usuario: data.profiles?.full_name || ''
+  };
 }
 
