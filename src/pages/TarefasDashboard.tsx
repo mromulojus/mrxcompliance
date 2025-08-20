@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 import { Kanban } from '@/components/ui/kanban-new';
+import { DepartmentalKanban } from '@/components/ui/kanban-departmental';
 import { 
   Select,
   SelectContent,
@@ -67,19 +68,37 @@ export default function TarefasDashboard() {
     setShowTaskModal(false);
   };
 
-  const handleTaskCreateFromColumn = (columnStatus: TaskStatus) => {
-    setSelectedColumnStatus(columnStatus);
+  const handleTaskCreateFromColumn = (moduleTypeOrStatus: string) => {
+    if (['a_fazer', 'em_andamento', 'em_revisao', 'concluido'].includes(moduleTypeOrStatus)) {
+      // Traditional kanban status
+      setSelectedColumnStatus(moduleTypeOrStatus as TaskStatus);
+    }
     setShowTaskModal(true);
   };
 
-  const handleTaskUpdate = (taskId: string, newStatus: TaskStatus, newOrder: number) => {
-    // Find the task and update it
-    const updatedTask = tarefas.find(t => t.id === taskId);
-    if (updatedTask) {
-      updateTarefa(taskId, { 
-        status: newStatus, 
-        ordem_na_coluna: newOrder 
-      });
+  const handleTaskUpdate = async (taskId: string, newColumnIdOrStatus: string, newOrder: number) => {
+    try {
+      // Check if we're dealing with column IDs (departmental boards) or status (traditional kanban)
+      const task = tarefas.find(t => t.id === taskId);
+      if (!task) return;
+
+      // If it's a UUID (column_id), update with column and order
+      const isColumnId = newColumnIdOrStatus.includes('-');
+      
+      if (isColumnId) {
+        await updateTarefa(taskId, { 
+          column_id: newColumnIdOrStatus, 
+          ordem_na_coluna: newOrder 
+        });
+      } else {
+        // Traditional status update
+        await updateTarefa(taskId, { 
+          status: newColumnIdOrStatus as TaskStatus, 
+          ordem_na_coluna: newOrder 
+        });
+      }
+    } catch (error) {
+      console.error('Error updating task:', error);
     }
   };
 
@@ -215,11 +234,12 @@ export default function TarefasDashboard() {
         <CardContent className="p-0">
           {view === 'kanban' ? (
             <div className="h-[calc(100vh-480px)] min-h-[520px]">
-              <Kanban
+              <DepartmentalKanban
                 tasks={filteredTarefas}
+                selectedModulo={filters.modulo}
+                selectedEmpresa={filters.empresa}
                 onTaskUpdate={handleTaskUpdate}
                 onTaskCreate={handleTaskCreateFromColumn}
-                onTaskDelete={deleteTarefa}
                 onTaskClick={handleTaskClick}
                 onTaskClose={handleTaskClose}
                 loading={loading}
@@ -255,7 +275,7 @@ export default function TarefasDashboard() {
               <div className="h-[calc(100vh-480px)] min-h-[520px]">
                 <Kanban
                   tasks={filteredTarefas}
-                  onTaskUpdate={handleTaskUpdate}
+                  onTaskUpdate={(taskId, status, order) => handleTaskUpdate(taskId, status, order)}
                   onTaskCreate={handleTaskCreateFromColumn}
                   onTaskDelete={deleteTarefa}
                   onTaskClick={handleTaskClick}
