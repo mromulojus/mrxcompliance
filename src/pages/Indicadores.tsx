@@ -68,18 +68,7 @@ export default function Indicadores() {
     fetchAll();
   }, []);
 
-  // Amostra de dados (exemplo do formato)
-  const sampleData = useMemo(() => {
-    return (tarefas || []).slice(0, 5).map((t) => ({
-      usuario: profilesById[t.responsavel_id || '']?.full_name || profilesById[t.responsavel_id || '']?.username || '—',
-      empresa: t.empresa_id || '—',
-      quadro: t.board_id ? (boardsById[t.board_id]?.name || '—') : '—',
-      status: t.status,
-      prioridade: t.prioridade,
-      dataCriacao: t.created_at,
-      dataConclusao: t.data_conclusao || null,
-    }));
-  }, [tarefas, profilesById, boardsById]);
+  
 
   const calcular = useMemo(() => {
     const by = <K extends string>(keyFn: (t: Tarefa) => K) => {
@@ -167,9 +156,8 @@ export default function Indicadores() {
       indicadoresPorQuadro: porQuadro,
       rankingGeralTarefas: rankingGeral,
       tempoUsoPorUsuario: tempoUso,
-      sampleData,
     };
-  }, [tarefas, profilesById, boardsById, sampleData]);
+  }, [tarefas, profilesById, boardsById]);
 
   const barData = useMemo(() => {
     return calcular.indicadoresPorUsuario.slice(0, 10).map((i) => ({
@@ -246,14 +234,7 @@ export default function Indicadores() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Amostra dos dados</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <pre className="text-xs whitespace-pre-wrap break-all">{JSON.stringify(sampleData, null, 2)}</pre>
-          </CardContent>
-        </Card>
+        
       </div>
 
       {loading && (
