@@ -53,8 +53,9 @@ export default function TarefasDashboard() {
   const filteredTarefas = useMemo(() => {
     let filtered = filterTarefas(tarefas, filters);
     
-    // Filter by selected board if specified
-    if (selectedBoardId) {
+    // Only filter by board if explicitly selected and not the default board
+    // For now, show all tasks when no specific departmental board is selected
+    if (selectedBoardId && selectedBoardId !== 'default') {
       filtered = filtered.filter(tarefa => tarefa.board_id === selectedBoardId);
     }
     
