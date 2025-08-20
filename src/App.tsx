@@ -29,6 +29,7 @@ import TarefasBoards from "./pages/TarefasBoards";
 import TarefaBoardView from "./pages/TarefaBoardView";
 import Homepage from "@/pages/Homepage";
 import UserDetails from "@/pages/admin/UserDetails";
+import Indicadores from "@/pages/Indicadores";
 
 const queryClient = new QueryClient();
 
@@ -65,6 +66,7 @@ const App = () => (
                 <Route path="/devedor/:devedorId" element={<DevedorDetalhes />} />
                 <Route path="/divida/:dividaId" element={<DividaDetalhes />} />
                 <Route path="/denuncias/dashboard" element={<DenunciasDashboard />} />
+                <Route path="/indicadores" element={<Indicadores />} />
                 
                 {/* Admin only routes */}
                 <Route path="/admin/activity-log" element={

@@ -93,6 +93,7 @@ export type Database = {
           created_at: string
           id: string
           meta: Json | null
+          user_id: string | null
         }
         Insert: {
           action: string
@@ -100,6 +101,7 @@ export type Database = {
           created_at?: string
           id?: string
           meta?: Json | null
+          user_id?: string | null
         }
         Update: {
           action?: string
@@ -107,6 +109,31 @@ export type Database = {
           created_at?: string
           id?: string
           meta?: Json | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_timesheets: {
+        Row: {
+          id: string
+          user_id: string
+          started_at: string
+          ended_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          started_at?: string
+          ended_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          started_at?: string
+          ended_at?: string | null
+          created_at?: string
         }
         Relationships: []
       }
