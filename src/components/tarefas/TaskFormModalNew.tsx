@@ -38,7 +38,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 const taskFormSchema = z.object({
   titulo: z.string().min(1, 'Título é obrigatório'),
   descricao: z.string().optional(),
-  modulo_origem: z.enum(['ouvidoria', 'auditoria', 'cobrancas', 'geral']),
+  modulo_origem: z.enum(['ouvidoria', 'auditoria', 'cobrancas', 'geral', 'vendas', 'juridico', 'compliance']),
   empresa_id: z.string().optional(),
   responsavel_id: z.string().optional(),
   status: z.enum(['a_fazer', 'em_andamento', 'em_revisao', 'concluido']),
@@ -234,10 +234,13 @@ export function TaskFormModal({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="geral">📋 Geral</SelectItem>
+                        <SelectItem value="geral">📋 Administrativo</SelectItem>
                         <SelectItem value="ouvidoria">📢 Ouvidoria</SelectItem>
-                        <SelectItem value="auditoria">🔍 Auditoria</SelectItem>
+                        <SelectItem value="auditoria">🔍 Compliance</SelectItem>
                         <SelectItem value="cobrancas">💰 Cobranças</SelectItem>
+                        <SelectItem value="vendas">🚀 Vendas</SelectItem>
+                        <SelectItem value="juridico">⚖️ Jurídico</SelectItem>
+                        <SelectItem value="compliance">✅ Compliance</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

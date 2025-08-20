@@ -1,6 +1,6 @@
 export type TaskStatus = 'a_fazer' | 'em_andamento' | 'em_revisao' | 'concluido';
 export type TaskPriority = 'alta' | 'media' | 'baixa';
-export type TaskModule = 'ouvidoria' | 'auditoria' | 'cobrancas' | 'geral';
+export type TaskModule = 'ouvidoria' | 'auditoria' | 'cobrancas' | 'geral' | 'vendas' | 'juridico' | 'compliance';
 
 // Interface básica para tarefa
 export interface Tarefa {
@@ -116,7 +116,10 @@ export const TASK_MODULE_LABELS = {
   ouvidoria: 'Ouvidoria',
   auditoria: 'Auditoria',
   cobrancas: 'Cobranças',
-  geral: 'Geral'
+  geral: 'Geral',
+  vendas: 'Vendas',
+  juridico: 'Jurídico',
+  compliance: 'Compliance'
 } as const;
 
 export const PRIORITY_COLORS = {
@@ -129,5 +132,8 @@ export const MODULE_COLORS = {
   ouvidoria: 'text-purple-600 bg-purple-50',
   auditoria: 'text-blue-600 bg-blue-50',
   cobrancas: 'text-orange-600 bg-orange-50',
-  geral: 'text-gray-600 bg-gray-50'
+  geral: 'text-gray-600 bg-gray-50',
+  vendas: 'text-green-600 bg-green-50',
+  juridico: 'text-indigo-600 bg-indigo-50',
+  compliance: 'text-teal-600 bg-teal-50'
 } as const;

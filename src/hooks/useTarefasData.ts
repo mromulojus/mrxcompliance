@@ -35,16 +35,96 @@ export function useTarefasData() {
     }
   };
 
+  // Module to board mapping
+  const getModuleToBoardMapping = () => ({
+    'geral': 'ADMINISTRATIVO',
+    'ouvidoria': 'OUVIDORIA (Ouve.ai)',
+    'auditoria': 'COMPLIANCE (Mrx Compliance)',
+    'compliance': 'COMPLIANCE (Mrx Compliance)',
+    'cobrancas': 'COBRANÇA (Debto)',
+    'vendas': 'VENDAS (xGROWTH)',
+    'juridico': 'JURIDICO (MR Advocacia)'
+  });
+
+  // Auto-assign board and column based on module and company
+  const assignBoardAndColumn = async (tarefaData: TaskFormData) => {
+    if (!tarefaData.empresa_id || !tarefaData.modulo_origem) {
+      return tarefaData;
+    }
+
+    try {
+      const moduleMapping = getModuleToBoardMapping();
+      const targetBoardName = moduleMapping[tarefaData.modulo_origem];
+      
+      if (!targetBoardName) {
+        return tarefaData;
+      }
+
+      // Look for existing board
+      const { data: existingBoard } = await supabase
+        .from('boards')
+        .select('*')
+        .eq('empresa_id', tarefaData.empresa_id)
+        .eq('name', targetBoardName)
+        .eq('is_active', true)
+        .single();
+
+      let boardId = existingBoard?.id;
+
+      // If no board exists, create it using the existing function
+      if (!boardId) {
+        await supabase.rpc('create_departmental_boards_for_empresa', {
+          p_empresa_id: tarefaData.empresa_id
+        });
+
+        // Fetch the created board
+        const { data: newBoard } = await supabase
+          .from('boards')
+          .select('*')
+          .eq('empresa_id', tarefaData.empresa_id)
+          .eq('name', targetBoardName)
+          .eq('is_active', true)
+          .single();
+
+        boardId = newBoard?.id;
+      }
+
+      if (boardId) {
+        // Get first column (A Fazer)
+        const { data: firstColumn } = await supabase
+          .from('board_columns')
+          .select('*')
+          .eq('board_id', boardId)
+          .order('position', { ascending: true })
+          .limit(1)
+          .single();
+
+        return {
+          ...tarefaData,
+          board_id: boardId,
+          column_id: firstColumn?.id
+        };
+      }
+    } catch (error) {
+      console.warn('Error auto-assigning board:', error);
+    }
+
+    return tarefaData;
+  };
+
   // Create tarefa
   const createTarefa = async (tarefaData: TaskFormData) => {
     try {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) throw new Error('Usuário não autenticado');
 
+      // Auto-assign board and column based on module
+      const enrichedData = await assignBoardAndColumn(tarefaData);
+
       // Handle "none" value for responsavel_id
       const processedData = {
-        ...tarefaData,
-        responsavel_id: tarefaData.responsavel_id === 'none' ? null : tarefaData.responsavel_id,
+        ...enrichedData,
+        responsavel_id: enrichedData.responsavel_id === 'none' ? null : enrichedData.responsavel_id,
         created_by: user.user.id,
       };
 
@@ -59,7 +139,7 @@ export function useTarefasData() {
       setTarefas(prev => [...prev, data]);
       toast({
         title: 'Sucesso',
-        description: 'Tarefa criada com sucesso',
+        description: 'Tarefa criada e direcionada para o quadro departamental',
       });
 
       return data;
