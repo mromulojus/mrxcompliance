@@ -1551,7 +1551,14 @@ export type Database = {
         | "CLIENTE"
         | "OUTRO"
       sexo: "MASCULINO" | "FEMININO"
-      task_module: "ouvidoria" | "auditoria" | "cobrancas" | "geral"
+      task_module:
+        | "ouvidoria"
+        | "auditoria"
+        | "cobrancas"
+        | "geral"
+        | "vendas"
+        | "juridico"
+        | "compliance"
       task_priority: "alta" | "media" | "baixa"
       task_status: "a_fazer" | "em_andamento" | "em_revisao" | "concluido"
       tipo_conta: "CORRENTE" | "POUPANCA"
@@ -1758,7 +1765,15 @@ export const Constants = {
         "OUTRO",
       ],
       sexo: ["MASCULINO", "FEMININO"],
-      task_module: ["ouvidoria", "auditoria", "cobrancas", "geral"],
+      task_module: [
+        "ouvidoria",
+        "auditoria",
+        "cobrancas",
+        "geral",
+        "vendas",
+        "juridico",
+        "compliance",
+      ],
       task_priority: ["alta", "media", "baixa"],
       task_status: ["a_fazer", "em_andamento", "em_revisao", "concluido"],
       tipo_conta: ["CORRENTE", "POUPANCA"],

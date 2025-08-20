@@ -150,7 +150,7 @@ export function useTarefasData() {
 
       const { data, error } = await supabase
         .from('tarefas')
-        .insert(processedData)
+        .insert(processedData as any)
         .select()
         .single();
       // Department assignment removed - function not available
@@ -203,7 +203,7 @@ export function useTarefasData() {
     try {
       const { data, error } = await supabase
         .from('tarefas')
-        .update(updates)
+        .update(updates as any)
         .eq('id', id)
         .select()
         .single();
