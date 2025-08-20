@@ -51,8 +51,34 @@ export function useTaskBoards(boardId?: string) {
           .eq('is_archived', false)
           .order('created_at', { ascending: false });
         if (tbError) throw tbError;
-        usedSource = 'task_boards';
-        data = tbData || [];
+        // If legacy table exists but has no data, attempt to also load from new boards table
+        if (tbData && tbData.length > 0) {
+          usedSource = 'task_boards';
+          data = tbData;
+        } else {
+          const { data: bData, error: bError } = await sb
+            .from('boards')
+            .select('id, name, empresa_id, created_by, is_active, created_at, updated_at')
+            .eq('is_active', true)
+            .order('created_at', { ascending: false });
+          // If the new table is not accessible, keep legacy empty state
+          if (!bError && bData) {
+            usedSource = 'boards';
+            data = (bData || []).map((row: any) => ({
+              id: row.id,
+              name: row.name,
+              empresa_id: row.empresa_id,
+              created_by: row.created_by,
+              is_archived: row.is_active === false,
+              created_at: row.created_at,
+              updated_at: row.updated_at,
+              card_default: null,
+            })) as TaskBoard[];
+          } else {
+            usedSource = 'task_boards';
+            data = tbData || [];
+          }
+        }
       } catch (e: any) {
         // Fallback to new table name `boards`
         const { data: bData, error: bError } = await sb
@@ -82,7 +108,7 @@ export function useTaskBoards(boardId?: string) {
     } finally {
       setLoading(false);
     }
-  }, [toast, boardsSource]);
+  }, [toast]);
 
   const createBoard = useCallback(async (name: string, empresa_id?: string) => {
     try {
@@ -125,18 +151,18 @@ export function useTaskBoards(boardId?: string) {
         return data as TaskBoard;
       };
 
-      if (boardsSource === 'boards') {
+      // Prefer new boards model when empresa_id is available; otherwise fallback to legacy
+      if (empresa_id) {
         try {
           created = await tryCreateInBoards();
         } catch (e) {
-          // fallback
           created = await tryCreateInTaskBoards();
         }
       } else {
         try {
           created = await tryCreateInTaskBoards();
         } catch (e) {
-          // fallback
+          // As last resort, attempt boards with a meaningful error if empresa_id missing
           created = await tryCreateInBoards();
         }
       }
@@ -149,7 +175,7 @@ export function useTaskBoards(boardId?: string) {
       toast({ title: 'Erro', description: 'Não foi possível criar o quadro', variant: 'destructive' });
       throw err;
     }
-  }, [toast, boardsSource]);
+  }, [toast]);
 
   const updateBoard = useCallback(async (id: string, name: string, card_default?: any) => {
     try {
