@@ -31,16 +31,43 @@ export function useTarefasData() {
   const fetchTarefas = useCallback(async () => {
     try {
       setLoading(true);
-      
-      // Buscar tarefas
-      const { data: tarefasData, error: tarefasError } = await supabase
+
+      // Buscar tarefas (compatível com backends sem coluna is_archived e/ou sem ordem_na_coluna)
+      let tarefasRaw: any[] | null = null;
+
+      // Tentativa principal: ordenar por ordem_na_coluna e created_at
+      const firstTry = await supabase
         .from('tarefas')
         .select('*')
-        .eq('is_archived', false)
         .order('ordem_na_coluna', { ascending: true })
         .order('created_at', { ascending: false });
 
-      if (tarefasError) throw tarefasError;
+      if (firstTry.error) {
+        console.warn('Falha na ordenação por ordem_na_coluna, tentando fallback:', firstTry.error.message);
+        // Fallback: ordenar apenas por created_at
+        const secondTry = await supabase
+          .from('tarefas')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (secondTry.error) {
+          console.warn('Falha na ordenação por created_at, tentando sem ordenação:', secondTry.error.message);
+          // Último fallback: sem ordenação para ao menos obter dados
+          const thirdTry = await supabase
+            .from('tarefas')
+            .select('*');
+
+          if (thirdTry.error) throw thirdTry.error;
+          tarefasRaw = thirdTry.data || [];
+        } else {
+          tarefasRaw = secondTry.data || [];
+        }
+      } else {
+        tarefasRaw = firstTry.data || [];
+      }
+
+      // Filtrar arquivadas no cliente, tratando ausência da coluna como não arquivado
+      const tarefasData = (tarefasRaw || []).filter((t: any) => t?.is_archived !== true);
 
       // Buscar dados dos usuários responsáveis
       const responsavelIds = [...new Set(
@@ -86,7 +113,7 @@ export function useTarefasData() {
           ...tarefa,
           department_ids: assigns.map(a => a.department_id),
           primary_department_id: primary,
-          responsavel: tarefa.responsavel_id 
+          responsavel: tarefa.responsavel_id
             ? responsaveisData.find(user => user.user_id === tarefa.responsavel_id)
             : undefined
         };
