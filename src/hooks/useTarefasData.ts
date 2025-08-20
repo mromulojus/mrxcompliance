@@ -16,6 +16,7 @@ export function useTarefasData() {
       const { data, error } = await supabase
         .from('tarefas')
         .select('*')
+        .eq('is_archived', false)
         .order('ordem_na_coluna', { ascending: true })
         .order('created_at', { ascending: false });
 
@@ -100,6 +101,37 @@ export function useTarefasData() {
         variant: 'destructive',
       });
       throw err;
+    }
+  };
+
+  // Archive tarefa
+  const archiveTask = async (taskId: string) => {
+    try {
+      const { error } = await supabase
+        .from('tarefas')
+        .update({ 
+          is_archived: true,
+          archived_at: new Date().toISOString()
+        })
+        .eq('id', taskId);
+
+      if (error) throw error;
+
+      // Remove from current tasks list
+      setTarefas(prev => prev.filter(t => t.id !== taskId));
+      
+      toast({
+        title: "Tarefa arquivada",
+        description: "A tarefa foi arquivada com sucesso."
+      });
+    } catch (error) {
+      console.error('Erro ao arquivar tarefa:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível arquivar a tarefa.",
+        variant: "destructive"
+      });
+      throw error;
     }
   };
 
@@ -235,6 +267,7 @@ export function useTarefasData() {
     createTarefa,
     updateTarefa,
     deleteTarefa,
+    archiveTask,
     updateTarefas,
     filterTarefas,
     calculateKPIs,

@@ -1302,7 +1302,10 @@ export type Database = {
       tarefas: {
         Row: {
           anexos: string[] | null
+          archived_at: string | null
+          board_id: string | null
           colaborador_id: string | null
+          column_id: string | null
           created_at: string
           created_by: string
           data_conclusao: string | null
@@ -1312,6 +1315,7 @@ export type Database = {
           divida_id: string | null
           empresa_id: string | null
           id: string
+          is_archived: boolean | null
           modulo_origem: Database["public"]["Enums"]["task_module"]
           ordem_na_coluna: number | null
           prioridade: Database["public"]["Enums"]["task_priority"]
@@ -1323,7 +1327,10 @@ export type Database = {
         }
         Insert: {
           anexos?: string[] | null
+          archived_at?: string | null
+          board_id?: string | null
           colaborador_id?: string | null
+          column_id?: string | null
           created_at?: string
           created_by: string
           data_conclusao?: string | null
@@ -1333,6 +1340,7 @@ export type Database = {
           divida_id?: string | null
           empresa_id?: string | null
           id?: string
+          is_archived?: boolean | null
           modulo_origem?: Database["public"]["Enums"]["task_module"]
           ordem_na_coluna?: number | null
           prioridade?: Database["public"]["Enums"]["task_priority"]
@@ -1344,7 +1352,10 @@ export type Database = {
         }
         Update: {
           anexos?: string[] | null
+          archived_at?: string | null
+          board_id?: string | null
           colaborador_id?: string | null
+          column_id?: string | null
           created_at?: string
           created_by?: string
           data_conclusao?: string | null
@@ -1354,6 +1365,7 @@ export type Database = {
           divida_id?: string | null
           empresa_id?: string | null
           id?: string
+          is_archived?: boolean | null
           modulo_origem?: Database["public"]["Enums"]["task_module"]
           ordem_na_coluna?: number | null
           prioridade?: Database["public"]["Enums"]["task_priority"]
@@ -1365,10 +1377,24 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "tarefas_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "tarefas_colaborador_id_fkey"
             columns: ["colaborador_id"]
             isOneToOne: false
             referencedRelation: "colaboradores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefas_column_id_fkey"
+            columns: ["column_id"]
+            isOneToOne: false
+            referencedRelation: "board_columns"
             referencedColumns: ["id"]
           },
           {
@@ -1426,6 +1452,10 @@ export type Database = {
           valor_original: number
         }
         Returns: number
+      }
+      create_departmental_boards_for_empresa: {
+        Args: { p_empresa_id: string }
+        Returns: undefined
       }
       generate_protocol: {
         Args: Record<PropertyKey, never>

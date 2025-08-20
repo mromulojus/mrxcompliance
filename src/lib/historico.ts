@@ -32,7 +32,7 @@ export async function saveObservacao(
     id: data.id,
     data: data.created_at,
     observacao: data.observacao,
-    usuario: data.profiles?.full_name || ''
+    usuario: (data.profiles as any)?.full_name || 'Sistema'
   };
 }
 

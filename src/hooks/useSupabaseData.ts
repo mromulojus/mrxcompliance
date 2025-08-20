@@ -147,7 +147,7 @@ export const useSupabaseData = () => {
         .order('nome');
 
       if (error) throw error;
-      setColaboradores((data || []) as Colaborador[]);
+      setColaboradores((data as any) || []);
     } catch (error) {
       console.error('Error fetching colaboradores:', error);
       toast({

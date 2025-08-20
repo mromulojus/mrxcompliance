@@ -255,9 +255,8 @@ export function useTaskBoards(boardId?: string) {
 
   const fetchBoardTasks = async (bId: string) => {
     try {
-      type Tarefa = Database['public']['Tables']['tarefas']['Row'];
       const { data: tasksData, error } = await supabase
-        .from<Tarefa>('tarefas')
+        .from('tarefas')
         .select('*')
         .eq('board_id', bId)
         .order('ordem_na_coluna', { ascending: true })
@@ -269,7 +268,7 @@ export function useTaskBoards(boardId?: string) {
         return;
       }
 
-      const responsavelIds = [...new Set((tasksData || []).map(t => t.responsavel_id).filter(Boolean))] as string[];
+      const responsavelIds = [...new Set((tasksData || []).map((t: any) => t.responsavel_id).filter(Boolean))] as string[];
       let profiles: Record<string, any> = {};
       
       if (responsavelIds.length) {
@@ -280,7 +279,7 @@ export function useTaskBoards(boardId?: string) {
         profiles = Object.fromEntries((usersData || []).map(u => [u.user_id, u]));
       }
 
-      const withUsers = (tasksData || []).map(t => ({
+      const withUsers = (tasksData || []).map((t: any) => ({
         ...t,
         responsavel: t.responsavel_id ? profiles[t.responsavel_id] : undefined,
       }));

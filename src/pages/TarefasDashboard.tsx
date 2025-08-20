@@ -16,11 +16,14 @@ import { TaskFiltersComponent } from '@/components/tarefas/TaskFiltersNew';
 import { TaskFormModal } from '@/components/tarefas/TaskFormModalNew';
 import { TaskDetailsModal } from '@/components/tarefas/TaskDetailsModal';
 import { FloatingTaskButton } from '@/components/tarefas/FloatingTaskButton';
-import { useTarefasData } from '@/hooks/useTarefasDataNew';
+import { BoardSelector } from '@/components/tarefas/BoardSelector';
+import { useTarefasData } from '@/hooks/useTarefasData';
 import { TaskFilters, TaskFormData, TaskStatus, TarefaWithUser } from '@/types/tarefas';
+import { useToast } from '@/hooks/use-toast';
 
 export default function TarefasDashboard() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [view, setView] = useState<'kanban' | 'grid'>('kanban');
   const [filters, setFilters] = useState<TaskFilters>({});
   const [showFilters, setShowFilters] = useState(false);
@@ -28,22 +31,34 @@ export default function TarefasDashboard() {
   const [showTaskDetails, setShowTaskDetails] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TarefaWithUser | null>(null);
   const [selectedColumnStatus, setSelectedColumnStatus] = useState<TaskStatus>('a_fazer');
+  const [selectedBoardId, setSelectedBoardId] = useState<string | undefined>();
 
   const {
     tarefas,
-    users,
     loading,
     createTarefa,
     updateTarefa,
     deleteTarefa,
-    reorderTasks,
+    archiveTask,
+    updateTarefas,
     filterTarefas,
     refreshTarefas,
   } = useTarefasData();
 
+  // Mock users data since not available in hook
+  const users = [];
+
+  // Apply filters and board selection
   const filteredTarefas = useMemo(() => {
-    return filterTarefas(tarefas, filters);
-  }, [tarefas, filters, filterTarefas]);
+    let filtered = filterTarefas(tarefas, filters);
+    
+    // Filter by selected board if specified
+    if (selectedBoardId) {
+      filtered = filtered.filter(tarefa => tarefa.board_id === selectedBoardId);
+    }
+    
+    return filtered;
+  }, [tarefas, filters, selectedBoardId, filterTarefas]);
 
   
 
@@ -57,8 +72,32 @@ export default function TarefasDashboard() {
     setShowTaskModal(true);
   };
 
-  const handleTaskReorder = (taskId: string, newStatus: TaskStatus, newOrder: number) => {
-    reorderTasks(taskId, newStatus, newOrder);
+  const handleTaskUpdate = (taskId: string, newStatus: TaskStatus, newOrder: number) => {
+    // Find the task and update it
+    const updatedTask = tarefas.find(t => t.id === taskId);
+    if (updatedTask) {
+      updateTarefa(taskId, { 
+        status: newStatus, 
+        ordem_na_coluna: newOrder 
+      });
+    }
+  };
+
+  const handleTaskClose = async (task: TarefaWithUser) => {
+    try {
+      await archiveTask(task.id);
+      toast({
+        title: 'Tarefa arquivada',
+        description: 'A tarefa foi arquivada com sucesso'
+      });
+    } catch (error) {
+      console.error('Erro ao arquivar tarefa:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível arquivar a tarefa',
+        variant: 'destructive'
+      });
+    }
   };
 
   const handleTaskClick = (task: TarefaWithUser) => {
@@ -69,7 +108,7 @@ export default function TarefasDashboard() {
   const handleTaskEdit = (task: TarefaWithUser) => {
     setSelectedTask(task);
     setShowTaskDetails(false);
-    // TODO: Open edit modal
+    setShowTaskModal(true);
   };
 
   const handleFiltersChange = (newFilters: TaskFilters) => {
@@ -146,7 +185,12 @@ export default function TarefasDashboard() {
         </div>
       </div>
 
-      
+      {/* Board Selector */}
+      <BoardSelector
+        selectedBoardId={selectedBoardId}
+        onBoardChange={setSelectedBoardId}
+        empresaId={filters.empresa}
+      />
 
       {/* Filters */}
       <Collapsible open={showFilters} onOpenChange={setShowFilters}>
@@ -173,13 +217,11 @@ export default function TarefasDashboard() {
             <div className="h-[calc(100vh-480px)] min-h-[520px]">
               <Kanban
                 tasks={filteredTarefas}
-                onTaskUpdate={handleTaskReorder}
+                onTaskUpdate={handleTaskUpdate}
                 onTaskCreate={handleTaskCreateFromColumn}
                 onTaskDelete={deleteTarefa}
                 onTaskClick={handleTaskClick}
-                onTaskClose={(task) => {
-                  void updateTarefa(task.id, { is_archived: true, archived_at: new Date().toISOString() });
-                }}
+                onTaskClose={handleTaskClose}
                 loading={loading}
               />
             </div>
@@ -213,13 +255,11 @@ export default function TarefasDashboard() {
               <div className="h-[calc(100vh-480px)] min-h-[520px]">
                 <Kanban
                   tasks={filteredTarefas}
-                  onTaskUpdate={handleTaskReorder}
+                  onTaskUpdate={handleTaskUpdate}
                   onTaskCreate={handleTaskCreateFromColumn}
                   onTaskDelete={deleteTarefa}
                   onTaskClick={handleTaskClick}
-                  onTaskClose={(task) => {
-                    void updateTarefa(task.id, { is_archived: true, archived_at: new Date().toISOString() });
-                  }}
+                  onTaskClose={handleTaskClose}
                   loading={loading}
                 />
               </div>
@@ -255,7 +295,9 @@ export default function TarefasDashboard() {
         onOpenChange={setShowTaskDetails}
         tarefa={selectedTask}
         onEdit={handleTaskEdit}
-        onUpdate={updateTarefa}
+        onUpdate={async (id, updates) => {
+          await updateTarefa(id, updates);
+        }}
       />
     </div>
   );
