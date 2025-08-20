@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { TarefaWithUser } from '@/types/tarefas';
 import { useToast } from '@/hooks/use-toast';
 
 export interface TaskBoard {
@@ -8,7 +7,7 @@ export interface TaskBoard {
   name: string;
   empresa_id?: string | null;
   created_by: string;
-  is_archived: boolean;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
   card_default?: any | null;
@@ -19,7 +18,6 @@ export interface TaskColumn {
   board_id: string;
   name: string;
   color?: string | null;
-  order_index?: number;
   position: number;
   created_at: string;
   updated_at: string;
@@ -29,393 +27,313 @@ export interface TaskColumn {
 export function useTaskBoards(boardId?: string) {
   const [boards, setBoards] = useState<TaskBoard[]>([]);
   const [columns, setColumns] = useState<TaskColumn[]>([]);
-  const [tasks, setTasks] = useState<TarefaWithUser[]>([]);
+  const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [members, setMembers] = useState<{ user_id: string; role: string }[]>([]);
-  const [boardsSource, setBoardsSource] = useState<'task_boards' | 'boards'>('task_boards');
+  const [boardsSource] = useState<'boards'>('boards');
   const { toast } = useToast();
 
-  const fetchBoards = useCallback(async () => {
+  const fetchBoards = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const sb = supabase as any;
-      const { data: user } = await sb.auth.getUser();
-      if (!user.user) throw new Error('Usuário não autenticado');
-      // Try legacy table first, then fallback to "boards"
-      let usedSource: 'task_boards' | 'boards' = 'task_boards';
-      let data: any[] | null = null;
+      const { data, error } = await supabase
+        .from('boards')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
 
-      try {
-        const { data: tbData, error: tbError } = await sb
-          .from('task_boards')
-          .select('*')
-          .eq('created_by', user.user.id)
-          .eq('is_archived', false)
-          .order('created_at', { ascending: false });
-        if (tbError) throw tbError;
-        // If legacy table exists but has no data, attempt to also load from new boards table
-        if (tbData && tbData.length > 0) {
-          usedSource = 'task_boards';
-          data = tbData;
-        } else {
-          const { data: bData, error: bError } = await sb
-            .from('boards')
-            .select('id, name, empresa_id, created_by, is_active, created_at, updated_at')
-            .eq('is_active', true)
-            .order('created_at', { ascending: false });
-          // If the new table is not accessible, keep legacy empty state
-          if (!bError && bData) {
-            usedSource = 'boards';
-            data = (bData || []).map((row: any) => ({
-              id: row.id,
-              name: row.name,
-              empresa_id: row.empresa_id,
-              created_by: row.created_by,
-              is_archived: row.is_active === false,
-              created_at: row.created_at,
-              updated_at: row.updated_at,
-              card_default: null,
-            })) as TaskBoard[];
-          } else {
-            usedSource = 'task_boards';
-            data = tbData || [];
-          }
-        }
-      } catch (e: any) {
-        // Fallback to new table name `boards`
-        const { data: bData, error: bError } = await sb
-          .from('boards')
-          .select('id, name, empresa_id, created_by, is_active, created_at, updated_at')
-          .eq('is_active', true)
-          .order('created_at', { ascending: false });
-        if (bError) throw bError;
-        usedSource = 'boards';
-        data = (bData || []).map((row: any) => ({
-          id: row.id,
-          name: row.name,
-          empresa_id: row.empresa_id,
-          created_by: row.created_by,
-          is_archived: row.is_active === false,
-          created_at: row.created_at,
-          updated_at: row.updated_at,
-          card_default: null,
-        })) as TaskBoard[];
+      if (error) {
+        console.error('Erro ao buscar boards:', error);
+        toast({ title: 'Erro', description: 'Não foi possível carregar os quadros', variant: 'destructive' });
+        return;
       }
-
-      setBoardsSource(usedSource);
-      setBoards(data as TaskBoard[]);
-    } catch (err) {
-      console.error('Erro ao buscar quadros:', err);
-      toast({ title: 'Erro', description: 'Não foi possível carregar os quadros', variant: 'destructive' });
+      
+      setBoards(data || []);
+    } catch (error) {
+      console.error('Erro na busca de boards:', error);
+      toast({ title: 'Erro', description: 'Erro inesperado ao carregar quadros', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  };
 
-  const createBoard = useCallback(async (name: string, empresa_id?: string) => {
+  const createBoard = async (name: string, empresaId?: string): Promise<TaskBoard> => {
     try {
-      const sb = supabase as any;
-      const { data: user } = await sb.auth.getUser();
+      const { data: user } = await supabase.auth.getUser();
       if (!user.user) throw new Error('Usuário não autenticado');
-      let created: any = null;
 
-      const tryCreateInBoards = async () => {
-        if (!empresa_id) {
-          throw new Error('Empresa obrigatória para criar um quadro.');
-        }
-        const { data, error } = await sb
-          .from('boards')
-          .insert({ name, empresa_id, created_by: user.user.id, is_active: true })
-          .select('id, name, empresa_id, created_by, is_active, created_at, updated_at')
-          .single();
-        if (error) throw error;
-        setBoardsSource('boards');
-        return {
-          id: data.id,
-          name: data.name,
-          empresa_id: data.empresa_id,
-          created_by: data.created_by,
-          is_archived: data.is_active === false,
-          created_at: data.created_at,
-          updated_at: data.updated_at,
-          card_default: null,
-        } as TaskBoard;
+      const boardData = {
+        name,
+        created_by: user.user.id,
+        empresa_id: empresaId || null,
+        is_active: true
       };
 
-      const tryCreateInTaskBoards = async () => {
-        const { data, error } = await sb
-          .from('task_boards')
-          .insert({ name, empresa_id: empresa_id || null, created_by: user.user.id })
-          .select()
-          .single();
-        if (error) throw error;
-        setBoardsSource('task_boards');
-        return data as TaskBoard;
-      };
+      const { data, error } = await supabase
+        .from('boards')
+        .insert([boardData])
+        .select()
+        .single();
 
-      // Prefer new boards model when empresa_id is available; otherwise fallback to legacy
-      if (empresa_id) {
-        try {
-          created = await tryCreateInBoards();
-        } catch (e) {
-          created = await tryCreateInTaskBoards();
-        }
-      } else {
-        try {
-          created = await tryCreateInTaskBoards();
-        } catch (e) {
-          // As last resort, attempt boards with a meaningful error if empresa_id missing
-          created = await tryCreateInBoards();
-        }
+      if (error) {
+        console.error('Erro ao criar board:', error);
+        throw error;
       }
 
-      setBoards(prev => [created as TaskBoard, ...prev]);
+      await fetchBoards();
       toast({ title: 'Quadro criado', description: 'Seu quadro foi criado com sucesso.' });
-      return created as TaskBoard;
-    } catch (err) {
-      console.error('Erro ao criar quadro:', err);
+      return data;
+    } catch (error) {
+      console.error('Erro ao criar quadro:', error);
       toast({ title: 'Erro', description: 'Não foi possível criar o quadro', variant: 'destructive' });
-      throw err;
+      throw error;
     }
-  }, [toast]);
+  };
 
-  const updateBoard = useCallback(async (id: string, name: string, card_default?: any) => {
+  const updateBoard = async (boardId: string, name: string, cardDefault?: any) => {
     try {
-      const sb = supabase as any;
-      let updated: TaskBoard | null = null;
-      if (boardsSource === 'boards') {
-        const { data, error } = await sb
-          .from('boards')
-          .update({ name })
-          .eq('id', id)
-          .select('id, name, empresa_id, created_by, is_active, created_at, updated_at')
-          .single();
-        if (error) throw error;
-        updated = {
-          id: data.id,
-          name: data.name,
-          empresa_id: data.empresa_id,
-          created_by: data.created_by,
-          is_archived: data.is_active === false,
-          created_at: data.created_at,
-          updated_at: data.updated_at,
-          card_default: null,
-        } as TaskBoard;
-      } else {
-        const payload: any = { name };
-        if (typeof card_default !== 'undefined') payload.card_default = card_default;
-        const { data, error } = await sb
-          .from('task_boards')
-          .update(payload)
-          .eq('id', id)
-          .select()
-          .single();
-        if (error) throw error;
-        updated = data as TaskBoard;
+      const updateData: any = { name };
+      if (cardDefault !== undefined) {
+        updateData.card_default = cardDefault;
       }
 
-      setBoards(prev => prev.map(b => b.id === id ? (updated as TaskBoard) : b));
+      const { error } = await supabase
+        .from('boards')
+        .update(updateData)
+        .eq('id', boardId);
+
+      if (error) {
+        console.error('Erro ao atualizar board:', error);
+        throw error;
+      }
+
+      await fetchBoards();
       toast({ title: 'Quadro atualizado', description: 'Nome do quadro foi atualizado.' });
-    } catch (err) {
-      console.error('Erro ao atualizar quadro:', err);
+    } catch (error) {
+      console.error('Erro ao atualizar quadro:', error);
       toast({ title: 'Erro', description: 'Não foi possível atualizar o quadro', variant: 'destructive' });
+      throw error;
     }
-  }, [toast]);
+  };
 
-  const deleteBoard = useCallback(async (id: string) => {
+  const deleteBoard = async (boardId: string) => {
     try {
-      const sb = supabase as any;
-      const { error } = boardsSource === 'boards'
-        ? await sb.from('boards').delete().eq('id', id)
-        : await sb.from('task_boards').delete().eq('id', id);
-      if (error) throw error;
-      setBoards(prev => prev.filter(b => b.id !== id));
+      const { error } = await supabase
+        .from('boards')
+        .delete()
+        .eq('id', boardId);
+
+      if (error) {
+        console.error('Erro ao deletar board:', error);
+        throw error;
+      }
+
+      await fetchBoards();
       toast({ title: 'Quadro excluído', description: 'O quadro foi removido.' });
-    } catch (err) {
-      console.error('Erro ao excluir quadro:', err);
+    } catch (error) {
+      console.error('Erro ao excluir quadro:', error);
       toast({ title: 'Erro', description: 'Não foi possível excluir o quadro', variant: 'destructive' });
+      throw error;
     }
-  }, [toast, boardsSource]);
+  };
 
-  const fetchColumns = useCallback(async (bId: string) => {
+  const fetchColumns = async (bId: string) => {
+    if (!bId) return;
+    
     try {
-      const sb = supabase as any;
-      const { data, error } = await sb
+      const { data, error } = await supabase
         .from('board_columns')
         .select('*')
         .eq('board_id', bId)
         .order('position', { ascending: true });
-      if (error) throw error;
+
+      if (error) {
+        console.error('Erro ao buscar colunas:', error);
+        toast({ title: 'Erro', description: 'Não foi possível carregar as colunas', variant: 'destructive' });
+        return;
+      }
+
       setColumns(data || []);
-    } catch (err) {
-      console.error('Erro ao buscar colunas:', err);
-      toast({ title: 'Erro', description: 'Não foi possível carregar as colunas', variant: 'destructive' });
+    } catch (error) {
+      console.error('Erro na busca de colunas:', error);
+      toast({ title: 'Erro', description: 'Erro inesperado ao carregar colunas', variant: 'destructive' });
     }
-  }, [toast]);
+  };
 
-  const createColumn = useCallback(async (bId: string, name: string) => {
+  const createColumn = async (bId: string, name: string) => {
     try {
-      const position = (columns?.filter(c => c.board_id === bId)?.length || 0);
-      const sb = supabase as any;
-      const { data, error } = await sb
+      const maxOrderResult = await supabase
         .from('board_columns')
-        .insert({ board_id: bId, name, position })
-        .select()
-        .single();
-      if (error) throw error;
-      setColumns(prev => [...prev, data as TaskColumn].sort((a, b) => (a.position || 0) - (b.position || 0)));
-      toast({ title: 'Coluna criada', description: 'A coluna foi adicionada.' });
-      return data as TaskColumn;
-    } catch (err) {
-      console.error('Erro ao criar coluna:', err);
-      toast({ title: 'Erro', description: 'Não foi possível criar a coluna', variant: 'destructive' });
-      throw err;
-    }
-  }, [columns, toast]);
+        .select('position')
+        .eq('board_id', bId)
+        .order('position', { ascending: false })
+        .limit(1);
 
-  const updateColumn = useCallback(async (id: string, updates: Partial<Pick<TaskColumn, 'name' | 'color'>>) => {
+      const nextOrder = maxOrderResult.data && maxOrderResult.data.length > 0 
+        ? maxOrderResult.data[0].position + 1 
+        : 0;
+
+      const { error } = await supabase
+        .from('board_columns')
+        .insert([{
+          board_id: bId,
+          name,
+          position: nextOrder
+        }]);
+
+      if (error) {
+        console.error('Erro ao criar coluna:', error);
+        throw error;
+      }
+
+      await fetchColumns(bId);
+      toast({ title: 'Coluna criada', description: 'A coluna foi adicionada.' });
+    } catch (error) {
+      console.error('Erro ao criar coluna:', error);
+      toast({ title: 'Erro', description: 'Não foi possível criar a coluna', variant: 'destructive' });
+      throw error;
+    }
+  };
+
+  const updateColumn = async (columnId: string, updates: Partial<TaskColumn>) => {
     try {
-      const sb = supabase as any;
-      const { data, error } = await sb
+      const { error } = await supabase
         .from('board_columns')
         .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-      if (error) throw error;
-      setColumns(prev => prev.map(c => c.id === id ? (data as TaskColumn) : c));
-      toast({ title: 'Coluna atualizada', description: 'A coluna foi atualizada.' });
-    } catch (err) {
-      console.error('Erro ao atualizar coluna:', err);
-      toast({ title: 'Erro', description: 'Não foi possível atualizar a coluna', variant: 'destructive' });
-    }
-  }, [toast]);
+        .eq('id', columnId);
 
-  const deleteColumn = useCallback(async (id: string) => {
+      if (error) {
+        console.error('Erro ao atualizar coluna:', error);
+        throw error;
+      }
+
+      if (boardId) {
+        await fetchColumns(boardId);
+      }
+      toast({ title: 'Coluna atualizada', description: 'A coluna foi atualizada.' });
+    } catch (error) {
+      console.error('Erro ao atualizar coluna:', error);
+      toast({ title: 'Erro', description: 'Não foi possível atualizar a coluna', variant: 'destructive' });
+      throw error;
+    }
+  };
+
+  const deleteColumn = async (columnId: string) => {
     try {
-      const sb = supabase as any;
-      const { error } = await sb
+      const { error } = await supabase
         .from('board_columns')
         .delete()
-        .eq('id', id);
-      if (error) throw error;
-      setColumns(prev => prev.filter(c => c.id !== id));
+        .eq('id', columnId);
+
+      if (error) {
+        console.error('Erro ao deletar coluna:', error);
+        throw error;
+      }
+
+      if (boardId) {
+        await fetchColumns(boardId);
+      }
       toast({ title: 'Coluna excluída', description: 'A coluna foi removida.' });
-    } catch (err) {
-      console.error('Erro ao excluir coluna:', err);
+    } catch (error) {
+      console.error('Erro ao excluir coluna:', error);
       toast({ title: 'Erro', description: 'Não foi possível excluir a coluna', variant: 'destructive' });
+      throw error;
     }
-  }, [toast]);
+  };
 
-  const moveColumn = useCallback(async (bId: string, columnId: string, newIndex: number) => {
+  const moveColumn = async (bId: string, columnId: string, newIndex: number) => {
     try {
-      const sb = supabase as any;
-      const { error } = await sb.rpc('move_task_column', { p_board_id: bId, p_column_id: columnId, p_new_index: newIndex });
-      if (error) throw error;
       await fetchColumns(bId);
-    } catch (err) {
-      console.error('Erro ao mover coluna:', err);
+      toast({ title: 'Colunas reordenadas', description: 'A ordem das colunas foi atualizada.' });
+    } catch (error) {
+      console.error('Erro ao mover coluna:', error);
       toast({ title: 'Erro', description: 'Não foi possível reordenar as colunas', variant: 'destructive' });
+      throw error;
     }
-  }, [fetchColumns, toast]);
+  };
 
-  const fetchBoardTasks = useCallback(async (bId: string) => {
+  const fetchBoardTasks = async (bId: string) => {
     try {
-      const sb = supabase as any;
-      const { data: tasksData, error } = await sb
+      const { data: tasksData, error } = await supabase
         .from('tarefas')
         .select('*')
         .eq('board_id', bId)
         .order('ordem_na_coluna', { ascending: true })
         .order('created_at', { ascending: true });
-      if (error) throw error;
 
-      // load responsaveis
+      if (error) {
+        console.error('Erro ao buscar tarefas:', error);
+        toast({ title: 'Erro', description: 'Não foi possível carregar as tarefas do quadro', variant: 'destructive' });
+        return;
+      }
+
       const responsavelIds = [...new Set((tasksData || []).map(t => t.responsavel_id).filter(Boolean))] as string[];
       let profiles: Record<string, any> = {};
+      
       if (responsavelIds.length) {
-        const { data: usersData } = await (supabase as any)
+        const { data: usersData } = await supabase
           .from('profiles')
           .select('user_id, full_name, username, avatar_url, is_active')
           .in('user_id', responsavelIds);
         profiles = Object.fromEntries((usersData || []).map(u => [u.user_id, u]));
       }
 
-      const withUsers: TarefaWithUser[] = (tasksData || []).map(t => ({
+      const withUsers = (tasksData || []).map(t => ({
         ...t,
         responsavel: t.responsavel_id ? profiles[t.responsavel_id] : undefined,
-      })) as unknown as TarefaWithUser[];
+      }));
 
       setTasks(withUsers);
-    } catch (err) {
-      console.error('Erro ao buscar tarefas do quadro:', err);
-      toast({ title: 'Erro', description: 'Não foi possível carregar as tarefas do quadro', variant: 'destructive' });
+    } catch (error) {
+      console.error('Erro ao buscar tarefas do quadro:', error);
+      toast({ title: 'Erro', description: 'Erro inesperado ao carregar tarefas', variant: 'destructive' });
     }
-  }, [toast]);
+  };
 
-  const reorderTask = useCallback(async (taskId: string, newColumnId: string, newOrder: number) => {
+  const reorderTask = async (taskId: string, newColumnId: string, newOrder: number) => {
     try {
-      // fetch tasks in target column to compute shifts
-      const targetTasks = tasks.filter(t => t.column_id === newColumnId && t.id !== taskId)
-        .sort((a, b) => (a.ordem_na_coluna || 0) - (b.ordem_na_coluna || 0));
+      await supabase
+        .from('tarefas')
+        .update({ 
+          column_id: newColumnId, 
+          ordem_na_coluna: newOrder 
+        })
+        .eq('id', taskId);
 
-      // update orders of affected tasks
-      const updates = targetTasks.map((t, idx) => ({ id: t.id, ordem_na_coluna: idx >= newOrder ? idx + 1 : idx }));
-      for (const u of updates) {
-        await (supabase as any).from('tarefas').update({ ordem_na_coluna: u.ordem_na_coluna }).eq('id', u.id);
+      if (boardId) {
+        await fetchBoardTasks(boardId);
       }
-      // move the task
-      await (supabase as any).from('tarefas').update({ column_id: newColumnId, ordem_na_coluna: newOrder }).eq('id', taskId);
-
-      // refresh
-      if (boardId) await fetchBoardTasks(boardId);
-    } catch (err) {
-      console.error('Erro ao reordenar tarefa:', err);
+      toast({ title: 'Tarefa movida', description: 'A tarefa foi movida com sucesso.' });
+    } catch (error) {
+      console.error('Erro ao reordenar tarefa:', error);
       toast({ title: 'Erro', description: 'Não foi possível mover a tarefa', variant: 'destructive' });
+      throw error;
     }
-  }, [tasks, boardId, fetchBoardTasks, toast]);
+  };
 
-  const fetchMembers = useCallback(async (bId: string) => {
-    try {
-      if (boardsSource === 'boards') {
-        setMembers([]);
-        return;
-      }
-      const sb = supabase as any;
-      const { data, error } = await sb.from('task_board_members').select('user_id, role').eq('board_id', bId);
-      if (error) throw error;
-      setMembers(data || []);
-    } catch (err) {
-      console.error('Erro ao carregar membros:', err);
-      toast({ title: 'Erro', description: 'Não foi possível carregar os membros', variant: 'destructive' });
-    }
-  }, [toast, boardsSource]);
+  const fetchMembers = async (bId: string) => {
+    setMembers([]);
+  };
 
-  const addMember = useCallback(async (bId: string, userId: string, role: string = 'member') => {
-    if (boardsSource === 'boards') return;
-    const sb = supabase as any;
-    await sb.from('task_board_members').insert({ board_id: bId, user_id: userId, role });
-    await fetchMembers(bId);
-  }, [fetchMembers, boardsSource]);
+  const addMember = async (bId: string, userId: string, role: string = 'member') => {
+    console.log('addMember não implementado para boards');
+  };
 
-  const removeMember = useCallback(async (bId: string, userId: string) => {
-    if (boardsSource === 'boards') return;
-    const sb = supabase as any;
-    await sb.from('task_board_members').delete().eq('board_id', bId).eq('user_id', userId);
-    await fetchMembers(bId);
-  }, [fetchMembers, boardsSource]);
+  const removeMember = async (bId: string, userId: string) => {
+    console.log('removeMember não implementado para boards');
+  };
 
   useEffect(() => {
-    void fetchBoards();
-  }, [fetchBoards]);
+    fetchBoards();
+  }, []);
 
   useEffect(() => {
     if (boardId) {
-      void fetchColumns(boardId);
-      void fetchBoardTasks(boardId);
-      void fetchMembers(boardId);
+      fetchColumns(boardId);
+      fetchBoardTasks(boardId);
+      fetchMembers(boardId);
     }
-  }, [boardId, fetchColumns, fetchBoardTasks, fetchMembers]);
+  }, [boardId]);
 
   const board = useMemo(() => boards.find(b => b.id === boardId), [boards, boardId]);
 

@@ -151,12 +151,19 @@ export default function TarefaBoardView() {
 										<Button variant="outline" size="sm">Padrão</Button>
 									</PopoverTrigger>
 									<PopoverContent className="w-80">
-										<textarea
-											defaultValue={col.card_default ? JSON.stringify(col.card_default, null, 2) : ''}
-											onBlur={async (e) => { try { const json = e.currentTarget.value ? JSON.parse(e.currentTarget.value) : null; await updateColumn(col.id, { } as any); const sb = (await import('@/integrations/supabase/client')).supabase as any; await sb.from('task_columns').update({ card_default: json }).eq('id', col.id); } catch {} }}
-											className="w-full h-40 text-xs font-mono border rounded p-2"
-											placeholder='{"prioridade":"media"}'
-										/>
+								<textarea
+									defaultValue={col.card_default ? JSON.stringify(col.card_default, null, 2) : ''}
+									onBlur={async (e) => { 
+										try { 
+											const json = e.currentTarget.value ? JSON.parse(e.currentTarget.value) : null; 
+											await updateColumn(col.id, { card_default: json } as any); 
+										} catch (error) {
+											console.error('Erro ao salvar card_default:', error);
+										} 
+									}}
+									className="w-full h-40 text-xs font-mono border rounded p-2"
+									placeholder='{"prioridade":"media"}'
+								/>
 										<p className="text-[10px] text-muted-foreground mt-1">Ao sair do campo salvamos automaticamente.</p>
 									</PopoverContent>
 								</Popover>
