@@ -3,6 +3,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Logo } from "@/components/ui/logo";
 import { FloatingTaskButton } from "@/components/tarefas/FloatingTaskButton";
+import { OptionsMenu } from "@/components/OptionsMenu";
 import { useTarefasData } from "@/hooks/useTarefasDataNew";
 
 const AppLayout: React.FC = () => {
@@ -57,7 +58,7 @@ const AppLayout: React.FC = () => {
             <Logo className="text-primary" />
           </div>
           <div className="flex items-center gap-3 text-sm">
-            <span className="text-muted-foreground">Sistema Aberto</span>
+            <OptionsMenu />
           </div>
         </header>
         <div className="p-2 md:p-4">
