@@ -121,10 +121,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             if (event === 'SIGNED_IN') {
               await updateLastLogin();
               await logActivity('login', { user_id: session.user.id });
-              // Start timesheet entry for this session
-              try {
-                await supabase.from('user_timesheets').insert({ user_id: session.user.id });
-              } catch (_) {}
+              // Timesheet funcionalidade desabilitada temporariamente
+              // try {
+              //   await supabase.from('user_timesheets').insert({ user_id: session.user.id });
+              // } catch (_) {}
               toast({
                 title: 'Login realizado com sucesso',
                 description: `Bem-vindo(a), ${profileData?.full_name || session.user.email}!`
@@ -264,13 +264,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const currentUserId = user?.id;
       // Close open timesheet before sign out
       if (currentUserId) {
-        try {
-          await supabase
-            .from('user_timesheets')
-            .update({ ended_at: new Date().toISOString() })
-            .eq('user_id', currentUserId)
-            .is('ended_at', null);
-        } catch (_) {}
+        // Timesheet funcionalidade desabilitada temporariamente
+        // try {
+        //   await supabase
+        //     .from('user_timesheets')
+        //     .update({ ended_at: new Date().toISOString() })
+        //     .eq('user_id', currentUserId)
+        //     .is('ended_at', null);
+        // } catch (_) {}
       }
       const { error } = await supabase.auth.signOut();
       if (!error && currentUserId) {

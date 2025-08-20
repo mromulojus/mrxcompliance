@@ -50,7 +50,7 @@ export default function Indicadores() {
         const [{ data: tData }, { data: pData }, { data: bData }] = await Promise.all([
           supabase.from('tarefas').select('*'),
           supabase.from('profiles').select('user_id, full_name, username'),
-          supabase.from('task_boards').select('id, name'),
+          supabase.from('boards').select('id, name'),
         ]);
 
         setTarefas(tData || []);

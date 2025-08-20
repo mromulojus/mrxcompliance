@@ -1,361 +1,361 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { supabase } from "@/integrations/supabase/client";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, Legend, Rectangle, XAxis, YAxis } from "recharts";
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ArrowLeft, Activity, Clock, MapPin, Phone, Mail, Building, Calendar, Settings } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
-type DatabaseRole = "operacional" | "empresarial" | "administrador" | "superuser";
-
-type Profile = {
+interface UserProfile {
   user_id: string;
   username: string;
   full_name: string | null;
-  role: DatabaseRole;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string | null;
+  avatar_url: string | null;
+  role: string;
   empresa_ids: string[] | null;
-  avatar_url?: string | null;
-};
+  created_at: string;
+  updated_at: string;
+  is_active: boolean;
+  last_login: string | null;
+  phone: string | null;
+  department: string | null;
+}
 
-type Empresa = { id: string; nome: string };
+interface UserActivity {
+  id: string;
+  action: string;
+  created_at: string;
+  meta: any;
+}
 
-const roleLabels: Record<DatabaseRole, string> = {
-  operacional: "Operacional",
-  empresarial: "Empresarial",
-  administrador: "Administrador",
-  superuser: "Superuser"
-};
+interface SimpleStats {
+  totalSessions: number;
+  totalDuration: number;
+  averageSession: number;
+  lastActive: string | null;
+}
 
-const UserDetails: React.FC = () => {
+export default function UserDetails() {
+  const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
-  const { userId } = useParams();
+  const { toast } = useToast();
+  
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [empresas, setEmpresas] = useState<Empresa[]>([]);
-  const [loginWeekCount, setLoginWeekCount] = useState(0);
-  const [loginMonthCount, setLoginMonthCount] = useState(0);
-  const [timeWeekHours, setTimeWeekHours] = useState(0);
-  const [timeMonthHours, setTimeMonthHours] = useState(0);
-  const [tasksDoneWeek, setTasksDoneWeek] = useState(0);
-  const [tasksDoneMonth, setTasksDoneMonth] = useState(0);
-  const [weeklyActivitySeries, setWeeklyActivitySeries] = useState<{ day: string; logins: number; horas: number; concluidas: number }[]>([]);
-  const [liveSessionSeconds, setLiveSessionSeconds] = useState<number>(0);
+  const [stats, setStats] = useState<SimpleStats>({
+    totalSessions: 0,
+    totalDuration: 0,
+    averageSession: 0,
+    lastActive: null
+  });
+  const [activities, setActivities] = useState<UserActivity[]>([]);
+  const [liveSessionSeconds, setLiveSessionSeconds] = useState(0);
 
   useEffect(() => {
-    document.title = "Detalhes do Usuário - MRx Compliance";
-  }, []);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!userId) return;
-      setLoading(true);
-      try {
-        const { data: prof, error } = await supabase
-          .from("profiles")
-          .select("user_id, username, full_name, role, is_active, created_at, updated_at, empresa_ids, avatar_url")
-          .eq("user_id", userId)
-          .maybeSingle();
-
-        if (error) throw error;
-
-        setProfile(prof as unknown as Profile);
-
-        const ids = (prof?.empresa_ids as string[] | null) || [];
-        if (ids.length > 0) {
-          const { data: empData } = await supabase
-            .from("empresas")
-            .select("id, nome")
-            .in("id", ids);
-          setEmpresas(empData || []);
-        } else {
-          setEmpresas([]);
-        }
-        // Fetch metrics: activity_logs for login/logout; tarefas for completed tasks
-        const now = new Date();
-        const startOfWeek = new Date(now);
-        startOfWeek.setDate(now.getDate() - 7);
-        const startOfMonth = new Date(now);
-        startOfMonth.setDate(now.getDate() - 30);
-
-        // Logins in last week/month
-        const [loginsWeekRes, loginsMonthRes] = await Promise.all([
-          supabase.from('activity_logs').select('id, action, created_at').gte('created_at', startOfWeek.toISOString()).eq('action', 'login').eq('user_id', userId),
-          supabase.from('activity_logs').select('id, action, created_at').gte('created_at', startOfMonth.toISOString()).eq('action', 'login').eq('user_id', userId),
-        ]);
-        setLoginWeekCount(loginsWeekRes.data?.length || 0);
-        setLoginMonthCount(loginsMonthRes.data?.length || 0);
-
-        // Approx time in system: pair login-logout events and sum session durations
-        const { data: actsMonth } = await supabase.from('activity_logs')
-          .select('action, created_at')
-          .gte('created_at', startOfMonth.toISOString())
-          .or('action.eq.login,action.eq.logout')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: true });
-        const sessions: { start: Date; end?: Date }[] = [];
-        (actsMonth || []).forEach((a) => {
-          if (a.action === 'login') sessions.push({ start: new Date(a.created_at) });
-          if (a.action === 'logout') {
-            const lastOpen = [...sessions].reverse().find((s) => !s.end);
-            if (lastOpen) lastOpen.end = new Date(a.created_at);
-          }
-        });
-        const totalMsMonth = sessions.reduce((acc, s) => acc + Math.max(0, (s.end?.getTime() || now.getTime()) - s.start.getTime()), 0);
-        const totalHoursMonth = totalMsMonth / 36e5;
-        setTimeMonthHours(Number(totalHoursMonth.toFixed(2)));
-        const totalMsWeek = sessions
-          .filter((s) => s.start >= startOfWeek)
-          .reduce((acc, s) => acc + Math.max(0, (s.end?.getTime() || now.getTime()) - s.start.getTime()), 0);
-        setTimeWeekHours(Number((totalMsWeek / 36e5).toFixed(2)));
-
-        // Tasks completed by this user (responsavel_id) in last week/month
-        const [doneWeek, doneMonth] = await Promise.all([
-          supabase.from('tarefas').select('id').eq('responsavel_id', userId).eq('status', 'concluido').gte('data_conclusao', startOfWeek.toISOString()),
-          supabase.from('tarefas').select('id').eq('responsavel_id', userId).eq('status', 'concluido').gte('data_conclusao', startOfMonth.toISOString()),
-        ]);
-        setTasksDoneWeek(doneWeek.data?.length || 0);
-        setTasksDoneMonth(doneMonth.data?.length || 0);
-
-        // Weekly series (last 7 days)
-        const seriesDays = Array.from({ length: 7 }).map((_, i) => {
-          const d = new Date(startOfWeek);
-          d.setDate(startOfWeek.getDate() + i);
-          return d;
-        });
-        const loginsByDay: Record<string, number> = {};
-        (loginsWeekRes.data || []).forEach((l) => {
-          const k = new Date(l.created_at).toISOString().slice(0, 10);
-          loginsByDay[k] = (loginsByDay[k] || 0) + 1;
-        });
-        const concluidasWeek = await supabase.from('tarefas').select('id, data_conclusao')
-          .eq('responsavel_id', userId).eq('status', 'concluido').gte('data_conclusao', startOfWeek.toISOString());
-        const concluidasByDay: Record<string, number> = {};
-        (concluidasWeek.data || []).forEach((t) => {
-          const k = (t.data_conclusao as string).slice(0, 10);
-          concluidasByDay[k] = (concluidasByDay[k] || 0) + 1;
-        });
-        const weeklySeries = seriesDays.map((d) => {
-          const k = d.toISOString().slice(0, 10);
-          return {
-            day: k,
-            logins: loginsByDay[k] || 0,
-            horas: 0, // detailed per-day session breakdown could be added later
-            concluidas: concluidasByDay[k] || 0,
-          };
-        });
-        setWeeklyActivitySeries(weeklySeries);
-
-        // Live session time: check open timesheet entry
-        const { data: openTs } = await supabase
-          .from('user_timesheets')
-          .select('id, started_at')
-          .eq('user_id', userId)
-          .is('ended_at', null)
-          .order('started_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        if (openTs?.started_at) {
-          const start = new Date(openTs.started_at).getTime();
-          setLiveSessionSeconds(Math.max(0, Math.floor((Date.now() - start) / 1000)));
-        } else {
-          setLiveSessionSeconds(0);
-        }
-      } catch (e) {
-        console.error("Erro ao carregar usuário:", e);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    if (userId) {
+      loadUserData();
+    }
   }, [userId]);
 
-  // Tick live timer each second if there is an open session
-  useEffect(() => {
-    if (!liveSessionSeconds) return;
-    const i = setInterval(() => {
-      setLiveSessionSeconds((s) => s + 1);
-    }, 1000);
-    return () => clearInterval(i);
-  }, [liveSessionSeconds]);
+  const loadUserData = async () => {
+    if (!userId) return;
+    
+    try {
+      setLoading(true);
+      
+      // Load user profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+      
+      if (profileError) throw profileError;
+      setProfile(profileData);
 
-  const empresasResumo = useMemo(() => {
-    if (!profile) return "";
-    if (!profile.empresa_ids || profile.empresa_ids.length === 0) return "Sem vínculo";
-    if (empresas.length === 0) return `${profile.empresa_ids.length} empresas`;
-    return empresas.map((e) => e.nome).join(", ");
-  }, [profile, empresas]);
+      // Load activities
+      const { data: activitiesData } = await supabase
+        .from('activity_logs')
+        .select('*')
+        .eq('by_user', profileData.username)
+        .order('created_at', { ascending: false })
+        .limit(10);
+      
+      setActivities(activitiesData || []);
+
+      // Simple stats calculation (no timesheet functionality)
+      const simpleStats: SimpleStats = {
+        totalSessions: activitiesData?.filter(a => a.action === 'login').length || 0,
+        totalDuration: 0, // Disabled functionality
+        averageSession: 0, // Disabled functionality
+        lastActive: profileData.last_login
+      };
+      
+      setStats(simpleStats);
+      setLiveSessionSeconds(0); // Disabled functionality
+      
+    } catch (error) {
+      console.error('Erro ao carregar dados do usuário:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar os dados do usuário',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleStatus = async () => {
+    if (!profile) return;
+    
+    try {
+      const newStatus = !profile.is_active;
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_active: newStatus })
+        .eq('user_id', userId);
+      
+      if (error) throw error;
+      
+      setProfile({ ...profile, is_active: newStatus });
+      
+      toast({
+        title: 'Status atualizado',
+        description: `Usuário ${newStatus ? 'ativado' : 'desativado'} com sucesso`
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível atualizar o status do usuário',
+        variant: 'destructive'
+      });
+    }
+  };
 
   if (loading) {
     return (
-      <main>
-        <div className="py-16 text-center text-muted-foreground">Carregando...</div>
-      </main>
+      <div className="flex items-center justify-center h-96">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
     );
   }
 
   if (!profile) {
     return (
-      <main>
-        <div className="py-16 text-center">
-          <p className="mb-4">Usuário não encontrado.</p>
-          <Button onClick={() => navigate(-1)}>Voltar</Button>
-        </div>
-      </main>
+      <div className="text-center py-12">
+        <h2 className="text-2xl font-bold mb-4">Usuário não encontrado</h2>
+        <Button onClick={() => navigate('/admin/users')}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Voltar para usuários
+        </Button>
+      </div>
     );
   }
 
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'Nunca';
+    return new Date(dateString).toLocaleString('pt-BR');
+  };
+
+  const formatDuration = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${hours}h ${minutes}m`;
+  };
+
+  const getRoleBadgeVariant = (role: string) => {
+    switch (role) {
+      case 'superuser':
+        return 'destructive';
+      case 'administrador':
+        return 'default';
+      case 'empresarial':
+        return 'secondary';
+      default:
+        return 'outline';
+    }
+  };
+
   return (
-    <main>
-      <div className="mb-4">
-        <Button variant="outline" onClick={() => navigate(-1)}>Voltar</Button>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button variant="outline" onClick={() => navigate('/admin/users')}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold">{profile.full_name || profile.username}</h1>
+            <p className="text-muted-foreground">Detalhes do usuário</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant={profile.is_active ? 'default' : 'secondary'}>
+            {profile.is_active ? 'Ativo' : 'Inativo'}
+          </Badge>
+          <Badge variant={getRoleBadgeVariant(profile.role)}>
+            {profile.role}
+          </Badge>
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="md:col-span-1">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Profile Card */}
+        <Card className="lg:col-span-1">
           <CardHeader>
-            <CardTitle>Usuário</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              Informações do Perfil
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <div className="flex items-center gap-4">
-              <Avatar className="h-12 w-12">
-                <AvatarImage src={profile.avatar_url || undefined} alt={profile.full_name ?? profile.username} />
+              <Avatar className="h-16 w-16">
+                <AvatarImage src={profile.avatar_url || undefined} />
                 <AvatarFallback>
-                  {profile.username?.slice(0, 2).toUpperCase()}
+                  {(profile.full_name || profile.username).slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <div className="text-lg font-semibold">
-                  {profile.full_name || profile.username}
-                </div>
-                <div className="text-sm text-muted-foreground">{profile.username}</div>
+                <h3 className="font-semibold">{profile.full_name || profile.username}</h3>
+                <p className="text-sm text-muted-foreground">@{profile.username}</p>
               </div>
             </div>
-            <div className="mt-4 flex items-center gap-2">
-              <Badge variant="secondary" className="uppercase">{roleLabels[profile.role]}</Badge>
-              <Badge variant={profile.is_active ? "default" : "destructive"}>
-                {profile.is_active ? "Ativo" : "Inativo"}
-              </Badge>
+
+            <div className="space-y-3">
+              {profile.phone && (
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4" />
+                  <span className="text-sm">{profile.phone}</span>
+                </div>
+              )}
+              
+              {profile.department && (
+                <div className="flex items-center gap-2">
+                  <Building className="h-4 w-4" />
+                  <span className="text-sm">{profile.department}</span>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                <span className="text-sm">Criado em {formatDate(profile.created_at)}</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Activity className="h-4 w-4" />
+                <span className="text-sm">Último login: {formatDate(profile.last_login)}</span>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t">
+              <Button 
+                variant={profile.is_active ? "destructive" : "default"}
+                onClick={handleToggleStatus}
+                className="w-full"
+              >
+                {profile.is_active ? 'Desativar usuário' : 'Ativar usuário'}
+              </Button>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle>Informações</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Campo</TableHead>
-                  <TableHead>Valor</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow>
-                  <TableCell>ID</TableCell>
-                  <TableCell className="font-mono">{profile.user_id}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>Nome</TableCell>
-                  <TableCell>{profile.full_name || "—"}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>Usuário</TableCell>
-                  <TableCell>{profile.username}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>Papel</TableCell>
-                  <TableCell className="uppercase">{roleLabels[profile.role]}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>Status</TableCell>
-                  <TableCell>{profile.is_active ? "Ativo" : "Inativo"}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>Empresas</TableCell>
-                  <TableCell>{empresasResumo}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>Criado em</TableCell>
-                  <TableCell>{new Date(profile.created_at).toLocaleString()}</TableCell>
-                </TableRow>
-                {profile.updated_at && (
-                  <TableRow>
-                    <TableCell>Atualizado em</TableCell>
-                    <TableCell>{new Date(profile.updated_at).toLocaleString()}</TableCell>
-                  </TableRow>
+        {/* Stats Cards */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Activity Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Total de Sessões</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalSessions}</div>
+                <p className="text-xs text-muted-foreground">logins registrados</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Tempo Total</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{formatDuration(stats.totalDuration)}</div>
+                <p className="text-xs text-muted-foreground">funcionalidade desabilitada</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Sessão Média</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{formatDuration(stats.averageSession)}</div>
+                <p className="text-xs text-muted-foreground">funcionalidade desabilitada</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Live Session */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Sessão Atual
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-4">
+                <div className="text-3xl font-bold mb-2">
+                  {formatDuration(liveSessionSeconds)}
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Funcionalidade de timesheet temporariamente desabilitada
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Recent Activities */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                Atividades Recentes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {activities.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Nenhuma atividade registrada
+                  </p>
+                ) : (
+                  activities.map((activity) => (
+                    <div key={activity.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                      <div>
+                        <p className="text-sm font-medium">{activity.action}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatDate(activity.created_at)}
+                        </p>
+                      </div>
+                      {activity.meta && (
+                        <Badge variant="outline" className="text-xs">
+                          {JSON.stringify(activity.meta).slice(0, 20)}...
+                        </Badge>
+                      )}
+                    </div>
+                  ))
                 )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-
-      <div className="mt-4 grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle>Logins</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-sm">Última semana: <span className="font-semibold">{loginWeekCount}</span></div>
-            <div className="text-sm">Últimos 30 dias: <span className="font-semibold">{loginMonthCount}</span></div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Tempo no Sistema</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-sm">Última semana: <span className="font-semibold">{timeWeekHours}h</span></div>
-            <div className="text-sm">Últimos 30 dias: <span className="font-semibold">{timeMonthHours}h</span></div>
-            <div className="text-sm mt-2">Sessão atual: <span className="font-semibold">{Math.floor(liveSessionSeconds/3600)}h {Math.floor((liveSessionSeconds%3600)/60)}m {liveSessionSeconds%60}s</span></div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Tarefas Concluídas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-sm">Última semana: <span className="font-semibold">{tasksDoneWeek}</span></div>
-            <div className="text-sm">Últimos 30 dias: <span className="font-semibold">{tasksDoneMonth}</span></div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="mt-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Atividade (últimos 7 dias)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer
-              config={{ logins: { label: 'Logins', color: 'hsl(var(--primary))' }, concluidas: { label: 'Concluídas', color: 'hsl(var(--success))' } }}
-              className="h-[260px]"
-            >
-              <BarChart data={weeklyActivitySeries}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="day" tickLine={false} axisLine={false} />
-                <YAxis allowDecimals={false} />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Legend />
-                <Bar dataKey="logins" fill="var(--color-logins)" radius={4} activeBar={<Rectangle fillOpacity={0.9} />} />
-                <Bar dataKey="concluidas" fill="var(--color-concluidas)" radius={4} activeBar={<Rectangle fillOpacity={0.9} />} />
-              </BarChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-      </div>
-    </main>
+    </div>
   );
-};
-
-export default UserDetails;
-
+}

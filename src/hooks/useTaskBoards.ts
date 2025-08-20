@@ -19,8 +19,10 @@ export interface TaskColumn {
   board_id: string;
   name: string;
   color?: string | null;
-  order_index: number;
+  order_index?: number;
+  position: number;
   created_at: string;
+  updated_at: string;
   card_default?: any | null;
 }
 
@@ -239,10 +241,10 @@ export function useTaskBoards(boardId?: string) {
     try {
       const sb = supabase as any;
       const { data, error } = await sb
-        .from('task_columns')
+        .from('board_columns')
         .select('*')
         .eq('board_id', bId)
-        .order('order_index', { ascending: true });
+        .order('position', { ascending: true });
       if (error) throw error;
       setColumns(data || []);
     } catch (err) {
@@ -253,15 +255,15 @@ export function useTaskBoards(boardId?: string) {
 
   const createColumn = useCallback(async (bId: string, name: string) => {
     try {
-      const order_index = (columns?.filter(c => c.board_id === bId)?.length || 0);
+      const position = (columns?.filter(c => c.board_id === bId)?.length || 0);
       const sb = supabase as any;
       const { data, error } = await sb
-        .from('task_columns')
-        .insert({ board_id: bId, name, order_index })
+        .from('board_columns')
+        .insert({ board_id: bId, name, position })
         .select()
         .single();
       if (error) throw error;
-      setColumns(prev => [...prev, data as TaskColumn].sort((a, b) => a.order_index - b.order_index));
+      setColumns(prev => [...prev, data as TaskColumn].sort((a, b) => (a.position || 0) - (b.position || 0)));
       toast({ title: 'Coluna criada', description: 'A coluna foi adicionada.' });
       return data as TaskColumn;
     } catch (err) {
@@ -275,7 +277,7 @@ export function useTaskBoards(boardId?: string) {
     try {
       const sb = supabase as any;
       const { data, error } = await sb
-        .from('task_columns')
+        .from('board_columns')
         .update(updates)
         .eq('id', id)
         .select()
@@ -293,7 +295,7 @@ export function useTaskBoards(boardId?: string) {
     try {
       const sb = supabase as any;
       const { error } = await sb
-        .from('task_columns')
+        .from('board_columns')
         .delete()
         .eq('id', id);
       if (error) throw error;
