@@ -2,15 +2,22 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = "https://pxpscjyeqmqqxzbttbep.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB4cHNjanllcW1xcXh6YnR0YmVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ2NzMzMzksImV4cCI6MjA3MDI0OTMzOX0.pXHV4HvzqVpiLLoJIgtZ6hL9kxuJIPzIZXNHMfu4Wzc";
+// Prefer environment variables; fall back to embedded values for local/dev only
+const envUrl = (import.meta as any)?.env?.VITE_SUPABASE_URL as string | undefined;
+const envAnonKey = (import.meta as any)?.env?.VITE_SUPABASE_ANON_KEY as string | undefined;
+
+const FALLBACK_SUPABASE_URL = "https://pxpscjyeqmqqxzbttbep.supabase.co";
+const FALLBACK_SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB4cHNjanllcW1xcXh6YnR0YmVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ2NzMzMzksImV4cCI6MjA3MDI0OTMzOX0.pXHV4HvzqVpiLLoJIgtZ6hL9kxuJIPzIZXNHMfu4Wzc";
+
+const SUPABASE_URL = envUrl || FALLBACK_SUPABASE_URL;
+const SUPABASE_PUBLISHABLE_KEY = envAnonKey || FALLBACK_SUPABASE_PUBLISHABLE_KEY;
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
-    storage: localStorage,
+    storage: typeof localStorage !== 'undefined' ? localStorage : undefined,
     persistSession: true,
     autoRefreshToken: true,
   }
