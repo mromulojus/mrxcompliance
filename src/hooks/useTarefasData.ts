@@ -60,7 +60,12 @@ export function useTarefasData() {
         return tarefaData;
       }
 
-      // Look for existing board
+      // First, ensure departmental boards exist for this company
+      await supabase.rpc('create_departmental_boards_for_empresa', {
+        p_empresa_id: tarefaData.empresa_id
+      });
+
+      // Now look for the board (it should exist now)
       const { data: existingBoard } = await supabase
         .from('boards')
         .select('*')
@@ -69,39 +74,19 @@ export function useTarefasData() {
         .eq('is_active', true)
         .single();
 
-      let boardId = existingBoard?.id;
-
-      // If no board exists, create it using the existing function
-      if (!boardId) {
-        await supabase.rpc('create_departmental_boards_for_empresa', {
-          p_empresa_id: tarefaData.empresa_id
-        });
-
-        // Fetch the created board
-        const { data: newBoard } = await supabase
-          .from('boards')
-          .select('*')
-          .eq('empresa_id', tarefaData.empresa_id)
-          .eq('name', targetBoardName)
-          .eq('is_active', true)
-          .single();
-
-        boardId = newBoard?.id;
-      }
-
-      if (boardId) {
+      if (existingBoard) {
         // Get first column (A Fazer)
         const { data: firstColumn } = await supabase
           .from('board_columns')
           .select('*')
-          .eq('board_id', boardId)
+          .eq('board_id', existingBoard.id)
           .order('position', { ascending: true })
           .limit(1)
           .single();
 
         return {
           ...tarefaData,
-          board_id: boardId,
+          board_id: existingBoard.id,
           column_id: firstColumn?.id
         };
       }

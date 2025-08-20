@@ -316,6 +316,37 @@ export function useTaskBoards(boardId?: string) {
     setMembers([]);
   };
 
+  // Ensure departmental boards exist for a company
+  const ensureDepartmentalBoards = async (empresaId: string) => {
+    try {
+      // Call the database function to create departmental boards
+      const { error } = await supabase.rpc('create_departmental_boards_for_empresa', {
+        p_empresa_id: empresaId
+      });
+
+      if (error) {
+        console.error('Erro ao criar quadros departamentais:', error);
+        throw error;
+      }
+
+      // Refresh the boards list
+      await fetchBoards();
+      
+      toast({ 
+        title: 'Quadros criados', 
+        description: 'Quadros departamentais foram criados para a empresa' 
+      });
+    } catch (error) {
+      console.error('Erro ao garantir quadros departamentais:', error);
+      toast({ 
+        title: 'Erro', 
+        description: 'Não foi possível criar os quadros departamentais', 
+        variant: 'destructive' 
+      });
+      throw error;
+    }
+  };
+
   const addMember = async (bId: string, userId: string, role: string = 'member') => {
     console.log('addMember não implementado para boards');
   };
@@ -360,5 +391,6 @@ export function useTaskBoards(boardId?: string) {
     addMember,
     removeMember,
     moveColumn,
+    ensureDepartmentalBoards,
   };
 }
