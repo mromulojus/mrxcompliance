@@ -19,7 +19,7 @@ interface FormColaboradorProps {
 
 export function FormColaborador({ colaborador, onSalvar, onCancelar }: FormColaboradorProps) {
   const { adicionarColaborador, editarColaborador } = useHR();
-  const { empresas } = useSupabaseData();
+  const { empresas, adicionarColaborador: addSupabase, editarColaborador: editSupabase } = useSupabaseData();
   
   const [formData, setFormData] = useState({
     nome: colaborador?.nome || '',
@@ -98,9 +98,6 @@ export function FormColaborador({ colaborador, onSalvar, onCancelar }: FormColab
         pix: formData.email
       };
 
-      // Salvar no Supabase
-      const { adicionarColaborador: addSupabase, editarColaborador: editSupabase } = useSupabaseData();
-      
       if (colaborador) {
         // await editSupabase(colaborador.id, dadosSupabase);
         editarColaborador(colaborador.id, {

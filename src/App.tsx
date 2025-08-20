@@ -7,17 +7,18 @@ import { AuthProvider } from "@/context/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { HRProvider } from "@/context/HRContext";
 import AppLayout from "@/layouts/AppLayout";
-import Index from "./pages/Index";
-import EmpresaDetalhes from "./pages/EmpresaDetalhes";
-import DenunciasDashboard from "./pages/DenunciasDashboard";
-import ConsultaDenuncia from "./pages/ConsultaDenuncia";
-import DenunciaPublica from "./pages/DenunciaPublica";
-import NotFound from "./pages/NotFound";
-import ActivityLog from "@/pages/admin/ActivityLog";
-import SystemData from "@/pages/admin/SystemData";
-import Structure from "@/pages/admin/Structure";
-import UsersPage from "@/pages/admin/Users";
-import Docs from "@/pages/admin/Docs";
+import { lazy, Suspense } from 'react';
+const Index = lazy(() => import('./pages/Index'));
+const EmpresaDetalhes = lazy(() => import('./pages/EmpresaDetalhes'));
+const DenunciasDashboard = lazy(() => import('./pages/DenunciasDashboard'));
+const ConsultaDenuncia = lazy(() => import('./pages/ConsultaDenuncia'));
+const DenunciaPublica = lazy(() => import('./pages/DenunciaPublica'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+const ActivityLog = lazy(() => import('@/pages/admin/ActivityLog'));
+const SystemData = lazy(() => import('@/pages/admin/SystemData'));
+const Structure = lazy(() => import('@/pages/admin/Structure'));
+const UsersPage = lazy(() => import('@/pages/admin/Users'));
+const Docs = lazy(() => import('@/pages/admin/Docs'));
 import Auth from "@/pages/Auth";
 import Login from "@/pages/Login";
 import Empresas from "@/pages/Empresas";
@@ -41,6 +42,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <Suspense fallback={<div className="p-4">Carregando…</div>}>
             <Routes>
           {/* Public routes */}
           <Route path="/home" element={<Homepage />} />
@@ -100,6 +102,7 @@ const App = () => (
               {/* 404 */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </Suspense>
           </BrowserRouter>
         </TooltipProvider>
       </HRProvider>

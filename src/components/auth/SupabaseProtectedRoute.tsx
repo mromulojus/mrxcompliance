@@ -1,6 +1,6 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
-import { useSupabaseAuth, Role } from "@/context/SupabaseAuthContext";
+import { useAuth } from "@/context/AuthContext";
 
 type ProtectedRouteProps = {
   children: React.ReactNode;
@@ -14,7 +14,7 @@ export const SupabaseProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children, 
   requireAnyOf 
 }) => {
-  const { user, profile, loading, can } = useSupabaseAuth();
+  const { user, profile, loading } = useAuth();
 
   if (loading) {
     return (
@@ -31,12 +31,10 @@ export const SupabaseProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/auth" replace />;
   }
 
+  // Optional: if consumer passes requireAnyOf with roles, respect it
   if (requireAnyOf && requireAnyOf.length > 0) {
-    const hasPermission = requireAnyOf.some((req) =>
-      req.type === "role" ? profile.role === req.value : can(req.value)
-    );
-    
-    if (!hasPermission) {
+    const hasRole = requireAnyOf.some((req) => req.type === 'role' && profile.role === (req.value as any));
+    if (!hasRole) {
       return <Navigate to="/" replace />;
     }
   }
