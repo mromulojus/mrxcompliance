@@ -41,6 +41,7 @@ const Calendario: React.FC = () => {
                 <SelectValue placeholder="Selecione uma empresa" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="all">Todas as empresas</SelectItem>
                 {empresas.map((empresa) => (
                   <SelectItem key={empresa.id} value={empresa.id}>
                     {empresa.nome}
