@@ -215,8 +215,27 @@ export function useTarefasData() {
       //     department_ids: updates.departments || []
       //   });
       // }
-
-      if (error) throw error;
+      if (error) {
+        const message = error.message?.toLowerCase() || '';
+        if (
+          ('is_archived' in updates || 'archived_at' in updates) &&
+          message.includes('column') &&
+          message.includes('does not exist')
+        ) {
+          const { error: fallbackError } = await supabase
+            .from('tarefas')
+            .update({ status: 'concluido' })
+            .eq('id', id);
+          if (fallbackError) throw fallbackError;
+          setTarefas(prev => prev.filter(t => t.id !== id));
+          toast({
+            title: 'Aviso',
+            description: 'Arquivamento indisponível, tarefa marcada como concluída.',
+          });
+          return;
+        }
+        throw error;
+      }
 
       // Buscar dados do usuário responsável se houver mudança
       let responsavel: UserProfile | undefined;
@@ -229,15 +248,20 @@ export function useTarefasData() {
         responsavel = userData || undefined;
       }
 
-      setTarefas(prev => prev.map(t => {
-        if (t.id === id) {
-          return {
-            ...data,
-            responsavel: updates.responsavel_id ? responsavel : t.responsavel
-          };
+      setTarefas(prev => {
+        if (data.is_archived) {
+          return prev.filter(t => t.id !== id);
         }
-        return t;
-      }));
+        return prev.map(t => {
+          if (t.id === id) {
+            return {
+              ...data,
+              responsavel: updates.responsavel_id ? responsavel : t.responsavel
+            };
+          }
+          return t;
+        });
+      });
 
       toast({
         title: 'Sucesso',
