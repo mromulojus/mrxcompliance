@@ -12,10 +12,12 @@ import { useAuth } from '@/context/AuthContext';
 
 export default function TarefasBoards() {
   const navigate = useNavigate();
-  const { boards, createBoard, deleteBoard } = useTaskBoards();
+  const { boards, createBoard, deleteBoard, updateBoard, createColumn, boardsSource } = useTaskBoards();
   const [newBoardName, setNewBoardName] = useState('');
   const [creating, setCreating] = useState(false);
   const { profile } = useAuth();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState<string>('');
 
   type TemplateKey = 'VENDAS' | 'COMPLIANCE' | 'JURIDICO' | 'OUVIDORIA' | 'COBRANCA' | 'ADMINISTRATIVO';
   const templates: Record<TemplateKey, { name: string; columns: string[]; cardDefault?: any; empresaMatch?: string | null }> = {
@@ -32,18 +34,17 @@ export default function TarefasBoards() {
     if (!newBoardName.trim()) return;
     setCreating(true);
     try {
-      const board = await createBoard(newBoardName.trim());
-      // If chosen template, create columns and set card default via direct Supabase calls
+      const empresaId = profile?.empresa_ids?.[0];
+      const board = await createBoard(newBoardName.trim(), empresaId);
+      // If chosen template, create columns and set card defaults through hook
       const key = selectedTemplate;
       if (key) {
         const tpl = templates[key];
-        const sb = (await import('@/integrations/supabase/client')).supabase as any;
-        // Create columns in order
         for (let i = 0; i < tpl.columns.length; i++) {
           const name = tpl.columns[i];
-          await sb.from('task_columns').insert({ board_id: board.id, name, order_index: i });
+          await createColumn(board.id, name);
         }
-        await sb.from('task_boards').update({ card_default: tpl.cardDefault || null }).eq('id', board.id);
+        await updateBoard(board.id, board.name, tpl.cardDefault || null);
       }
       setNewBoardName('');
       setSelectedTemplate(null);
@@ -51,6 +52,19 @@ export default function TarefasBoards() {
     } finally {
       setCreating(false);
     }
+  };
+
+  const startEditing = (id: string, name: string) => {
+    setEditingId(id);
+    setEditingName(name);
+  };
+
+  const saveEditing = async () => {
+    if (editingId && editingName.trim()) {
+      await updateBoard(editingId, editingName.trim());
+    }
+    setEditingId(null);
+    setEditingName('');
   };
 
   return (
@@ -100,13 +114,27 @@ export default function TarefasBoards() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {boards.map((board) => (
-          <Card key={board.id} className="hover:shadow-md transition cursor-pointer" onClick={() => navigate(`/tarefas/quadros/${board.id}`)}>
+          <Card key={board.id} className="hover:shadow-md transition">
             <CardHeader>
-              <CardTitle>{board.name}</CardTitle>
+              {editingId === board.id ? (
+                <div className="flex items-center gap-2">
+                  <Input value={editingName} onChange={(e) => setEditingName(e.target.value)} className="w-full" />
+                  <Button size="sm" onClick={(e) => { e.stopPropagation(); void saveEditing(); }}>Salvar</Button>
+                  <Button variant="ghost" size="sm" onClick={() => { setEditingId(null); setEditingName(''); }}>Cancelar</Button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <CardTitle className="cursor-pointer" onClick={() => navigate(`/tarefas/quadros/${board.id}`)}>{board.name}</CardTitle>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); startEditing(board.id, board.name); }}>Editar</Button>
+                    <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); void deleteBoard(board.id); }}>Excluir</Button>
+                  </div>
+                </div>
+              )}
             </CardHeader>
             <CardContent className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Atualizado em {new Date(board.updated_at).toLocaleDateString('pt-BR')}</span>
-              <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); void deleteBoard(board.id); }}>Excluir</Button>
+              {boardsSource === 'boards' && <span className="text-[10px] text-muted-foreground">Fonte: boards</span>}
             </CardContent>
           </Card>
         ))}
