@@ -151,11 +151,22 @@ export default function Indicadores() {
       .sort((a, b) => b.pontos - a.pontos)
       .map((r, idx) => ({ usuario: r.nome, pontuacao: Number(r.pontos.toFixed(2)), tarefasResolvidas: r.resolvidas, ranking: idx + 1 }));
 
+    // Tempo total de resolução por usuário (proxy de "tempo de uso")
+    const tempoUso: { usuario: string; horas: number }[] = [];
+    gUser.forEach((list, k) => {
+      const nome = k === 'sem_responsavel' ? 'Sem responsável' : (profilesById[k]?.full_name || profilesById[k]?.username || '—');
+      const concluidas = list.filter((t) => isConcluida(t.status));
+      const totalHoras = concluidas.reduce((acc, t) => acc + diffHoras(t.created_at, t.data_conclusao || t.updated_at || t.created_at), 0);
+      tempoUso.push({ usuario: nome, horas: Number(totalHoras.toFixed(2)) });
+    });
+    tempoUso.sort((a, b) => b.horas - a.horas);
+
     return {
       indicadoresPorUsuario: porUsuario,
       indicadoresPorEmpresa: porEmpresa,
       indicadoresPorQuadro: porQuadro,
       rankingGeralTarefas: rankingGeral,
+      tempoUsoPorUsuario: tempoUso,
       sampleData,
     };
   }, [tarefas, profilesById, boardsById, sampleData]);
@@ -221,17 +232,17 @@ export default function Indicadores() {
       <div className="mt-6 grid gap-4">
         <Card>
           <CardHeader>
-            <CardTitle>Formato final (JSON)</CardTitle>
+            <CardTitle>Tempo total de resolução por usuário (Top 10)</CardTitle>
           </CardHeader>
           <CardContent>
-            <pre className="text-xs whitespace-pre-wrap break-all">
-{JSON.stringify({
-  indicadoresPorUsuario: calcular.indicadoresPorUsuario,
-  indicadoresPorEmpresa: calcular.indicadoresPorEmpresa,
-  indicadoresPorQuadro: calcular.indicadoresPorQuadro,
-  rankingGeralTarefas: calcular.rankingGeralTarefas,
-}, null, 2)}
-            </pre>
+            <ul className="space-y-2">
+              {calcular.tempoUsoPorUsuario.slice(0, 10).map((u, idx) => (
+                <li key={u.usuario + idx} className="flex items-center justify-between border-b last:border-none py-1 text-sm">
+                  <span className="font-medium">#{idx + 1} {u.usuario}</span>
+                  <span className="text-muted-foreground">{u.horas} h</span>
+                </li>
+              ))}
+            </ul>
           </CardContent>
         </Card>
 
