@@ -61,6 +61,14 @@ export default function TarefasDashboard() {
     return filtered;
   }, [tarefas, filters, selectedBoardId, filterTarefas]);
 
+  console.log('Debug TarefasDashboard:', {
+    tarefasCount: tarefas.length,
+    filters,
+    filteredTarefasCount: filteredTarefas.length,
+    loading,
+    selectedBoardId
+  });
+
   
 
   const handleTaskCreate = async (taskData: TaskFormData) => {

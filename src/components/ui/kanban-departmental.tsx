@@ -60,6 +60,15 @@ export const DepartmentalKanban = ({
   const [columns, setColumns] = useState<BoardColumn[]>([]);
   const [board, setBoard] = useState<DepartmentalBoard | null>(null);
   const { toast } = useToast();
+  
+  console.log('Debug DepartmentalKanban:', {
+    tasksCount: tasks.length,
+    selectedModulo,
+    selectedEmpresa,
+    board,
+    columns: columns.length,
+    loading
+  });
 
   // Module to board mapping
   const getModuleToBoardMapping = () => ({
@@ -128,23 +137,21 @@ export const DepartmentalKanban = ({
         setColumns(columnsData || []);
       } catch (error) {
         console.error('Error fetching board and columns:', error);
-        toast({
-          title: 'Erro',
-          description: 'Não foi possível carregar o quadro departamental',
-          variant: 'destructive'
-        });
       }
     };
 
     fetchBoardAndColumns();
-  }, [selectedModulo, selectedEmpresa, toast]);
+  }, [selectedModulo, selectedEmpresa]);
 
   // Filter tasks that belong to this board
   const boardTasks = useMemo(() => {
+    console.log('boardTasks filter:', { board: board?.id, tasksLength: tasks.length });
     // Show all tasks when no board is selected (fallback mode)
     if (!board) return tasks;
     // Filter tasks by board when board is selected
-    return tasks.filter(task => task.board_id === board.id);
+    const filtered = tasks.filter(task => task.board_id === board.id);
+    console.log('boardTasks filtered:', { filtered: filtered.length, boardId: board.id });
+    return filtered;
   }, [tasks, board]);
 
   if (loading) {
