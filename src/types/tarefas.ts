@@ -12,6 +12,9 @@ export interface Tarefa {
   modulo_origem: TaskModule;
   empresa_id?: string;
   responsavel_id?: string;
+  // Archive control
+  is_archived?: boolean;
+  archived_at?: string;
   // Boards/Columns (opcional)
   board_id?: string;
   column_id?: string;

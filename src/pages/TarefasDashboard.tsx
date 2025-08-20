@@ -177,6 +177,9 @@ export default function TarefasDashboard() {
                 onTaskCreate={handleTaskCreateFromColumn}
                 onTaskDelete={deleteTarefa}
                 onTaskClick={handleTaskClick}
+                onTaskClose={(task) => {
+                  void updateTarefa(task.id, { is_archived: true, archived_at: new Date().toISOString() });
+                }}
                 loading={loading}
               />
             </div>
@@ -214,6 +217,9 @@ export default function TarefasDashboard() {
                   onTaskCreate={handleTaskCreateFromColumn}
                   onTaskDelete={deleteTarefa}
                   onTaskClick={handleTaskClick}
+                  onTaskClose={(task) => {
+                    void updateTarefa(task.id, { is_archived: true, archived_at: new Date().toISOString() });
+                  }}
                   loading={loading}
                 />
               </div>

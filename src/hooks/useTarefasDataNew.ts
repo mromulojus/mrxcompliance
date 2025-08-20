@@ -36,6 +36,7 @@ export function useTarefasData() {
       const { data: tarefasData, error: tarefasError } = await supabase
         .from('tarefas')
         .select('*')
+        .eq('is_archived', false)
         .order('ordem_na_coluna', { ascending: true })
         .order('created_at', { ascending: false });
 
