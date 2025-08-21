@@ -23,6 +23,7 @@ import { ExportPdf } from '@/components/hr/ExportPdf';
 import { PainelAvisos } from '@/components/hr/PainelAvisos';
 import { Logo } from '@/components/ui/logo';
 import { Footer } from '@/components/ui/footer';
+import { CompanyLoadingScreen } from '@/components/ui/company-loading-screen';
 import { calcularTotalRescisaoEmpresa } from '@/lib/rescisao';
 import { EmpresaDashboard } from '@/components/dashboard/EmpresaDashboard';
 import { ComplianceAuditDashboard } from '@/components/dashboard/ComplianceAuditDashboard';
@@ -33,7 +34,8 @@ export default function EmpresaDetalhes() {
   const navigate = useNavigate();
   const {
     empresas,
-    colaboradores
+    colaboradores,
+    loading
   } = useSupabaseData();
   const { colaboradores: colaboradoresHR } = useHR();
   const [showFormColaborador, setShowFormColaborador] = useState(false);
@@ -44,7 +46,23 @@ export default function EmpresaDetalhes() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [searchColaboradores, setSearchColaboradores] = useState('');
   const { toast } = useToast();
+  // Show loading screen while data is being fetched
+  if (loading) {
+    return <CompanyLoadingScreen />;
+  }
+
   const empresa = empresas.find(e => e.id === empresaId);
+  
+  // Only show "not found" after loading is complete AND company doesn't exist
+  if (!loading && !empresa) {
+    return <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Empresa não encontrada</h1>
+          <Button onClick={() => navigate('/')}>Voltar ao Dashboard</Button>
+        </div>
+      </div>;
+  }
+
   // Usar apenas colaboradores do Supabase para evitar duplicação
   const colaboradoresEmpresa = colaboradores.filter(c => c.empresa_id === empresaId);
   
@@ -55,14 +73,6 @@ export default function EmpresaDetalhes() {
     colaborador.cargo.toLowerCase().includes(searchColaboradores.toLowerCase()) ||
     colaborador.departamento.toLowerCase().includes(searchColaboradores.toLowerCase())
   );
-  if (!empresa) {
-    return <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Empresa não encontrada</h1>
-          <Button onClick={() => navigate('/')}>Voltar ao Dashboard</Button>
-        </div>
-      </div>;
-  }
 
   // Análises da empresa
   const colaboradoresAtivos = colaboradoresEmpresa.filter(c => c.status === 'ATIVO').length;
