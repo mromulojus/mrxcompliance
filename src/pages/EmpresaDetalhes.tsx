@@ -10,7 +10,8 @@ import { Input } from '@/components/ui/input';
 import { ArrowLeft, Users, Building2, TrendingUp, PieChart, BarChart3, DollarSign, UserPlus, FileSpreadsheet, FileText, CheckSquare, AlertTriangle, Search, LayoutDashboard, Scale, Copy } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { useSupabaseData } from '@/hooks/useSupabaseData';
-import { useEmpresaDetalhes } from '@/hooks/useEmpresaDetalhes';
+import { useEmpresaDetalhesOptimized } from '@/hooks/useEmpresaDetalhesOptimized';
+import { EmpresaDetailsSkeleton } from '@/components/ui/empresa-skeleton';
 import { useHR } from '@/context/HRContext';
 import { ColaboradorCard } from '@/components/hr/ColaboradorCard';
 import { FormColaboradorCompleto } from '@/components/hr/FormColaboradorCompleto';
@@ -24,7 +25,6 @@ import { ExportPdf } from '@/components/hr/ExportPdf';
 import { PainelAvisos } from '@/components/hr/PainelAvisos';
 import { Logo } from '@/components/ui/logo';
 import { Footer } from '@/components/ui/footer';
-import { CompanyLoadingScreen } from '@/components/ui/company-loading-screen';
 import { calcularTotalRescisaoEmpresa } from '@/lib/rescisao';
 import { EmpresaDashboard } from '@/components/dashboard/EmpresaDashboard';
 import { ComplianceAuditDashboard } from '@/components/dashboard/ComplianceAuditDashboard';
@@ -36,8 +36,9 @@ export default function EmpresaDetalhes() {
   const {
     empresa,
     colaboradores: colaboradoresEmpresa,
-    loading
-  } = useEmpresaDetalhes(empresaId || '');
+    loading,
+    error
+  } = useEmpresaDetalhesOptimized(empresaId || '');
   const { colaboradores: colaboradoresHR } = useHR();
   const [showFormColaborador, setShowFormColaborador] = useState(false);
   const [showImportColaboradores, setShowImportColaboradores] = useState(false);
@@ -49,7 +50,18 @@ export default function EmpresaDetalhes() {
   const { toast } = useToast();
   // Show loading screen while data is being fetched
   if (loading) {
-    return <CompanyLoadingScreen />;
+    return <EmpresaDetailsSkeleton />;
+  }
+
+  // Handle error state
+  if (error) {
+    return <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold mb-4">Erro ao carregar empresa</h1>
+        <p className="text-muted-foreground mb-4">{error}</p>
+        <Button onClick={() => navigate('/')}>Voltar ao Dashboard</Button>
+      </div>
+    </div>;
   }
 
   // Only show "not found" after loading is complete AND company doesn't exist

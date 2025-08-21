@@ -2,12 +2,14 @@ import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSupabaseData } from "@/hooks/useSupabaseData";
 import { useDebtoData } from "@/hooks/useDebtoData";
+import { useUserPermissions } from "@/hooks/useUserPermissions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Building2, Eye, Search, Trash2, AlertTriangle, FileText, TrendingUp, Zap, Plus, Upload, BarChart3, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useHR } from "@/context/HRContext";
+import { EmpresaCardSkeleton } from "@/components/ui/empresa-skeleton";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -23,10 +25,13 @@ import {
 const Empresas = () => {
   const { empresas, colaboradores, loading } = useSupabaseData();
   const { dividas, loading: debtoLoading } = useDebtoData();
+  const { canDeleteEmpresa, profile, loading: permissionsLoading } = useUserPermissions();
   const { removerEmpresa } = useHR();
   const navigate = useNavigate();
   const [q, setQ] = useState("");
   const { toast } = useToast();
+
+  const isLoading = loading || permissionsLoading;
 
   useEffect(() => {
     document.title = "Empresas - MRx Compliance";
@@ -284,7 +289,12 @@ const Empresas = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {list.map((empresa) => {
+        {isLoading ? (
+          // Show skeleton loading cards
+          Array.from({ length: 6 }).map((_, index) => (
+            <EmpresaCardSkeleton key={index} />
+          ))
+        ) : list.map((empresa) => {
           const stats = countByEmpresa[empresa.id] || { total: 0, ativos: 0 };
           const complianceKey = `auditoria-${empresa.id}`;
           let compliance = 0;
@@ -328,31 +338,43 @@ const Empresas = () => {
                   <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/empresa/${empresa.id}`); }} className="gap-2">
                     <Eye className="h-4 w-4" /> Ver detalhes
                   </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="gap-2 text-destructive hover:text-destructive">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Excluir Empresa</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Tem certeza que deseja excluir a empresa "{empresa.nome}"? 
-                          Esta ação também removerá todos os colaboradores associados e não pode ser desfeita.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction 
-                          onClick={() => removerEmpresa(empresa.id)}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-                          Excluir
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                  {canDeleteEmpresa() ? (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="gap-2 text-destructive hover:text-destructive">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Excluir Empresa</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Tem certeza que deseja excluir a empresa "{empresa.nome}"? 
+                            Esta ação também removerá todos os colaboradores associados e não pode ser desfeita.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={() => removerEmpresa(empresa.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Excluir
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  ) : (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      disabled 
+                      className="gap-2 opacity-50 cursor-not-allowed"
+                      title={`Você precisa do perfil ${profile?.role === 'empresarial' ? 'administrador' : 'administrador ou superior'} para excluir empresas`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -382,7 +404,7 @@ const Empresas = () => {
                 </div>
               </CardContent>
             </Card>
-          );
+            );
         })}
       </div>
     </main>
