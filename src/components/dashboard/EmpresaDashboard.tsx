@@ -278,15 +278,32 @@ export function EmpresaDashboard({ empresaId }: EmpresaDashboardProps) {
           <CardContent className="space-y-3">
             <div className="flex justify-between">
               <span className="text-sm">Taxa de Rotatividade</span>
-              <span className="text-sm font-medium">8.5%</span>
+              <span className="text-sm font-medium">
+                {totalColaboradores > 0 
+                  ? ((colaboradoresEmpresa.filter(c => c.status === 'DEMITIDO').length / totalColaboradores) * 100).toFixed(1) + '%'
+                  : '0%'
+                }
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm">Tempo Médio Empresa</span>
-              <span className="text-sm font-medium">2.3 anos</span>
+              <span className="text-sm font-medium">
+                {colaboradoresEmpresa.length > 0
+                  ? (colaboradoresEmpresa.reduce((acc, c) => {
+                      const admissao = new Date(c.data_admissao);
+                      const hoje = new Date();
+                      const anos = (hoje.getTime() - admissao.getTime()) / (1000 * 60 * 60 * 24 * 365);
+                      return acc + anos;
+                    }, 0) / colaboradoresEmpresa.length).toFixed(1) + ' anos'
+                  : '0 anos'
+                }
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm">Salário Médio</span>
-              <span className="text-sm font-medium">R$ 3.200</span>
+              <span className="text-sm font-medium">
+                {formatCurrency(colaboradoresEmpresa.reduce((sum, c) => sum + Number(c.salario_base), 0) / colaboradoresEmpresa.length || 0)}
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -298,15 +315,30 @@ export function EmpresaDashboard({ empresaId }: EmpresaDashboardProps) {
           <CardContent className="space-y-3">
             <div className="flex justify-between">
               <span className="text-sm">Taxa de Recuperação</span>
-              <span className="text-sm font-medium">65%</span>
+              <span className="text-sm font-medium">
+                {dividasEmpresa.length > 0
+                  ? ((dividasEmpresa.filter(d => d.status === 'pago').length / dividasEmpresa.length) * 100).toFixed(0) + '%'
+                  : '0%'
+                }
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm">Tempo Médio Cobrança</span>
-              <span className="text-sm font-medium">45 dias</span>
+              <span className="text-sm font-medium">
+                {dividasEmpresa.length > 0
+                  ? Math.round(dividasEmpresa.reduce((acc, d) => {
+                      const vencimento = new Date(d.data_vencimento);
+                      const hoje = new Date();
+                      const dias = Math.max(0, (hoje.getTime() - vencimento.getTime()) / (1000 * 60 * 60 * 24));
+                      return acc + dias;
+                    }, 0) / dividasEmpresa.length) + ' dias'
+                  : '0 dias'
+                }
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm">Acordos Ativos</span>
-              <span className="text-sm font-medium">12</span>
+              <span className="text-sm font-medium">{dividasEmpresa.filter(d => d.status === 'acordado').length}</span>
             </div>
           </CardContent>
         </Card>

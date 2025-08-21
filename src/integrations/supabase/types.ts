@@ -110,6 +110,54 @@ export type Database = {
         }
         Relationships: []
       }
+      agenda_acordos: {
+        Row: {
+          acordo_id: string | null
+          created_at: string
+          data_vencimento: string
+          devedor_nome: string
+          divida_id: string | null
+          empresa_id: string
+          id: string
+          observacoes: string | null
+          parcela_numero: number
+          parcela_total: number
+          status: string
+          updated_at: string
+          valor_parcela: number
+        }
+        Insert: {
+          acordo_id?: string | null
+          created_at?: string
+          data_vencimento: string
+          devedor_nome: string
+          divida_id?: string | null
+          empresa_id: string
+          id?: string
+          observacoes?: string | null
+          parcela_numero: number
+          parcela_total: number
+          status?: string
+          updated_at?: string
+          valor_parcela: number
+        }
+        Update: {
+          acordo_id?: string | null
+          created_at?: string
+          data_vencimento?: string
+          devedor_nome?: string
+          divida_id?: string | null
+          empresa_id?: string
+          id?: string
+          observacoes?: string | null
+          parcela_numero?: number
+          parcela_total?: number
+          status?: string
+          updated_at?: string
+          valor_parcela?: number
+        }
+        Relationships: []
+      }
       board_columns: {
         Row: {
           board_id: string
@@ -760,6 +808,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      empresa_historico: {
+        Row: {
+          anexos: string[] | null
+          created_at: string
+          created_by: string
+          descricao: string
+          empresa_id: string
+          id: string
+          meta: Json | null
+          tipo: string
+          titulo: string
+          usuario_nome: string
+        }
+        Insert: {
+          anexos?: string[] | null
+          created_at?: string
+          created_by: string
+          descricao: string
+          empresa_id: string
+          id?: string
+          meta?: Json | null
+          tipo: string
+          titulo: string
+          usuario_nome: string
+        }
+        Update: {
+          anexos?: string[] | null
+          created_at?: string
+          created_by?: string
+          descricao?: string
+          empresa_id?: string
+          id?: string
+          meta?: Json | null
+          tipo?: string
+          titulo?: string
+          usuario_nome?: string
+        }
+        Relationships: []
       }
       empresas: {
         Row: {

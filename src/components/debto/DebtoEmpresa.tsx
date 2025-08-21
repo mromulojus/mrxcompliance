@@ -9,6 +9,7 @@ import { DevedorCard } from "@/components/debto/DevedorCard";
 import { DividaCard } from "@/components/debto/DividaCard";
 import { FormDebtor } from "@/components/debto/FormDebtor";
 import { FormDivida } from "@/components/debto/FormDivida";
+import AgendaAcordos from "@/components/debto/AgendaAcordos";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useDebtoData } from "@/hooks/useDebtoData";
 import { useAuth } from "@/context/AuthContext";
@@ -227,42 +228,7 @@ export function DebtoEmpresa({ empresaId }: DebtoEmpresaProps) {
             </Card>
 
             {/* Agenda - Próximos Acordos a Vencer */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 text-orange-500" />
-                  Agenda - Próximos Acordos a Vencer
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {/* Simulação de acordos próximos ao vencimento */}
-                {[
-                  { devedor: "João Silva", valor: 1200, vencimento: "2025-01-25", parcela: "3/6" },
-                  { devedor: "Maria Santos", valor: 800, vencimento: "2025-01-28", parcela: "1/4" },
-                  { devedor: "Carlos Lima", valor: 2500, vencimento: "2025-02-02", parcela: "2/8" }
-                ].map((acordo, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
-                    <div className="flex-1">
-                      <div className="font-medium text-sm">{acordo.devedor}</div>
-                      <div className="text-xs text-muted-foreground">
-                        Parcela {acordo.parcela} - {formatCurrency(acordo.valor)}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-xs text-muted-foreground">{acordo.vencimento}</div>
-                      <Badge variant="outline" className="text-xs">
-                        {Math.ceil((new Date(acordo.vencimento).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} dias
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-                {filteredDividas.filter(d => (d.urgency_score || 0) > 70).length === 0 && (
-                  <p className="text-center text-muted-foreground py-4">
-                    Nenhum acordo próximo ao vencimento
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+            <AgendaAcordos empresaId={empresaId} />
           </div>
         </TabsContent>
 
