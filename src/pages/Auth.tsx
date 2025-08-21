@@ -98,8 +98,6 @@ export default function Auth() {
 
   return (
     <div className="relative overflow-hidden">
-      <SplashCursor />
-      
       <SignInPage
         title={
           <span className="font-light text-foreground tracking-tighter">
