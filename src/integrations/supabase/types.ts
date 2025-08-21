@@ -1563,16 +1563,6 @@ export type Database = {
         Args: { p_empresa_id: string }
         Returns: undefined
       }
-      debug_colaboradores: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          created_by: string
-          empresa_id: string
-          id: string
-          nome: string
-          status: Database["public"]["Enums"]["colaborador_status"]
-        }[]
-      }
       generate_protocol: {
         Args: Record<PropertyKey, never>
         Returns: string

@@ -142,11 +142,23 @@ export const useSupabaseData = () => {
 
   const fetchColaboradores = async () => {
     try {
+      console.log('Fetching colaboradores...');
+      
+      // Verificar se há usuário logado
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('Current session:', session?.user?.id);
+      
       const { data, error } = await supabase
         .from('colaboradores')
-        .select('*')
+        .select(`
+          *,
+          empresas (
+            nome
+          )
+        `)
         .order('nome');
 
+      console.log('Colaboradores query result:', { data, error });
       if (error) throw error;
       setColaboradores((data as any) || []);
     } catch (error) {
