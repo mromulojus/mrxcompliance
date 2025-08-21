@@ -198,7 +198,7 @@ export function useTarefasData() {
   };
 
   // Create tarefa
-  const createTarefa = useCallback(async (tarefaData: TaskFormData) => {
+  const createTarefa = useCallback(async (tarefaData: TaskFormData): Promise<void> => {
     try {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) throw new Error('Usuário não autenticado');
@@ -206,10 +206,11 @@ export function useTarefasData() {
       // Auto-assign board and column based on module
       const enrichedData = await assignBoardAndColumn(tarefaData);
 
-      // Handle "none" value for responsavel_id
+      // Handle "none" value for responsavel_id and support responsavel_ids
       const processedData = {
         ...enrichedData,
         responsavel_id: enrichedData.responsavel_id === 'none' ? null : enrichedData.responsavel_id,
+        responsavel_ids: (enrichedData as any).responsavel_ids || (enrichedData.responsavel_id && enrichedData.responsavel_id !== 'none' ? [enrichedData.responsavel_id] : []),
         created_by: user.user.id,
       };
 
@@ -218,14 +219,6 @@ export function useTarefasData() {
         .insert(processedData as any)
         .select()
         .single();
-      // Department assignment removed - function not available
-      // if (tarefaData.departments && tarefaData.departments.length > 0) {
-      //   await supabase.rpc('assign_departments_to_resource', {
-      //     resource_id: data.id,
-      //     resource_type: 'task',
-      //     department_ids: tarefaData.departments || []
-      //   });
-      // }
 
       if (error) throw error;
 
@@ -251,7 +244,7 @@ export function useTarefasData() {
         description: 'Tarefa criada e direcionada para o quadro departamental',
       });
 
-      return tarefaWithUser;
+      // Don't return anything - function should return Promise<void>
     } catch (err) {
       console.error('Erro ao criar tarefa:', err);
       toast({

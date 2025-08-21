@@ -225,7 +225,7 @@ export function useTarefasData() {
         description: 'Tarefa criada com sucesso',
       });
 
-      return taskWithUser;
+      // Don't return anything since function signature is Promise<void>
     } catch (err: any) {
       console.error('Erro ao criar tarefa:', err);
       const errorMessage = err.message || 'Não foi possível criar a tarefa';
