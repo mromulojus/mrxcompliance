@@ -1594,7 +1594,7 @@ export type Database = {
       }
     }
     Enums: {
-      colaborador_status: "ATIVO" | "INATIVO" | "DEMITIDO"
+      colaborador_status: "ATIVO" | "INATIVO" | "DEMITIDO" | "PROCESSO_SELETIVO"
       conhecimento_fato:
         | "OUVI_FALAR"
         | "DOCUMENTO"
@@ -1801,7 +1801,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      colaborador_status: ["ATIVO", "INATIVO", "DEMITIDO"],
+      colaborador_status: ["ATIVO", "INATIVO", "DEMITIDO", "PROCESSO_SELETIVO"],
       conhecimento_fato: [
         "OUVI_FALAR",
         "DOCUMENTO",

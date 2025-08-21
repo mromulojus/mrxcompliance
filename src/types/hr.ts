@@ -26,7 +26,7 @@ export interface Colaborador {
   cargo: string;
   departamento: string;
   empresa: string;
-  status: 'ATIVO' | 'INATIVO' | 'DEMITIDO';
+  status: 'ATIVO' | 'INATIVO' | 'DEMITIDO' | 'PROCESSO_SELETIVO';
   tipo_contrato: 'CLT' | 'PJ' | 'PF';
   data_admissao: string;
   data_nascimento: string;

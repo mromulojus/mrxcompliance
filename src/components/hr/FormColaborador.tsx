@@ -27,7 +27,7 @@ export function FormColaborador({ colaborador, onSalvar, onCancelar }: FormColab
     cargo: colaborador?.cargo || '',
     departamento: colaborador?.departamento || '',
     empresa: colaborador?.empresa || '',
-    status: colaborador?.status || 'ATIVO' as const,
+    status: colaborador?.status || 'ATIVO' as 'ATIVO' | 'INATIVO' | 'DEMITIDO' | 'PROCESSO_SELETIVO',
     data_admissao: colaborador?.data_admissao || '',
     data_nascimento: colaborador?.data_nascimento || '',
     sexo: colaborador?.sexo || 'MASCULINO' as const,
@@ -282,6 +282,7 @@ export function FormColaborador({ colaborador, onSalvar, onCancelar }: FormColab
                     <SelectItem value="ATIVO">Ativo</SelectItem>
                     <SelectItem value="INATIVO">Inativo</SelectItem>
                     <SelectItem value="DEMITIDO">Demitido</SelectItem>
+                    <SelectItem value="PROCESSO_SELETIVO">Processo Seletivo</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

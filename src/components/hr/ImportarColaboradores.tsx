@@ -114,8 +114,8 @@ export function ImportarColaboradores({ onClose }: { onClose?: () => void }) {
     if (!data.cargo) errors.push('Cargo é obrigatório');
     if (!data.departamento) errors.push('Departamento é obrigatório');
     if (!data.empresa_id) errors.push('ID da empresa é obrigatório');
-    if (!data.status || !['ATIVO', 'INATIVO', 'DEMITIDO'].includes(data.status)) {
-      errors.push('Status deve ser ATIVO, INATIVO ou DEMITIDO');
+    if (!data.status || !['ATIVO', 'INATIVO', 'DEMITIDO', 'PROCESSO_SELETIVO'].includes(data.status)) {
+      errors.push('Status deve ser ATIVO, INATIVO, DEMITIDO ou PROCESSO_SELETIVO');
     }
     if (!data.data_admissao) errors.push('Data de admissão é obrigatória');
     if (!data.data_nascimento) errors.push('Data de nascimento é obrigatória');
@@ -161,7 +161,7 @@ export function ImportarColaboradores({ onClose }: { onClose?: () => void }) {
             cargo: row.cargo,
             departamento: row.departamento,
             empresa: row.empresa_id,
-            status: row.status as 'ATIVO' | 'INATIVO' | 'DEMITIDO',
+            status: row.status as 'ATIVO' | 'INATIVO' | 'DEMITIDO' | 'PROCESSO_SELETIVO',
             tipo_contrato: (row.tipo_contrato as 'CLT' | 'PJ' | 'PF') || 'CLT',
             data_admissao: row.data_admissao,
             data_nascimento: row.data_nascimento,

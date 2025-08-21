@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { DocumentsManager } from './DocumentsManager';
 import { AdicionarObservacaoInline } from './AdicionarObservacaoInline';
 import { EtiquetasColaborador } from './EtiquetasColaborador';
+import { supabase } from '@/integrations/supabase/client';
 import {
   User,
   Mail,
@@ -42,6 +43,42 @@ interface VisualizacaoColaboradorCompletaProps {
 
 export function VisualizacaoColaboradorCompleta({ colaborador, onClose, onEdit }: VisualizacaoColaboradorCompletaProps) {
   const [historico, setHistorico] = useState(colaborador.historico || []);
+
+  // Buscar histórico atualizado do banco de dados
+  useEffect(() => {
+    const fetchHistorico = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('historico_colaborador')
+          .select(`
+            id,
+            observacao,
+            created_at,
+            profiles:created_by(full_name)
+          `)
+          .eq('colaborador_id', colaborador.id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Erro ao buscar histórico:', error);
+          return;
+        }
+
+        const historicoFormatado = data?.map(item => ({
+          id: item.id,
+          data: item.created_at,
+          observacao: item.observacao,
+          usuario: (item.profiles as any)?.full_name || 'Sistema'
+        })) || [];
+
+        setHistorico(historicoFormatado);
+      } catch (error) {
+        console.error('Erro ao buscar histórico:', error);
+      }
+    };
+
+    fetchHistorico();
+  }, [colaborador.id]);
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'ATIVO':
@@ -50,6 +87,8 @@ export function VisualizacaoColaboradorCompleta({ colaborador, onClose, onEdit }
         return 'bg-yellow-100 text-yellow-800';
       case 'DEMITIDO':
         return 'bg-red-100 text-red-800';
+      case 'PROCESSO_SELETIVO':
+        return 'bg-blue-100 text-blue-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }

@@ -33,7 +33,7 @@ export function FormColaboradorCompleto({ colaborador, empresaId, onSalvar, onCa
     cargo: colaborador?.cargo || '',
     departamento: colaborador?.departamento || '',
     empresa: colaborador?.empresa || empresaId || '',
-    status: colaborador?.status || 'ATIVO' as const,
+    status: colaborador?.status || 'ATIVO' as 'ATIVO' | 'INATIVO' | 'DEMITIDO' | 'PROCESSO_SELETIVO',
     tipo_contrato: colaborador?.tipo_contrato || 'CLT' as const,
     data_admissao: colaborador?.data_admissao || '',
     data_nascimento: colaborador?.data_nascimento || '',
@@ -353,6 +353,7 @@ export function FormColaboradorCompleto({ colaborador, empresaId, onSalvar, onCa
                       <SelectItem value="ATIVO">Ativo</SelectItem>
                       <SelectItem value="INATIVO">Inativo</SelectItem>
                       <SelectItem value="DEMITIDO">Demitido</SelectItem>
+                      <SelectItem value="PROCESSO_SELETIVO">Processo Seletivo</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
