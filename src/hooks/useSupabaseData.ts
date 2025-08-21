@@ -237,24 +237,30 @@ export const useSupabaseData = () => {
   };
 
   const removerEmpresa = async (id: string) => {
+    console.log('🗑️ Tentando excluir empresa:', id);
+    
     try {
       const { error } = await supabase
         .from('empresas')
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro do Supabase na exclusão:', error);
+        throw error;
+      }
 
+      console.log('✅ Empresa excluída com sucesso');
       setEmpresas(prev => prev.filter(e => e.id !== id));
       toast({
         title: "Empresa removida",
         description: "Empresa foi removida com sucesso."
       });
-    } catch (error) {
-      console.error('Error deleting empresa:', error);
+    } catch (error: any) {
+      console.error('❌ Error deleting empresa:', error);
       toast({
         title: "Erro ao remover empresa",
-        description: "Não foi possível remover a empresa.",
+        description: `Não foi possível remover a empresa: ${error.message || 'Erro desconhecido'}`,
         variant: "destructive"
       });
       throw error;
