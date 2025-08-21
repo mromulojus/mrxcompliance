@@ -8,7 +8,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { HRProvider } from "@/context/HRContext";
 import AppLayout from "@/layouts/AppLayout";
 import { lazy, Suspense } from 'react';
-const Index = lazy(() => import('./pages/Index'));
+import Index from './pages/Index';
 const EmpresaDetalhes = lazy(() => import('./pages/EmpresaDetalhes'));
 const DenunciasDashboard = lazy(() => import('./pages/DenunciasDashboard'));
 const ConsultaDenuncia = lazy(() => import('./pages/ConsultaDenuncia'));
