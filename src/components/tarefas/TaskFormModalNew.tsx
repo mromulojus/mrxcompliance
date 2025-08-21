@@ -32,7 +32,7 @@ import { TaskFormData, UserProfile } from '@/types/tarefas';
 import { supabase } from '@/integrations/supabase/client';
 import { EmpresaSelectModal } from '@/components/empresas/EmpresaSelectModal';
 import { Label } from '@/components/ui/label';
-import { Paperclip } from 'lucide-react';
+import { Paperclip, Circle, Plus, X } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 
 const taskFormSchema = z.object({
@@ -77,6 +77,7 @@ export function TaskFormModal({
   const [uploadingAnexos, setUploadingAnexos] = useState(false);
   const [selectedResponsaveis, setSelectedResponsaveis] = useState<string[]>([]);
   const [targetBoard, setTargetBoard] = useState<string>('');
+  const [initialChecklist, setInitialChecklist] = useState<string[]>(['']);
 
   // Module to board mapping
   const getModuleToBoardMapping = () => ({
@@ -165,11 +166,34 @@ export function TaskFormModal({
     return paths;
   };
 
+  const addChecklistItem = () => {
+    setInitialChecklist(prev => [...prev, '']);
+  };
+
+  const removeChecklistItem = (index: number) => {
+    setInitialChecklist(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (data: TaskFormData) => {
     const empresaId = selectedEmpresa?.id || data.empresa_id;
     const anexosPaths = await uploadAnexos(anexoArquivos, empresaId);
+    
+    // Prepare checklist data
+    const validChecklistItems = initialChecklist.filter(item => item.trim() !== '');
+    const checklistData = validChecklistItems.map((text, index) => ({
+      id: Date.now() + index,
+      text: text.trim(),
+      completed: false
+    }));
+
+    let finalDescription = data.descricao || '';
+    if (checklistData.length > 0) {
+      finalDescription += `checklist:${JSON.stringify(checklistData)}`;
+    }
+
     const payload: TaskFormData = {
       ...data,
+      descricao: finalDescription,
       empresa_id: empresaId,
       ...contextData,
       anexos: anexosPaths.length ? anexosPaths : undefined,
@@ -189,6 +213,7 @@ export function TaskFormModal({
     form.reset();
     setAnexoArquivos([]);
     setSelectedResponsaveis([]);
+    setInitialChecklist(['']);
   };
 
   const primarySelectedId = selectedResponsaveis[0] || form.watch('responsavel_id');
@@ -242,6 +267,47 @@ export function TaskFormModal({
                 </FormItem>
               )}
             />
+
+            {/* Checklist Inicial */}
+            <div className="space-y-3">
+              <Label>Checklist (opcional)</Label>
+              <div className="space-y-2">
+                {initialChecklist.map((item, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <Circle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <Input
+                      value={item}
+                      onChange={(e) => {
+                        const newChecklist = [...initialChecklist];
+                        newChecklist[index] = e.target.value;
+                        setInitialChecklist(newChecklist);
+                      }}
+                      placeholder={`Item ${index + 1}`}
+                      className="flex-1 text-sm"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeChecklistItem(index)}
+                      className="flex-shrink-0 p-2"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addChecklistItem}
+                  className="w-full"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Adicionar item ao checklist
+                </Button>
+              </div>
+            </div>
 
             {/* Module and Priority */}
             <div className="grid grid-cols-2 gap-4">
