@@ -5,10 +5,22 @@ import { Logo } from "@/components/ui/logo";
 import { FloatingTaskButton } from "@/components/tarefas/FloatingTaskButton";
 import { OptionsMenu } from "@/components/OptionsMenu";
 import { useTarefasData } from "@/hooks/useTarefasDataNew";
+import { FirstAccessModal } from "@/components/auth/FirstAccessModal";
+import { useAuth } from "@/context/AuthContext";
 
 const AppLayout: React.FC = () => {
   const location = useLocation();
   const { createTarefa, users } = useTarefasData();
+  const { profile } = useAuth();
+  const [showFirstAccessModal, setShowFirstAccessModal] = React.useState(false);
+
+  // Check if user needs to complete first access setup
+  React.useEffect(() => {
+    if (profile) {
+      const needsFirstAccess = !profile.terms_accepted || !profile.first_login_completed;
+      setShowFirstAccessModal(needsFirstAccess);
+    }
+  }, [profile]);
 
   React.useEffect(() => {
     const path = location.pathname;
@@ -66,6 +78,12 @@ const AppLayout: React.FC = () => {
         </div>
         <FloatingTaskButton onTaskCreate={createTarefa} users={users} />
       </main>
+
+      {/* First Access Modal */}
+      <FirstAccessModal 
+        isOpen={showFirstAccessModal}
+        onComplete={() => setShowFirstAccessModal(false)}
+      />
     </div>
   );
 };

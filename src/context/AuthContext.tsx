@@ -17,6 +17,9 @@ export interface UserProfile {
   is_active: boolean;
   empresa_ids?: string[];
   last_login?: string;
+  terms_accepted?: boolean;
+  terms_accepted_at?: string;
+  first_login_completed?: boolean;
   created_at: string;
   updated_at: string;
 }

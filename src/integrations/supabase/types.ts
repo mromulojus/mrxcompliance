@@ -1354,12 +1354,15 @@ export type Database = {
           created_at: string
           department: string | null
           empresa_ids: string[] | null
+          first_login_completed: boolean | null
           full_name: string | null
           id: string
           is_active: boolean | null
           last_login: string | null
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
+          terms_accepted: boolean | null
+          terms_accepted_at: string | null
           updated_at: string
           user_id: string
           username: string
@@ -1369,12 +1372,15 @@ export type Database = {
           created_at?: string
           department?: string | null
           empresa_ids?: string[] | null
+          first_login_completed?: boolean | null
           full_name?: string | null
           id?: string
           is_active?: boolean | null
           last_login?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          terms_accepted?: boolean | null
+          terms_accepted_at?: string | null
           updated_at?: string
           user_id: string
           username: string
@@ -1384,12 +1390,15 @@ export type Database = {
           created_at?: string
           department?: string | null
           empresa_ids?: string[] | null
+          first_login_completed?: boolean | null
           full_name?: string | null
           id?: string
           is_active?: boolean | null
           last_login?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          terms_accepted?: boolean | null
+          terms_accepted_at?: string | null
           updated_at?: string
           user_id?: string
           username?: string
