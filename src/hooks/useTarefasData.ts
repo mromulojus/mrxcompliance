@@ -40,18 +40,24 @@ export function useTarefasData() {
 
       if (tasksError) throw tasksError;
 
-      // Then fetch profiles for responsáveis
-      const responsavelIds = tasksData
-        ?.filter(task => task.responsavel_id)
-        .map(task => task.responsavel_id) || [];
+      // Collect all unique user IDs from both responsavel_id and responsavel_ids
+      const allResponsavelIds = new Set<string>();
+      tasksData?.forEach(task => {
+        if (task.responsavel_id) {
+          allResponsavelIds.add(task.responsavel_id);
+        }
+        if (task.responsavel_ids && Array.isArray(task.responsavel_ids)) {
+          task.responsavel_ids.forEach((id: string) => allResponsavelIds.add(id));
+        }
+      });
 
       let profilesMap: Record<string, any> = {};
       
-      if (responsavelIds.length > 0) {
+      if (allResponsavelIds.size > 0) {
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
-          .select('user_id, full_name, username, avatar_url')
-          .in('user_id', responsavelIds);
+          .select('user_id, full_name, username, avatar_url, is_active')
+          .in('user_id', Array.from(allResponsavelIds));
 
         if (!profilesError && profilesData) {
           profilesMap = profilesData.reduce((acc, profile) => {
@@ -64,7 +70,10 @@ export function useTarefasData() {
       // Combine tasks with profiles
       const tarefasWithUsers: TarefaWithUser[] = (tasksData || []).map(task => ({
         ...task,
-        responsavel: task.responsavel_id ? profilesMap[task.responsavel_id] : undefined
+        responsavel: task.responsavel_id ? profilesMap[task.responsavel_id] : undefined,
+        responsaveis: (task.responsavel_ids || [])
+          .map((id: string) => profilesMap[id])
+          .filter(Boolean)
       }));
 
       setTarefas(tarefasWithUsers);
@@ -144,7 +153,7 @@ export function useTarefasData() {
   };
 
   // Create tarefa
-  const createTarefa = async (tarefaData: TaskFormData) => {
+  const createTarefa = async (tarefaData: TaskFormData): Promise<void> => {
     try {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) throw new Error('Usuário não autenticado');
@@ -172,6 +181,7 @@ export function useTarefasData() {
         modulo_origem: enrichedData.modulo_origem || 'geral',
         empresa_id: enrichedData.empresa_id || null,
         responsavel_id: enrichedData.responsavel_id === 'none' ? null : enrichedData.responsavel_id,
+        responsavel_ids: (enrichedData as any).responsavel_ids || (enrichedData.responsavel_id && enrichedData.responsavel_id !== 'none' ? [enrichedData.responsavel_id] : []),
         status: enrichedData.status || 'a_fazer',
         prioridade: enrichedData.prioridade || 'media',
         data_vencimento: enrichedData.data_vencimento || null,
@@ -231,22 +241,29 @@ export function useTarefasData() {
   // Update tarefa
   const updateTarefa = async (id: string, updates: Partial<TarefaWithUser>) => {
     try {
+      // Process updates to handle responsavel_ids
+      const processedUpdates = { ...updates };
+      if ((updates as any).responsavel_ids) {
+        processedUpdates.responsavel_ids = (updates as any).responsavel_ids;
+        processedUpdates.responsavel_id = (updates as any).responsavel_ids[0] || null;
+      }
+
       const { data, error } = await supabase
         .from('tarefas')
-        .update(updates as any)
+        .update(processedUpdates as any)
         .eq('id', id)
         .select()
         .single();
 
       if (error) throw error;
 
-      setTarefas(prev => prev.map(t => t.id === id ? data : t));
+      // Refetch to ensure we have the latest data with user info
+      await fetchTarefas();
+
       toast({
         title: 'Sucesso',
         description: 'Tarefa atualizada com sucesso',
       });
-
-      return data;
     } catch (err) {
       console.error('Erro ao atualizar tarefa:', err);
       toast({

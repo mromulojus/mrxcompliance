@@ -8,11 +8,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { TaskFormModal } from './TaskFormModalNew';
+import TaskFormModal from './TaskFormModalNew';
 import { TaskFormData } from '@/types/tarefas';
 
 interface FloatingTaskButtonProps {
-  onTaskCreate: (task: TaskFormData) => void;
+  onTaskCreate: (task: TaskFormData) => Promise<void>;
   users: any[];
   contextData?: {
     empresa_id?: string;
@@ -27,8 +27,8 @@ interface FloatingTaskButtonProps {
 export function FloatingTaskButton({ onTaskCreate, users, contextData }: FloatingTaskButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleTaskSubmit = (taskData: TaskFormData) => {
-    onTaskCreate(taskData);
+  const handleTaskSubmit = async (taskData: TaskFormData) => {
+    await onTaskCreate(taskData);
     setIsModalOpen(false);
   };
 

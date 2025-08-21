@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TaskFormModal } from '@/components/tarefas/TaskFormModalNew';
+import TaskFormModal from '@/components/tarefas/TaskFormModalNew';
 import { TaskFormData } from '@/types/tarefas';
 import { useTarefasData } from '@/hooks/useTarefasDataNew';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';

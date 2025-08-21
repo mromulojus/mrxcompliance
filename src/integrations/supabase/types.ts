@@ -1427,6 +1427,7 @@ export type Database = {
           prioridade: Database["public"]["Enums"]["task_priority"]
           processo_id: string | null
           responsavel_id: string | null
+          responsavel_ids: string[] | null
           status: Database["public"]["Enums"]["task_status"]
           titulo: string
           updated_at: string
@@ -1452,6 +1453,7 @@ export type Database = {
           prioridade?: Database["public"]["Enums"]["task_priority"]
           processo_id?: string | null
           responsavel_id?: string | null
+          responsavel_ids?: string[] | null
           status?: Database["public"]["Enums"]["task_status"]
           titulo: string
           updated_at?: string
@@ -1477,6 +1479,7 @@ export type Database = {
           prioridade?: Database["public"]["Enums"]["task_priority"]
           processo_id?: string | null
           responsavel_id?: string | null
+          responsavel_ids?: string[] | null
           status?: Database["public"]["Enums"]["task_status"]
           titulo?: string
           updated_at?: string

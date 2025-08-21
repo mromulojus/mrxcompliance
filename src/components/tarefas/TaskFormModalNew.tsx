@@ -28,7 +28,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { TaskFormData, UserProfile } from '@/types/tarefas';
+import { TaskFormData, UserProfile, TarefaWithUser, TaskModule } from '@/types/tarefas';
 import { supabase } from '@/integrations/supabase/client';
 import { EmpresaSelectModal } from '@/components/empresas/EmpresaSelectModal';
 import { Label } from '@/components/ui/label';
@@ -49,7 +49,8 @@ const taskFormSchema = z.object({
 interface TaskFormModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: TaskFormData) => void;
+  onSubmit: (data: TaskFormData) => Promise<void>;
+  onUpdate?: (id: string, data: Partial<TarefaWithUser>) => Promise<void>;
   users: UserProfile[];
   defaultValues?: Partial<TaskFormData> & {
     denuncia_id?: string;
@@ -57,15 +58,20 @@ interface TaskFormModalProps {
     processo_id?: string;
     colaborador_id?: string;
   };
-  editData?: TaskFormData;
-  /** Campos de contexto adicionais que serão mesclados no submit (ex.: board_id, column_id) */
-  contextData?: Partial<TaskFormData>;
+  editData?: TarefaWithUser;
+  contextData?: {
+    board_id?: string;
+    column_id?: string;
+    empresa_id?: string;
+    modulo_origem?: TaskModule;
+  };
 }
 
-export function TaskFormModal({ 
-  open, 
-  onOpenChange, 
-  onSubmit, 
+export default function TaskFormModal({
+  open,
+  onOpenChange,
+  onSubmit,
+  onUpdate,
   users,
   defaultValues,
   editData,
@@ -212,37 +218,49 @@ export function TaskFormModal({
   }, [open, empresas.length]);
 
   const handleSubmit = async (data: TaskFormData) => {
-    const empresaId = selectedEmpresa?.id || data.empresa_id;
-    const anexosPaths = await uploadAnexos(anexoArquivos, empresaId);
-    
-    // Prepare checklist data
-    const validChecklistItems = initialChecklist.filter(item => item.trim() !== '');
-    const checklistData = validChecklistItems.map((text, index) => ({
-      id: Date.now() + index,
-      text: text.trim(),
-      completed: false
-    }));
+    try {
+      const empresaId = selectedEmpresa?.id || data.empresa_id;
+      const anexosPaths = await uploadAnexos(anexoArquivos, empresaId);
+      
+      // Prepare checklist data
+      const validChecklistItems = initialChecklist.filter(item => item.trim() !== '');
+      const checklistData = validChecklistItems.map((text, index) => ({
+        id: Date.now() + index,
+        text: text.trim(),
+        completed: false
+      }));
 
-    let finalDescription = data.descricao || '';
-    if (checklistData.length > 0) {
-      finalDescription += `checklist:${JSON.stringify(checklistData)}`;
-    }
+      let finalDescription = data.descricao || '';
+      if (checklistData.length > 0) {
+        finalDescription += `checklist:${JSON.stringify(checklistData)}`;
+      }
 
-    const payload: TaskFormData = {
-      ...data,
-      descricao: finalDescription,
-      empresa_id: empresaId,
-      ...contextData,
-      anexos: anexosPaths.length ? anexosPaths : undefined,
-    } as any;
-    if (selectedResponsaveis.length > 0) {
-      // prefer multi; keep primary as first for backward compat
-      (payload as any).responsavel_id = selectedResponsaveis[0];
-    } else if (data.responsavel_id === 'none') {
-      (payload as any).responsavel_id = undefined;
+      // Prepare responsavel IDs - support multiple assignees
+      const responsavelIds = selectedResponsaveis.length > 0 
+        ? selectedResponsaveis // selectedResponsaveis is already a string array of user_ids
+        : (data.responsavel_id ? [data.responsavel_id] : []);
+
+      const payload: TaskFormData & { responsavel_ids?: string[] } = {
+        ...data,
+        descricao: finalDescription,
+        empresa_id: empresaId,
+        responsavel_id: responsavelIds[0] || data.responsavel_id, // First for compatibility
+        responsavel_ids: responsavelIds, // New array for multiple assignees
+        ...contextData,
+        anexos: anexosPaths.length ? anexosPaths : undefined,
+      };
+
+      // Handle editing vs creating
+      if (editData?.id && onUpdate) {
+        await onUpdate(editData.id, payload);
+      } else {
+        await onSubmit(payload);
+      }
+      
+      handleClose();
+    } catch (error) {
+      console.error('Erro ao processar tarefa:', error);
     }
-    onSubmit(payload);
-    handleClose();
   };
 
   const handleClose = () => {
