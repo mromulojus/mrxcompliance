@@ -8,12 +8,13 @@ import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useHR } from '@/context/HRContext';
 import { Denuncia, DenunciaStatus } from '@/types/denuncia';
-import { AlertCircle, MessageSquare, Calendar, User, FileText, ExternalLink } from 'lucide-react';
+import { AlertCircle, MessageSquare, Calendar, User, FileText, ExternalLink, Download, Upload } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { QRCodeComponent } from '@/components/ui/qr-code';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { Input } from '@/components/ui/input';
 
 interface DenunciasEmpresaProps {
   empresaId: string;
@@ -86,6 +87,10 @@ export function DenunciasEmpresa({ empresaId }: DenunciasEmpresaProps) {
   const [selectedDenuncia, setSelectedDenuncia] = useState<Denuncia | null>(null);
   const [novoComentario, setNovoComentario] = useState('');
   const [novoStatus, setNovoStatus] = useState<DenunciaStatus>('RECEBIDO');
+  const [novoAnexoArquivos, setNovoAnexoArquivos] = useState<File[]>([]);
+  const [uploadingAnexos, setUploadingAnexos] = useState(false);
+  const [novoAnexoComentarios, setNovoAnexoComentarios] = useState<File[]>([]);
+  const [uploadingComentarioAnexos, setUploadingComentarioAnexos] = useState(false);
 
   const denunciasEmpresa = denuncias.filter(d => d.empresaId === empresaId);
   
@@ -133,26 +138,119 @@ export function DenunciasEmpresa({ empresaId }: DenunciasEmpresaProps) {
   const handleAdicionarComentario = async () => {
     if (!selectedDenuncia || !novoComentario.trim()) return;
 
-    await adicionarComentario(selectedDenuncia.id, { autor: 'Sistema', mensagem: novoComentario });
-    setNovoComentario('');
+    try {
+      let anexosComentario: string[] = [];
+      
+      // Upload dos anexos do comentário se houver
+      if (novoAnexoComentarios.length > 0) {
+        setUploadingComentarioAnexos(true);
+        const folder = `comentarios/empresa_${selectedDenuncia.empresaId}/${selectedDenuncia.id}`;
+        
+        for (const file of novoAnexoComentarios) {
+          const allowedTypes = [
+            'image/jpeg', 'image/png', 'image/webp',
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+          ];
+          if (!allowedTypes.includes(file.type)) {
+            throw new Error('Tipo de arquivo não permitido. Use JPG, PNG, WEBP, PDF ou DOC/DOCX.');
+          }
+          if (file.size > 10 * 1024 * 1024) {
+            throw new Error('Arquivo muito grande. Máximo 10MB por arquivo.');
+          }
+          const safeName = file.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
+          const path = `${folder}/${Date.now()}_${safeName}`;
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('denuncia-anexos')
+            .upload(path, file, { cacheControl: '3600' });
+          if (uploadError) throw uploadError;
+          anexosComentario.push(uploadData.path);
+        }
+      }
 
-    // Atualizar denúncia local
-    const updatedDenuncia = {
-      ...selectedDenuncia,
-      comentarios: [...selectedDenuncia.comentarios, {
-        id: Date.now().toString(),
-        denunciaId: selectedDenuncia.id,
-        autor: 'Sistema',
+      await adicionarComentario(selectedDenuncia.id, { 
+        autor: 'Sistema', 
         mensagem: novoComentario,
-        createdAt: new Date().toISOString()
-      }]
-    };
-    setSelectedDenuncia(updatedDenuncia);
+        anexos: anexosComentario
+      });
+      
+      setNovoComentario('');
+      setNovoAnexoComentarios([]);
 
-    toast({
-      title: 'Comentário adicionado',
-      description: 'Seu comentário foi registrado na denúncia.'
-    });
+      // Atualizar denúncia local
+      const updatedDenuncia = {
+        ...selectedDenuncia,
+        comentarios: [...selectedDenuncia.comentarios, {
+          id: Date.now().toString(),
+          denunciaId: selectedDenuncia.id,
+          autor: 'Sistema',
+          mensagem: novoComentario,
+          anexos: anexosComentario,
+          createdAt: new Date().toISOString()
+        }]
+      };
+      setSelectedDenuncia(updatedDenuncia);
+
+      toast({
+        title: 'Comentário adicionado',
+        description: 'Seu comentário foi registrado na denúncia.'
+      });
+    } catch (e: any) {
+      console.error('Erro ao adicionar comentário:', e);
+      toast({
+        title: 'Erro ao adicionar comentário',
+        description: e.message || 'Falha ao adicionar comentário',
+        variant: 'destructive'
+      });
+    } finally {
+      setUploadingComentarioAnexos(false);
+    }
+  };
+
+  const handleUploadAnexos = async () => {
+    if (!selectedDenuncia || novoAnexoArquivos.length === 0) return;
+    try {
+      setUploadingAnexos(true);
+      const folder = `empresa_${selectedDenuncia.empresaId}/${selectedDenuncia.id}`;
+      const anexosPaths: string[] = [];
+      for (const file of novoAnexoArquivos) {
+        const allowedTypes = [
+          'image/jpeg', 'image/png', 'image/webp',
+          'application/pdf',
+          'application/msword',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        ];
+        if (!allowedTypes.includes(file.type)) {
+          throw new Error('Tipo de arquivo não permitido. Use JPG, PNG, WEBP, PDF ou DOC/DOCX.');
+        }
+        if (file.size > 10 * 1024 * 1024) {
+          throw new Error('Arquivo muito grande. Máximo 10MB por arquivo.');
+        }
+        const safeName = file.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
+        const path = `${folder}/${Date.now()}_${safeName}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('denuncia-anexos')
+          .upload(path, file, { cacheControl: '3600' });
+        if (uploadError) throw uploadError;
+        anexosPaths.push(uploadData.path);
+      }
+
+      const novosAnexos = [...(selectedDenuncia.anexos || []), ...anexosPaths];
+      await supabase
+        .from('denuncias')
+        .update({ anexos: novosAnexos })
+        .eq('id', selectedDenuncia.id);
+
+      setSelectedDenuncia({ ...selectedDenuncia, anexos: novosAnexos });
+      setNovoAnexoArquivos([]);
+      toast({ title: 'Anexos enviados', description: 'Arquivos anexados à denúncia.' });
+    } catch (e: any) {
+      console.error('Erro ao anexar arquivos:', e);
+      toast({ title: 'Erro ao anexar', description: e.message || 'Falha ao enviar anexos', variant: 'destructive' });
+    } finally {
+      setUploadingAnexos(false);
+    }
   };
 
 
@@ -307,14 +405,112 @@ export function DenunciasEmpresa({ empresaId }: DenunciasEmpresaProps) {
                                 </div>
                                 <div>
                                   <label className="text-sm font-medium">Identificado:</label>
-                                  <p>{selectedDenuncia.identificado ? 'Sim' : 'Anônimo'}</p>
+                                  <p>{selectedDenuncia.identificado ? `Sim - ${selectedDenuncia.nome}` : 'Anônimo'}</p>
                                 </div>
+                                {selectedDenuncia.identificado && selectedDenuncia.email && (
+                                  <div>
+                                    <label className="text-sm font-medium">Email:</label>
+                                    <p>{selectedDenuncia.email}</p>
+                                  </div>
+                                )}
+                                {selectedDenuncia.identificado && (
+                                  <div>
+                                    <label className="text-sm font-medium">Relação com a empresa:</label>
+                                    <p>{selectedDenuncia.relacao}</p>
+                                  </div>
+                                )}
+                                {selectedDenuncia.identificado && (
+                                  <div>
+                                    <label className="text-sm font-medium">Como soube do fato:</label>
+                                    <p>{selectedDenuncia.conhecimentoFato}</p>
+                                  </div>
+                                )}
+                                {selectedDenuncia.identificado && (
+                                  <div>
+                                    <label className="text-sm font-medium">Envolvidos cientes:</label>
+                                    <p>{selectedDenuncia.envolvidosCientes ? 'Sim' : 'Não'}</p>
+                                  </div>
+                                )}
+                                {selectedDenuncia.setor && (
+                                  <div>
+                                    <label className="text-sm font-medium">Setor:</label>
+                                    <p>{selectedDenuncia.setor}</p>
+                                  </div>
+                                )}
                               </div>
 
                               {/* Descrição */}
                               <div>
                                 <label className="text-sm font-medium">Descrição:</label>
                                 <p className="text-sm bg-muted p-3 rounded mt-1">{selectedDenuncia.descricao}</p>
+                              </div>
+
+                              {selectedDenuncia.evidenciasDescricao && (
+                                <div>
+                                  <label className="text-sm font-medium">Evidências:</label>
+                                  <p className="text-sm bg-muted p-3 rounded mt-1">{selectedDenuncia.evidenciasDescricao}</p>
+                                </div>
+                              )}
+
+                              {selectedDenuncia.sugestao && (
+                                <div>
+                                  <label className="text-sm font-medium">Sugestão:</label>
+                                  <p className="text-sm bg-muted p-3 rounded mt-1">{selectedDenuncia.sugestao}</p>
+                                </div>
+                              )}
+
+                              {/* Anexos */}
+                              <div className="space-y-3">
+                                <label className="text-sm font-medium">Anexos:</label>
+                                {selectedDenuncia.anexos && selectedDenuncia.anexos.length > 0 ? (
+                                  <div className="space-y-2">
+                                    {selectedDenuncia.anexos.map((path, idx) => (
+                                      <div key={idx} className="flex items-center gap-2 p-2 bg-muted rounded">
+                                        <FileText className="h-4 w-4 text-muted-foreground" />
+                                        <span className="text-sm flex-1 truncate">{path.split('/').pop()}</span>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={async () => {
+                                            const { data, error } = await supabase.storage
+                                              .from('denuncia-anexos')
+                                              .createSignedUrl(path, 60 * 5);
+                                            if (!error && data?.signedUrl) {
+                                              window.open(data.signedUrl, '_blank');
+                                            }
+                                          }}
+                                        >
+                                          <Download className="h-4 w-4" />
+                                        </Button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="text-sm text-muted-foreground">Nenhum anexo.</p>
+                                )}
+
+                                <div className="space-y-2 pt-2">
+                                  <Input
+                                    type="file"
+                                    multiple
+                                    accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx"
+                                    onChange={(e) => setNovoAnexoArquivos(Array.from(e.target.files || []))}
+                                    disabled={uploadingAnexos}
+                                  />
+                                  <Button onClick={handleUploadAnexos} disabled={novoAnexoArquivos.length === 0 || uploadingAnexos}>
+                                    {uploadingAnexos ? (
+                                      <>
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                                        Enviando...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Upload className="h-4 w-4 mr-2" />
+                                        Anexar Arquivos
+                                      </>
+                                    )}
+                                  </Button>
+                                </div>
                               </div>
 
                               {/* Atualizar Status */}
@@ -348,9 +544,38 @@ export function DenunciasEmpresa({ empresaId }: DenunciasEmpresaProps) {
                                   placeholder="Digite seu comentário..."
                                   rows={3}
                                 />
-                                <Button onClick={handleAdicionarComentario} disabled={!novoComentario.trim()}>
-                                  <MessageSquare className="h-4 w-4 mr-2" />
-                                  Adicionar Comentário
+                                
+                                {/* Anexos do comentário */}
+                                <div className="space-y-2">
+                                  <Input
+                                    type="file"
+                                    multiple
+                                    accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx"
+                                    onChange={(e) => setNovoAnexoComentarios(Array.from(e.target.files || []))}
+                                    disabled={uploadingComentarioAnexos}
+                                  />
+                                  {novoAnexoComentarios.length > 0 && (
+                                    <p className="text-sm text-muted-foreground">
+                                      {novoAnexoComentarios.length} arquivo(s) selecionado(s)
+                                    </p>
+                                  )}
+                                </div>
+                                
+                                <Button 
+                                  onClick={handleAdicionarComentario} 
+                                  disabled={!novoComentario.trim() || uploadingComentarioAnexos}
+                                >
+                                  {uploadingComentarioAnexos ? (
+                                    <>
+                                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                                      Enviando...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <MessageSquare className="h-4 w-4 mr-2" />
+                                      Adicionar Comentário
+                                    </>
+                                  )}
                                 </Button>
                               </div>
 
@@ -369,7 +594,36 @@ export function DenunciasEmpresa({ empresaId }: DenunciasEmpresaProps) {
                                             {formatDistanceToNow(new Date(comentario.createdAt), { addSuffix: true, locale: ptBR })}
                                           </span>
                                         </div>
-                                        <p>{comentario.mensagem}</p>
+                                        <p className="mb-2">{comentario.mensagem}</p>
+                                        {/* Anexos do comentário */}
+                                        {comentario.anexos && comentario.anexos.length > 0 && (
+                                          <div className="space-y-1">
+                                            <p className="text-xs font-medium text-muted-foreground">Anexos:</p>
+                                            <div className="space-y-1">
+                                              {comentario.anexos.map((path, idx) => (
+                                                <div key={idx} className="flex items-center gap-2 p-1 bg-background rounded">
+                                                  <FileText className="h-3 w-3 text-muted-foreground" />
+                                                  <span className="text-xs flex-1 truncate">{path.split('/').pop()}</span>
+                                                  <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-6 w-6 p-0"
+                                                    onClick={async () => {
+                                                      const { data, error } = await supabase.storage
+                                                        .from('denuncia-anexos')
+                                                        .createSignedUrl(path, 60 * 5);
+                                                      if (!error && data?.signedUrl) {
+                                                        window.open(data.signedUrl, '_blank');
+                                                      }
+                                                    }}
+                                                  >
+                                                    <Download className="h-3 w-3" />
+                                                  </Button>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )}
                                       </div>
                                     ))}
                                   </div>

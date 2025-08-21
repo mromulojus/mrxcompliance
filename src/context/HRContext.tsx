@@ -37,7 +37,7 @@ interface HRContextType {
       denuncia: Omit<Denuncia, 'id' | 'protocolo' | 'status' | 'comentarios' | 'createdAt' | 'updatedAt'> & { status?: DenunciaStatus }
     ) => Promise<Denuncia | null>;
     atualizarStatus: (id: string, status: DenunciaStatus) => Promise<void>;
-    adicionarComentario: (id: string, comentario: { autor: string; mensagem: string }) => Promise<void>;
+    adicionarComentario: (id: string, comentario: { autor: string; mensagem: string; anexos?: string[] }) => Promise<void>;
     denunciasNaoTratadas: Denuncia[];
   
   // Computados
@@ -203,6 +203,7 @@ const convertComentarioFromSupabase = (comentario: SupabaseComentario): Comentar
   denunciaId: comentario.denuncia_id,
   autor: comentario.autor,
   mensagem: comentario.mensagem,
+  anexos: comentario.anexos || [],
   createdAt: comentario.created_at
 });
 
@@ -508,14 +509,15 @@ const convertDenunciaToSupabase = (denuncia: Partial<Denuncia>): Partial<Supabas
       }
     };
 
-    const adicionarComentario = async (id: string, comentario: { autor: string; mensagem: string }) => {
+    const adicionarComentario = async (id: string, comentario: { autor: string; mensagem: string; anexos?: string[] }) => {
       try {
         const { error } = await supabase
           .from('comentarios_denuncia')
           .insert({
             denuncia_id: id,
             autor: comentario.autor,
-            mensagem: comentario.mensagem
+            mensagem: comentario.mensagem,
+            anexos: comentario.anexos || []
           });
 
         if (error) throw error;

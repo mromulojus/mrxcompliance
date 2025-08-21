@@ -108,6 +108,7 @@ export type ComentarioDenuncia = {
   denuncia_id: string;
   autor: string;
   mensagem: string;
+  anexos?: string[];
   created_at: string;
   updated_at: string;
 };

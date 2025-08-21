@@ -5,6 +5,7 @@ export interface Comentario {
   denunciaId: string;
   autor: string; // nome ou "Anônimo"
   mensagem: string;
+  anexos?: string[]; // URLs dos anexos no Supabase Storage
   createdAt: string; // ISO date
 }
 

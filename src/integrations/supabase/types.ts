@@ -406,6 +406,7 @@ export type Database = {
       }
       comentarios_denuncia: {
         Row: {
+          anexos: string[] | null
           autor: string
           created_at: string
           denuncia_id: string
@@ -413,6 +414,7 @@ export type Database = {
           mensagem: string
         }
         Insert: {
+          anexos?: string[] | null
           autor: string
           created_at?: string
           denuncia_id: string
@@ -420,6 +422,7 @@ export type Database = {
           mensagem: string
         }
         Update: {
+          anexos?: string[] | null
           autor?: string
           created_at?: string
           denuncia_id?: string
