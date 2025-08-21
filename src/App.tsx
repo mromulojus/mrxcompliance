@@ -4,7 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
-import { CacheProvider } from "@/context/CacheContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { HRProvider } from "@/context/HRContext";
 import AppLayout from "@/layouts/AppLayout";
@@ -41,15 +40,14 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <CacheProvider>
-      <AuthProvider>
-        <HRProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Suspense fallback={<div className="p-4">Carregando…</div>}>
-              <Routes>
+    <AuthProvider>
+      <HRProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Suspense fallback={<div className="p-4">Carregando…</div>}>
+            <Routes>
           {/* Public routes */}
           <Route path="/home" element={<Homepage />} />
           <Route path="/auth" element={<Auth />} />
@@ -159,13 +157,12 @@ const App = () => (
 
               {/* 404 */}
               <Route path="*" element={<NotFound />} />
-              </Routes>
-              </Suspense>
-            </BrowserRouter>
-          </TooltipProvider>
-        </HRProvider>
-      </AuthProvider>
-    </CacheProvider>
+            </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </TooltipProvider>
+      </HRProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

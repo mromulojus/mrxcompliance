@@ -1,8 +1,58 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useCache } from '@/context/CacheContext';
 import type { Empresa, Colaborador } from '@/hooks/useSupabaseData';
+
+type CacheInterface = {
+  get: <T>(key: string) => T | null;
+  set: <T>(key: string, data: T, ttl?: number) => void;
+  clear: (key?: string) => void;
+  has: (key: string) => boolean;
+};
+
+// Simple in-memory fallback cache
+const createFallbackCache = (): CacheInterface => {
+  const cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+  
+  return {
+    get: <T,>(key: string): T | null => {
+      const entry = cache.get(key);
+      if (!entry) return null;
+      
+      const now = Date.now();
+      if (now > entry.timestamp + entry.ttl) {
+        cache.delete(key);
+        return null;
+      }
+      
+      return entry.data as T;
+    },
+    set: <T,>(key: string, data: T, ttl: number = 5 * 60 * 1000) => {
+      cache.set(key, {
+        data,
+        timestamp: Date.now(),
+        ttl
+      });
+    },
+    clear: (key?: string) => {
+      if (key) {
+        cache.delete(key);
+      } else {
+        cache.clear();
+      }
+    },
+    has: (key: string): boolean => {
+      const entry = cache.get(key);
+      if (!entry) return false;
+      
+      const now = Date.now();
+      return now <= entry.timestamp + entry.ttl;
+    }
+  };
+};
+
+// Create a singleton fallback cache
+const fallbackCache = createFallbackCache();
 
 type EmpresaDetalhesData = {
   empresa: Empresa | null;
@@ -17,7 +67,9 @@ export const useEmpresaDetalhes = (empresaId: string): EmpresaDetalhesData => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-  const cache = useCache();
+  
+  // Use fallback cache for now to avoid context issues
+  const cache = fallbackCache;
 
   // Cache keys
   const empresaCacheKey = `empresa_${empresaId}`;
