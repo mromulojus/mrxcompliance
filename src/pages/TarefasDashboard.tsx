@@ -218,6 +218,8 @@ export default function TarefasDashboard() {
         selectedBoardId={selectedBoardId}
         onBoardChange={setSelectedBoardId}
         empresaId={filters.empresa}
+        selectedModule={filters.modulo}
+        onModuleChange={(module) => setFilters({...filters, modulo: module})}
       />
 
       {/* Filters */}

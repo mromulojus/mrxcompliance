@@ -178,10 +178,13 @@ export function TaskFiltersComponent({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="geral">Geral</SelectItem>
-                <SelectItem value="ouvidoria">Ouvidoria</SelectItem>
-                <SelectItem value="auditoria">Auditoria</SelectItem>
-                <SelectItem value="cobrancas">Cobranças</SelectItem>
+                <SelectItem value="geral">🏢 Geral</SelectItem>
+                <SelectItem value="ouvidoria">🎧 Ouvidoria</SelectItem>
+                <SelectItem value="auditoria">🔍 Auditoria</SelectItem>
+                <SelectItem value="cobrancas">💰 Cobranças</SelectItem>
+                <SelectItem value="vendas">🚀 Vendas</SelectItem>
+                <SelectItem value="juridico">⚖️ Jurídico</SelectItem>
+                <SelectItem value="compliance">✅ Compliance</SelectItem>
               </SelectContent>
             </Select>
 
@@ -277,7 +280,14 @@ export function TaskFiltersComponent({
               
               {filters.modulo && (
                 <Badge variant="secondary" className="gap-1">
-                  Módulo: {filters.modulo}
+                  Módulo: {filters.modulo === 'geral' ? '🏢 Geral' :
+                          filters.modulo === 'ouvidoria' ? '🎧 Ouvidoria' :
+                          filters.modulo === 'auditoria' ? '🔍 Auditoria' :
+                          filters.modulo === 'cobrancas' ? '💰 Cobranças' :
+                          filters.modulo === 'vendas' ? '🚀 Vendas' :
+                          filters.modulo === 'juridico' ? '⚖️ Jurídico' :
+                          filters.modulo === 'compliance' ? '✅ Compliance' :
+                          filters.modulo}
                   <Button
                     variant="ghost"
                     size="sm"

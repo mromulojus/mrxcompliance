@@ -2,16 +2,19 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTaskBoards } from '@/hooks/useTaskBoards';
-import { Kanban, Plus } from 'lucide-react';
+import { Kanban, Plus, Filter } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { TaskModule } from '@/types/tarefas';
 
 interface BoardSelectorProps {
   selectedBoardId?: string;
   onBoardChange: (boardId: string | undefined) => void;
   empresaId?: string;
+  selectedModule?: TaskModule;
+  onModuleChange: (module: TaskModule | undefined) => void;
 }
 
-export function BoardSelector({ selectedBoardId, onBoardChange, empresaId }: BoardSelectorProps) {
+export function BoardSelector({ selectedBoardId, onBoardChange, empresaId, selectedModule, onModuleChange }: BoardSelectorProps) {
   const { boards, createBoard } = useTaskBoards();
   const [isCreatingBoard, setIsCreatingBoard] = useState(false);
   const { toast } = useToast();
@@ -78,7 +81,7 @@ export function BoardSelector({ selectedBoardId, onBoardChange, empresaId }: Boa
   };
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-4 flex-wrap">
       <div className="flex items-center gap-2">
         <Kanban className="h-4 w-4" />
         <span className="text-sm font-medium">Quadro:</span>
@@ -98,6 +101,30 @@ export function BoardSelector({ selectedBoardId, onBoardChange, empresaId }: Boa
               {board.name}
             </SelectItem>
           ))}
+        </SelectContent>
+      </Select>
+
+      <div className="flex items-center gap-2">
+        <Filter className="h-4 w-4" />
+        <span className="text-sm font-medium">Módulo:</span>
+      </div>
+
+      <Select 
+        value={selectedModule || "all"} 
+        onValueChange={(value) => onModuleChange(value === "all" ? undefined : value as TaskModule)}
+      >
+        <SelectTrigger className="w-52">
+          <SelectValue placeholder="Todos os módulos" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Todos os Módulos</SelectItem>
+          <SelectItem value="geral">🏢 Administrativo</SelectItem>
+          <SelectItem value="ouvidoria">🎧 Ouvidoria</SelectItem>
+          <SelectItem value="auditoria">🔍 Auditoria</SelectItem>
+          <SelectItem value="cobrancas">💰 Cobranças</SelectItem>
+          <SelectItem value="vendas">🚀 Vendas</SelectItem>
+          <SelectItem value="juridico">⚖️ Jurídico</SelectItem>
+          <SelectItem value="compliance">✅ Compliance</SelectItem>
         </SelectContent>
       </Select>
 
