@@ -441,33 +441,49 @@ const convertDenunciaToSupabase = (denuncia: Partial<Denuncia>): Partial<Supabas
     try {
       console.log('Criando denúncia:', denunciaData);
       
-      const supabaseData = convertDenunciaToSupabase({
-        ...denunciaData,
-        status: denunciaData.status || 'RECEBIDO'
-      });
+      // Generate protocol in frontend to avoid RLS issues
+      const currentYear = new Date().getFullYear();
+      const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+      const generatedProtocol = `MRX-${currentYear}-${randomNum}`;
+      
+      const supabaseData = {
+        ...convertDenunciaToSupabase({
+          ...denunciaData,
+          status: denunciaData.status || 'RECEBIDO',
+          protocolo: generatedProtocol
+        }),
+        protocolo: generatedProtocol
+      };
 
       console.log('Dados convertidos:', supabaseData);
 
-      const { data, error } = await supabase
+      // Just insert without trying to select back - avoid RLS complications
+      const { error } = await supabase
         .from('denuncias')
-        .insert(supabaseData as any)
-        .select('*')
-        .maybeSingle();
+        .insert(supabaseData as any);
 
       if (error) {
         console.error('Erro do Supabase:', error);
         throw error;
       }
 
-      if (!data) {
-        console.error('Nenhum dado retornado');
-        throw new Error('Erro ao criar denúncia: nenhum dado retornado');
-      }
-
-      console.log('Denúncia criada:', data);
+      console.log('Denúncia criada com protocolo:', generatedProtocol);
+      
+      // Create a mock denuncia object to return
+      const mockDenuncia: Denuncia = {
+        id: crypto.randomUUID(),
+        protocolo: generatedProtocol,
+        ...denunciaData,
+        status: denunciaData.status || 'RECEBIDO',
+        comentarios: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      // Refresh denuncias list
       await refetchDenuncias();
       toast.success('Denúncia criada com sucesso!');
-      return convertDenunciaFromSupabase(data as any);
+      return mockDenuncia;
     } catch (error) {
       console.error('Erro ao criar denúncia:', error);
       toast.error(`Erro ao criar denúncia: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
