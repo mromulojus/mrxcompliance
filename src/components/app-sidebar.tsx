@@ -29,6 +29,22 @@ export function AppSidebar() {
     <Logo variant="icon" size="sm" className={className} />
   );
 
+  // Filtrar itens baseado no role do usuário
+  const getVisibleItems = (allItems: Item[]) => {
+    const userRole = profile?.role;
+    
+    // Usuários operacional e empresarial só veem Empresas e Denúncias
+    if (userRole === 'operacional' || userRole === 'empresarial') {
+      return allItems.filter(item => 
+        item.url === "/empresas" || 
+        item.url === "/denuncias/dashboard"
+      );
+    }
+    
+    // Administradores e superusers veem tudo
+    return allItems;
+  };
+
   const items: Item[] = [
     { title: "Painel", url: "/", icon: MrxIcon as unknown as LucideIcon, show: true },
     { title: "Tarefas", url: "/tarefas", icon: KanbanSquare, show: true },
@@ -40,12 +56,14 @@ export function AppSidebar() {
     // Itens administrativos movidos para o menu "Opções" no cabeçalho
   ];
 
+  const visibleItems = getVisibleItems(items);
+
   return (
     <Sidebar>
       <SidebarBody className="justify-between gap-10">
         <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
           <div className="mt-2 flex flex-col gap-2">
-            {items.filter((i) => i.show).map((item) => (
+            {visibleItems.filter((i) => i.show).map((item) => (
               <SidebarLink
                 key={item.title}
                 className={path === item.url ? "bg-neutral-200/60 dark:bg-neutral-700/60 rounded-md px-2" : "px-2"}

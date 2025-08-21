@@ -21,6 +21,11 @@ import {
 export function OptionsMenu() {
   const { profile } = useAuth();
 
+  // Apenas administradores e superusers têm acesso ao menu de opções
+  if (!profile?.role || (profile.role !== 'administrador' && profile.role !== 'superuser')) {
+    return null;
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

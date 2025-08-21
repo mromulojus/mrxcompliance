@@ -58,19 +58,59 @@ const App = () => (
                   <AppLayout />
                 </ProtectedRoute>
               }>
-                <Route path="/" element={<Index />} />
-                <Route path="/tarefas" element={<TarefasDashboard />} />
-                <Route path="/tarefas/quadros" element={<TarefasBoards />} />
-                <Route path="/tarefas/quadros/:boardId" element={<TarefaBoardView />} />
-                <Route path="/dashboard" element={<Index />} />
+                <Route path="/" element={
+                  <ProtectedRoute allowedRoles={["superuser", "administrador"]}>
+                    <Index />
+                  </ProtectedRoute>
+                } />
+                <Route path="/tarefas" element={
+                  <ProtectedRoute allowedRoles={["superuser", "administrador"]}>
+                    <TarefasDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/tarefas/quadros" element={
+                  <ProtectedRoute allowedRoles={["superuser", "administrador"]}>
+                    <TarefasBoards />
+                  </ProtectedRoute>
+                } />
+                <Route path="/tarefas/quadros/:boardId" element={
+                  <ProtectedRoute allowedRoles={["superuser", "administrador"]}>
+                    <TarefaBoardView />
+                  </ProtectedRoute>
+                } />
+                <Route path="/dashboard" element={
+                  <ProtectedRoute allowedRoles={["superuser", "administrador"]}>
+                    <Index />
+                  </ProtectedRoute>
+                } />
                 <Route path="/empresas" element={<Empresas />} />
                 <Route path="/empresa/:empresaId" element={<EmpresaDetalhes />} />
-                <Route path="/debto" element={<DebtosDashboard />} />
-                <Route path="/devedor/:devedorId" element={<DevedorDetalhes />} />
-                <Route path="/divida/:dividaId" element={<DividaDetalhes />} />
+                <Route path="/debto" element={
+                  <ProtectedRoute allowedRoles={["superuser", "administrador"]}>
+                    <DebtosDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/devedor/:devedorId" element={
+                  <ProtectedRoute allowedRoles={["superuser", "administrador"]}>
+                    <DevedorDetalhes />
+                  </ProtectedRoute>
+                } />
+                <Route path="/divida/:dividaId" element={
+                  <ProtectedRoute allowedRoles={["superuser", "administrador"]}>
+                    <DividaDetalhes />
+                  </ProtectedRoute>
+                } />
                 <Route path="/denuncias/dashboard" element={<DenunciasDashboard />} />
-                <Route path="/indicadores" element={<Indicadores />} />
-                <Route path="/calendario" element={<Calendario />} />
+                <Route path="/indicadores" element={
+                  <ProtectedRoute allowedRoles={["superuser", "administrador"]}>
+                    <Indicadores />
+                  </ProtectedRoute>
+                } />
+                <Route path="/calendario" element={
+                  <ProtectedRoute allowedRoles={["superuser", "administrador"]}>
+                    <Calendario />
+                  </ProtectedRoute>
+                } />
                 <Route path="/calendario" element={<Calendario />} />
                 
                 {/* Admin only routes */}
