@@ -32,7 +32,7 @@ import { TaskFormData, UserProfile } from '@/types/tarefas';
 import { supabase } from '@/integrations/supabase/client';
 import { EmpresaSelectModal } from '@/components/empresas/EmpresaSelectModal';
 import { Label } from '@/components/ui/label';
-import { Paperclip, Circle, Plus, X } from 'lucide-react';
+import { Paperclip, Circle, Plus, X, Building2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 
 const taskFormSchema = z.object({
@@ -78,6 +78,8 @@ export function TaskFormModal({
   const [selectedResponsaveis, setSelectedResponsaveis] = useState<string[]>([]);
   const [targetBoard, setTargetBoard] = useState<string>('');
   const [initialChecklist, setInitialChecklist] = useState<string[]>(['']);
+  const [empresas, setEmpresas] = useState<{ id: string; nome: string }[]>([]);
+  const [loadingEmpresas, setLoadingEmpresas] = useState(false);
 
   // Module to board mapping
   const getModuleToBoardMapping = () => ({
@@ -173,6 +175,41 @@ export function TaskFormModal({
   const removeChecklistItem = (index: number) => {
     setInitialChecklist(prev => prev.filter((_, i) => i !== index));
   };
+
+  const fetchEmpresas = async () => {
+    setLoadingEmpresas(true);
+    try {
+      const { data, error } = await supabase
+        .from('empresas')
+        .select('id, nome')
+        .order('nome');
+      
+      if (error) throw error;
+      setEmpresas(data || []);
+    } catch (error) {
+      console.error('Erro ao buscar empresas:', error);
+    } finally {
+      setLoadingEmpresas(false);
+    }
+  };
+
+  const generateEmpresasChecklist = () => {
+    const empresasTemplate = empresas.map(empresa => `${empresa.nome}`);
+    
+    if (initialChecklist.some(item => item.trim() !== '')) {
+      const confirmReplace = window.confirm('O checklist já possui itens. Deseja substituí-los pelo modelo de empresas?');
+      if (!confirmReplace) return;
+    }
+    
+    setInitialChecklist([...empresasTemplate, '']);
+  };
+
+  // Fetch empresas when modal opens
+  useEffect(() => {
+    if (open && empresas.length === 0) {
+      fetchEmpresas();
+    }
+  }, [open, empresas.length]);
 
   const handleSubmit = async (data: TaskFormData) => {
     const empresaId = selectedEmpresa?.id || data.empresa_id;
@@ -296,16 +333,34 @@ export function TaskFormModal({
                     </Button>
                   </div>
                 ))}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addChecklistItem}
-                  className="w-full"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Adicionar item ao checklist
-                </Button>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addChecklistItem}
+                    className="w-full"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Adicionar item
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={generateEmpresasChecklist}
+                    disabled={loadingEmpresas || empresas.length === 0}
+                    className="w-full"
+                  >
+                    <Building2 className="h-4 w-4 mr-2" />
+                    {loadingEmpresas ? 'Carregando...' : 'Modelo empresas'}
+                  </Button>
+                </div>
+                {empresas.length > 0 && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    📋 Modelo disponível com {empresas.length} empresa{empresas.length !== 1 ? 's' : ''} ativa{empresas.length !== 1 ? 's' : ''}
+                  </p>
+                )}
               </div>
             </div>
 
