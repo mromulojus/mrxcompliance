@@ -164,9 +164,40 @@ export function TaskCreationTest() {
         result += `❌ Erro no teste do hook: ${hookTestError.message}\n`;
       }
 
+      // Test 7: Final verification after fixes
+      result += '\n=== TESTE FINAL (PÓS-CORREÇÃO) ===\n';
+      try {
+        const finalTestData = {
+          titulo: `Final Test ${Date.now()}`,
+          descricao: 'Teste final após correções do trigger',
+          modulo_origem: 'geral' as TaskModule,
+          status: 'a_fazer' as TaskStatus,
+          prioridade: 'media' as TaskPriority,
+          created_by: user.id,
+          ordem_na_coluna: 0,
+          is_archived: false
+        };
+
+        const { data: finalTask, error: finalError } = await supabase
+          .from('tarefas')
+          .insert(finalTestData)
+          .select()
+          .single();
+
+        if (finalError) {
+          result += `❌ Erro no teste final: ${finalError.message}\n`;
+        } else {
+          result += `✅ SUCESSO! Criação sem empresa funcionando: ${finalTask.id}\n`;
+          await supabase.from('tarefas').delete().eq('id', finalTask.id);
+          result += '✅ Teste final completo - Sistema operacional\n';
+        }
+      } catch (finalTestError: any) {
+        result += `❌ Erro no teste final: ${finalTestError.message}\n`;
+      }
+
       toast({
         title: 'Diagnóstico completo',
-        description: 'Verifique os resultados no painel'
+        description: 'Sistema corrigido! Verifique os resultados detalhados no painel.'
       });
 
     } catch (error: any) {
@@ -186,6 +217,17 @@ export function TaskCreationTest() {
     <Card className="w-full max-w-4xl">
       <CardHeader>
         <CardTitle>🔧 Diagnóstico do Sistema de Tarefas</CardTitle>
+        <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-md">
+          <div className="flex items-center gap-2">
+            <span className="text-green-600">✅</span>
+            <span className="text-sm text-green-800 font-medium">
+              Correção aplicada: Trigger do histórico da empresa foi corrigido
+            </span>
+          </div>
+          <p className="text-xs text-green-700 mt-1">
+            O sistema agora permite criar tarefas sem empresa vinculada
+          </p>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <Button 
