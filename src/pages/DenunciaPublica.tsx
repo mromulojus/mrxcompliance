@@ -108,12 +108,19 @@ export default function DenunciaPublica() {
     }
 
     try {
+      console.log('Iniciando criação de denúncia...');
+      setUploadingAnexos(false);
+      
       // Upload anexos antes de criar a denúncia
       let anexosPaths: string[] = [];
       if (selectedFiles.length > 0) {
+        console.log('Fazendo upload de anexos:', selectedFiles.length, 'arquivos');
         setUploadingAnexos(true);
         const folder = `empresa_${empresaId}/${Date.now()}_${Math.random().toString(36).slice(2)}`;
+        
         for (const file of selectedFiles) {
+          console.log('Processando arquivo:', file.name, 'Tamanho:', file.size);
+          
           // Validações: tipo e tamanho (máx 10MB por arquivo)
           const allowedTypes = [
             'image/jpeg', 'image/png', 'image/webp',
@@ -130,15 +137,25 @@ export default function DenunciaPublica() {
 
           const safeName = file.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
           const path = `${folder}/${Date.now()}_${safeName}`;
+          
+          console.log('Fazendo upload para:', path);
           const { data: uploadData, error: uploadError } = await supabase.storage
             .from('denuncia-anexos')
             .upload(path, file, { cacheControl: '3600' });
-          if (uploadError) throw uploadError;
+            
+          if (uploadError) {
+            console.error('Erro no upload:', uploadError);
+            throw uploadError;
+          }
+          
+          console.log('Upload concluído:', uploadData.path);
           anexosPaths.push(uploadData.path);
         }
         setUploadingAnexos(false);
+        console.log('Todos os anexos enviados:', anexosPaths);
       }
 
+      console.log('Criando denúncia com dados:', formData);
       const denuncia = await criarDenuncia({
         empresaId: empresaId!,
         identificado: formData.identificado,
@@ -155,8 +172,12 @@ export default function DenunciaPublica() {
         anexos: anexosPaths.length ? anexosPaths : undefined,
       });
 
-      if (!denuncia) throw new Error('Falha ao criar denúncia');
+      if (!denuncia) {
+        console.error('Denúncia retornou null');
+        throw new Error('Falha ao criar denúncia - nenhum dado retornado');
+      }
 
+      console.log('Denúncia criada com sucesso:', denuncia);
       setProtocolo(denuncia.protocolo);
       setSubmitted(true);
       setSelectedFiles([]);
@@ -166,10 +187,17 @@ export default function DenunciaPublica() {
         description: `Protocolo ${denuncia.protocolo} gerado com sucesso.`
       });
     } catch (error) {
-      console.error('Erro ao registrar denúncia:', error);
+      console.error('Erro detalhado ao registrar denúncia:', error);
+      setUploadingAnexos(false);
+      
+      let errorMessage = 'Ocorreu um erro ao registrar a denúncia. Tente novamente.';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: 'Erro',
-        description: 'Ocorreu um erro ao registrar a denúncia. Tente novamente.',
+        description: errorMessage,
         variant: 'destructive'
       });
     }

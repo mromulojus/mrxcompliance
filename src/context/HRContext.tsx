@@ -434,33 +434,46 @@ const convertDenunciaToSupabase = (denuncia: Partial<Denuncia>): Partial<Supabas
     setFiltrosState(prev => ({ ...prev, ...novosFiltros }));
   };
 
-    // Denúncias
-    const criarDenuncia = async (
-      denunciaData: Omit<Denuncia, 'id' | 'protocolo' | 'status' | 'comentarios' | 'createdAt' | 'updatedAt'> & { status?: DenunciaStatus }
-    ): Promise<Denuncia | null> => {
-      try {
-        const supabaseData = convertDenunciaToSupabase({
-          ...denunciaData,
-          status: denunciaData.status || 'RECEBIDO'
-        });
+  // Denúncias
+  const criarDenuncia = async (
+    denunciaData: Omit<Denuncia, 'id' | 'protocolo' | 'status' | 'comentarios' | 'createdAt' | 'updatedAt'> & { status?: DenunciaStatus }
+  ): Promise<Denuncia | null> => {
+    try {
+      console.log('Criando denúncia:', denunciaData);
+      
+      const supabaseData = convertDenunciaToSupabase({
+        ...denunciaData,
+        status: denunciaData.status || 'RECEBIDO'
+      });
 
-        const { data, error } = await supabase
-          .from('denuncias')
-          .insert(supabaseData as any)
-          .select('*, comentarios_denuncia(*)')
-          .single();
+      console.log('Dados convertidos:', supabaseData);
 
-        if (error) throw error;
+      const { data, error } = await supabase
+        .from('denuncias')
+        .insert(supabaseData as any)
+        .select('*')
+        .maybeSingle();
 
-        await refetchDenuncias();
-        toast.success('Denúncia criada com sucesso!');
-        return convertDenunciaFromSupabase(data as any);
-      } catch (error) {
-        console.error('Erro ao criar denúncia:', error);
-        toast.error('Erro ao criar denúncia');
-        return null;
+      if (error) {
+        console.error('Erro do Supabase:', error);
+        throw error;
       }
-    };
+
+      if (!data) {
+        console.error('Nenhum dado retornado');
+        throw new Error('Erro ao criar denúncia: nenhum dado retornado');
+      }
+
+      console.log('Denúncia criada:', data);
+      await refetchDenuncias();
+      toast.success('Denúncia criada com sucesso!');
+      return convertDenunciaFromSupabase(data as any);
+    } catch (error) {
+      console.error('Erro ao criar denúncia:', error);
+      toast.error(`Erro ao criar denúncia: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      return null;
+    }
+  };
 
     const atualizarStatus = async (id: string, status: DenunciaStatus) => {
       try {
