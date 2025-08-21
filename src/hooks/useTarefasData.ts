@@ -1,13 +1,30 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { TarefaWithUser, Tarefa, TaskFormData, TaskFilters, TaskKPIs } from '@/types/tarefas';
+import { TarefaWithUser, Tarefa, TaskFormData, TaskFilters, TaskKPIs, UserProfile } from '@/types/tarefas';
 import { useToast } from '@/hooks/use-toast';
 
 export function useTarefasData() {
   const [tarefas, setTarefas] = useState<TarefaWithUser[]>([]);
+  const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Fetch users
+  const fetchUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, username, avatar_url, is_active')
+        .eq('is_active', true)
+        .order('full_name');
+
+      if (error) throw error;
+      setUsers(data || []);
+    } catch (err) {
+      console.error('Erro ao buscar usuários:', err);
+    }
+  };
 
   // Fetch tarefas
   const fetchTarefas = async () => {
@@ -132,36 +149,79 @@ export function useTarefasData() {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) throw new Error('Usuário não autenticado');
 
-      // Auto-assign board and column based on module
-      const enrichedData = await assignBoardAndColumn(tarefaData);
+      // Validate required fields
+      if (!tarefaData.titulo || tarefaData.titulo.trim().length === 0) {
+        throw new Error('Título da tarefa é obrigatório');
+      }
 
-      // Handle "none" value for responsavel_id
+      // Auto-assign board and column based on module (only if empresa_id is provided)
+      let enrichedData = tarefaData;
+      try {
+        if (tarefaData.empresa_id && tarefaData.modulo_origem) {
+          enrichedData = await assignBoardAndColumn(tarefaData);
+        }
+      } catch (boardError) {
+        console.warn('Erro ao atribuir quadro automático:', boardError);
+        // Continue without board assignment
+      }
+
+      // Handle "none" value for responsavel_id and ensure proper data types
       const processedData = {
-        ...enrichedData,
+        titulo: enrichedData.titulo.trim(),
+        descricao: enrichedData.descricao?.trim() || null,
+        modulo_origem: enrichedData.modulo_origem || 'geral',
+        empresa_id: enrichedData.empresa_id || null,
         responsavel_id: enrichedData.responsavel_id === 'none' ? null : enrichedData.responsavel_id,
+        status: enrichedData.status || 'a_fazer',
+        prioridade: enrichedData.prioridade || 'media',
+        data_vencimento: enrichedData.data_vencimento || null,
+        anexos: enrichedData.anexos || null,
+        board_id: enrichedData.board_id || null,
+        column_id: enrichedData.column_id || null,
+        ordem_na_coluna: 0,
         created_by: user.user.id,
+        is_archived: false
       };
+
+      console.log('Creating task with data:', processedData);
 
       const { data, error } = await supabase
         .from('tarefas')
-        .insert(processedData as any)
+        .insert(processedData)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error details:', error);
+        throw new Error(`Erro do banco de dados: ${error.message}`);
+      }
 
-      setTarefas(prev => [...prev, data]);
+      // Fetch user data for the created task if there's a responsible
+      let responsavel: any = undefined;
+      if (data.responsavel_id) {
+        const { data: userData } = await supabase
+          .from('profiles')
+          .select('user_id, full_name, username, avatar_url')
+          .eq('user_id', data.responsavel_id)
+          .single();
+        responsavel = userData;
+      }
+
+      const taskWithUser = { ...data, responsavel };
+      setTarefas(prev => [...prev, taskWithUser]);
+      
       toast({
         title: 'Sucesso',
-        description: 'Tarefa criada e direcionada para o quadro departamental',
+        description: 'Tarefa criada com sucesso',
       });
 
-      return data;
-    } catch (err) {
+      return taskWithUser;
+    } catch (err: any) {
       console.error('Erro ao criar tarefa:', err);
+      const errorMessage = err.message || 'Não foi possível criar a tarefa';
       toast({
         title: 'Erro',
-        description: 'Não foi possível criar a tarefa',
+        description: errorMessage,
         variant: 'destructive',
       });
       throw err;
@@ -351,11 +411,13 @@ export function useTarefasData() {
   };
 
   useEffect(() => {
+    fetchUsers();
     fetchTarefas();
   }, []);
 
   return {
     tarefas,
+    users,
     loading,
     error,
     createTarefa,

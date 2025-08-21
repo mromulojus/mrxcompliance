@@ -31,6 +31,7 @@ import TarefasDashboard from "./pages/TarefasDashboard";
 import TarefasBoards from "./pages/TarefasBoards";
 import TarefaBoardView from "./pages/TarefaBoardView";
 import Homepage from "@/pages/Homepage";
+import TaskDiagnosticPage from "./pages/TaskDiagnosticPage";
 
 import Indicadores from "@/pages/Indicadores";
 import Calendario from "@/pages/Calendario";
@@ -78,6 +79,11 @@ const App = () => (
                 <Route path="/tarefas/quadros/:boardId" element={
                   <ProtectedRoute allowedRoles={["superuser", "administrador"]}>
                     <TarefaBoardView />
+                  </ProtectedRoute>
+                } />
+                <Route path="/diagnostic" element={
+                  <ProtectedRoute allowedRoles={["superuser", "administrador"]}>
+                    <TaskDiagnosticPage />
                   </ProtectedRoute>
                 } />
                 <Route path="/dashboard" element={

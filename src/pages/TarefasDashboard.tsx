@@ -46,6 +46,8 @@ export default function TarefasDashboard() {
     updateTarefas,
     filterTarefas,
     refreshTarefas,
+    users: usersFromHook,
+    error
   } = useTarefasData();
 
   // Initialize with current user's tasks by default
@@ -64,8 +66,8 @@ export default function TarefasDashboard() {
     getCurrentUser();
   }, []);
 
-  // Mock users data since not available in hook
-  const users = [];
+  // Get users from hook
+  const users = usersFromHook || [];
 
   // Apply filters and board selection
   const filteredTarefas = useMemo(() => {
@@ -91,8 +93,14 @@ export default function TarefasDashboard() {
   
 
   const handleTaskCreate = async (taskData: TaskFormData) => {
-    await createTarefa(taskData);
-    setShowTaskModal(false);
+    try {
+      await createTarefa(taskData);
+      setShowTaskModal(false);
+      await refreshTarefas(); // Refresh after creation
+    } catch (error) {
+      console.error('Erro ao criar tarefa:', error);
+      // Error already shown by hook toast
+    }
   };
 
   const handleTaskCreateFromColumn = (moduleTypeOrStatus: string) => {
@@ -188,6 +196,16 @@ export default function TarefasDashboard() {
         </div>
         
         <div className="flex items-center gap-2">
+          {/* Diagnostic button - temporary */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/diagnostic')}
+            className="text-xs bg-yellow-50 border-yellow-200 text-yellow-700 hover:bg-yellow-100"
+          >
+            🔧 Diagnóstico
+          </Button>
+          
           {/* Removido botão "Ver Quadros" em favor do botão Grade */}
           <Button
             variant="outline"
@@ -308,7 +326,7 @@ export default function TarefasDashboard() {
                   tasks={filteredTarefas}
                   onTaskUpdate={(taskId, status, order) => handleTaskUpdate(taskId, status, order)}
                   onTaskCreate={handleTaskCreateFromColumn}
-                  onTaskDelete={deleteTarefa}
+                  onTaskDelete={() => {}} // Disabled delete in grid mode
                   onTaskClick={handleTaskClick}
                   onTaskClose={handleTaskClose}
                   loading={loading}
