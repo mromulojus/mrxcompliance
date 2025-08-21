@@ -211,7 +211,14 @@ export function FormColaboradorCompleto({ colaborador, empresaId, onSalvar, onCa
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          {colaborador ? 'Editar Colaborador' : 'Novo Colaborador'}
+          {colaborador ? (
+            <div className="flex flex-col">
+              <span>Editar Colaborador</span>
+              <Badge variant="secondary" className="w-fit text-xs mt-1">
+                {colaborador.nome} - {colaborador.cargo}
+              </Badge>
+            </div>
+          ) : 'Novo Colaborador'}
           <Button
             type="button"
             variant="outline"
@@ -223,6 +230,14 @@ export function FormColaboradorCompleto({ colaborador, empresaId, onSalvar, onCa
             Foto de Perfil
           </Button>
         </CardTitle>
+        {colaborador && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-2">
+            <p className="text-sm text-yellow-800">
+              <strong>⚠️ ATENÇÃO:</strong> Você está editando os dados de <strong>{colaborador.nome}</strong>. 
+              Verifique se os dados inseridos estão corretos para evitar sobrescrever informações importantes.
+            </p>
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit}>
@@ -973,7 +988,10 @@ export function FormColaboradorCompleto({ colaborador, empresaId, onSalvar, onCa
                 Cancelar
               </Button>
               <Button type="submit">
-                {colaborador ? 'Atualizar' : 'Salvar'}
+                {colaborador ? 
+                  `Salvar Alterações - ${colaborador.nome}` : 
+                  'Cadastrar Colaborador'
+                }
               </Button>
             </div>
           </Tabs>
