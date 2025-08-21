@@ -246,14 +246,6 @@ const EmpresaHistorico: React.FC<EmpresaHistoricoProps> = ({ empresaId, classNam
                           {item.anexos.length} anexo(s)
                         </div>
                       )}
-                      
-                      {item.meta && (
-                        <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
-                          <pre className="whitespace-pre-wrap">
-                            {JSON.stringify(item.meta, null, 2)}
-                          </pre>
-                        </div>
-                      )}
                     </div>
                   </div>
                   {index < historico.length - 1 && <Separator />}
