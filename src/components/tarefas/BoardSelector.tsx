@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTaskBoards } from '@/hooks/useTaskBoards';
-import { Kanban, Plus, Filter } from 'lucide-react';
+import { Kanban, Plus, Filter, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { TaskModule } from '@/types/tarefas';
+import { TaskModule, UserProfile } from '@/types/tarefas';
+import { supabase } from '@/integrations/supabase/client';
 
 interface BoardSelectorProps {
   selectedBoardId?: string;
@@ -12,12 +13,47 @@ interface BoardSelectorProps {
   empresaId?: string;
   selectedModule?: TaskModule;
   onModuleChange: (module: TaskModule | undefined) => void;
+  selectedUser?: string;
+  onUserChange: (userId: string | undefined) => void;
 }
 
-export function BoardSelector({ selectedBoardId, onBoardChange, empresaId, selectedModule, onModuleChange }: BoardSelectorProps) {
+export function BoardSelector({ 
+  selectedBoardId, 
+  onBoardChange, 
+  empresaId, 
+  selectedModule, 
+  onModuleChange,
+  selectedUser,
+  onUserChange 
+}: BoardSelectorProps) {
   const { boards, createBoard } = useTaskBoards();
   const [isCreatingBoard, setIsCreatingBoard] = useState(false);
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [currentUser, setCurrentUser] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Fetch users for filter dropdown
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const [usersResult, userResult] = await Promise.all([
+          supabase
+            .from('profiles')
+            .select('user_id, full_name, username, is_active')
+            .eq('is_active', true)
+            .order('full_name'),
+          supabase.auth.getUser()
+        ]);
+
+        if (usersResult.data) setUsers(usersResult.data);
+        if (userResult.data.user) setCurrentUser(userResult.data.user.id);
+      } catch (err) {
+        console.error('Error fetching users:', err);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   const filteredBoards = boards.filter(board => 
     !empresaId || board.empresa_id === empresaId
@@ -125,6 +161,32 @@ export function BoardSelector({ selectedBoardId, onBoardChange, empresaId, selec
           <SelectItem value="vendas">🚀 Vendas</SelectItem>
           <SelectItem value="juridico">⚖️ Jurídico</SelectItem>
           <SelectItem value="compliance">✅ Compliance</SelectItem>
+        </SelectContent>
+      </Select>
+
+      <div className="flex items-center gap-2">
+        <Users className="h-4 w-4" />
+        <span className="text-sm font-medium">Responsável:</span>
+      </div>
+
+      <Select 
+        value={selectedUser || "all"} 
+        onValueChange={(value) => onUserChange(value === "all" ? undefined : value)}
+      >
+        <SelectTrigger className="w-52">
+          <SelectValue placeholder="Todos os usuários" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Todos</SelectItem>
+          {currentUser && (
+            <SelectItem value={currentUser}>Minhas Tarefas</SelectItem>
+          )}
+          <SelectItem value="unassigned">Não Atribuídas</SelectItem>
+          {users.map((user) => (
+            <SelectItem key={user.user_id} value={user.user_id}>
+              {user.full_name || user.username}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
 

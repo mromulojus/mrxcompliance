@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { KanbanSquare, LayoutGrid, Filter, RefreshCw } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -21,18 +21,20 @@ import { BoardSelector } from '@/components/tarefas/BoardSelector';
 import { useTarefasData } from '@/hooks/useTarefasData';
 import { TaskFilters, TaskFormData, TaskStatus, TarefaWithUser } from '@/types/tarefas';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function TarefasDashboard() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [view, setView] = useState<'kanban' | 'grid'>('kanban');
   const [filters, setFilters] = useState<TaskFilters>({});
+  const [currentUser, setCurrentUser] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [showTaskDetails, setShowTaskDetails] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TarefaWithUser | null>(null);
   const [selectedColumnStatus, setSelectedColumnStatus] = useState<TaskStatus>('a_fazer');
-  const [selectedBoardId, setSelectedBoardId] = useState<string | undefined>();
+  const [selectedBoardId, setSelectedBoardId] = useState<string | undefined>(undefined);
 
   const {
     tarefas,
@@ -45,6 +47,22 @@ export default function TarefasDashboard() {
     filterTarefas,
     refreshTarefas,
   } = useTarefasData();
+
+  // Initialize with current user's tasks by default
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setCurrentUser(user.id);
+        // Set initial filter to current user's tasks
+        setFilters(prev => ({
+          ...prev,
+          responsavel: user.id
+        }));
+      }
+    };
+    getCurrentUser();
+  }, []);
 
   // Mock users data since not available in hook
   const users = [];
@@ -220,6 +238,8 @@ export default function TarefasDashboard() {
         empresaId={filters.empresa}
         selectedModule={filters.modulo}
         onModuleChange={(module) => setFilters({...filters, modulo: module})}
+        selectedUser={filters.responsavel}
+        onUserChange={(userId) => setFilters({...filters, responsavel: userId})}
       />
 
       {/* Filters */}
