@@ -1066,6 +1066,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_historico_colaborador_created_by"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "historico_colaborador_colaborador_id_fkey"
             columns: ["colaborador_id"]
             isOneToOne: false
