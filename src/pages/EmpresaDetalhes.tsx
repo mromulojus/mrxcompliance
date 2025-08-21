@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { ArrowLeft, Users, Building2, TrendingUp, PieChart, BarChart3, DollarSign, UserPlus, FileSpreadsheet, FileText, CheckSquare, AlertTriangle, Search, LayoutDashboard, Scale, Copy } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { useSupabaseData } from '@/hooks/useSupabaseData';
+import { useEmpresaDetalhes } from '@/hooks/useEmpresaDetalhes';
 import { useHR } from '@/context/HRContext';
 import { ColaboradorCard } from '@/components/hr/ColaboradorCard';
 import { FormColaboradorCompleto } from '@/components/hr/FormColaboradorCompleto';
@@ -33,10 +34,10 @@ export default function EmpresaDetalhes() {
   } = useParams();
   const navigate = useNavigate();
   const {
-    empresas,
-    colaboradores,
+    empresa,
+    colaboradores: colaboradoresEmpresa,
     loading
-  } = useSupabaseData();
+  } = useEmpresaDetalhes(empresaId || '');
   const { colaboradores: colaboradoresHR } = useHR();
   const [showFormColaborador, setShowFormColaborador] = useState(false);
   const [showImportColaboradores, setShowImportColaboradores] = useState(false);
@@ -51,8 +52,6 @@ export default function EmpresaDetalhes() {
     return <CompanyLoadingScreen />;
   }
 
-  const empresa = empresas.find(e => e.id === empresaId);
-  
   // Only show "not found" after loading is complete AND company doesn't exist
   if (!loading && !empresa) {
     return <div className="min-h-screen bg-background flex items-center justify-center">
@@ -63,9 +62,6 @@ export default function EmpresaDetalhes() {
       </div>;
   }
 
-  // Usar apenas colaboradores do Supabase para evitar duplicação
-  const colaboradoresEmpresa = colaboradores.filter(c => c.empresa_id === empresaId);
-  
   // Filtrar colaboradores pela busca
   const colaboradoresFiltrados = colaboradoresEmpresa.filter(colaborador =>
     colaborador.nome.toLowerCase().includes(searchColaboradores.toLowerCase()) ||
