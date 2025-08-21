@@ -51,6 +51,10 @@ export function calcularRescisao({
   const verbasBase = feriasProporcionais + tercoFerias + decimoTerceiro + avisoPrevio;
 
   // Tratamento de tipo de contrato
+  if (!tipoContrato) {
+    return { erro: "Tipo de contrato não informado." };
+  }
+  
   const tipo = tipoContrato.toUpperCase() as 'CLT' | 'PJ' | 'PF';
 
   if (tipo === 'CLT') {
