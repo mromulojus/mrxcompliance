@@ -88,6 +88,18 @@ export function calcularRescisao({
 }
 
 export function calcularRescisaoColaborador(colaborador: Colaborador): CalculoRescisao | { erro: string } {
+  if (!colaborador.tipo_contrato) {
+    return { erro: "Tipo de contrato não informado no colaborador." };
+  }
+  
+  if (!colaborador.data_admissao) {
+    return { erro: "Data de admissão não informada no colaborador." };
+  }
+  
+  if (!colaborador.salario_base || colaborador.salario_base <= 0) {
+    return { erro: "Salário base inválido no colaborador." };
+  }
+
   return calcularRescisao({
     tipoContrato: colaborador.tipo_contrato,
     dataAdmissao: colaborador.data_admissao,
