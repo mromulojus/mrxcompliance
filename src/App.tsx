@@ -17,6 +17,8 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 const ActivityLog = lazy(() => import('@/pages/admin/ActivityLog'));
 const SystemData = lazy(() => import('@/pages/admin/SystemData'));
 const Structure = lazy(() => import('@/pages/admin/Structure'));
+const UserDetails = lazy(() => import('@/pages/admin/UserDetails'));
+const Profile = lazy(() => import('@/pages/Profile'));
 const UsersPage = lazy(() => import('@/pages/admin/Users'));
 const Docs = lazy(() => import('@/pages/admin/Docs'));
 import Auth from "@/pages/Auth";
@@ -29,7 +31,7 @@ import TarefasDashboard from "./pages/TarefasDashboard";
 import TarefasBoards from "./pages/TarefasBoards";
 import TarefaBoardView from "./pages/TarefaBoardView";
 import Homepage from "@/pages/Homepage";
-import UserDetails from "@/pages/admin/UserDetails";
+
 import Indicadores from "@/pages/Indicadores";
 import Calendario from "@/pages/Calendario";
 
@@ -137,6 +139,11 @@ const App = () => (
                 <Route path="/admin/users/:userId" element={
                   <ProtectedRoute allowedRoles={["superuser", "administrador"]} allowSelfParamKey="userId">
                     <UserDetails />
+                  </ProtectedRoute>
+                } />
+                <Route path="/profile" element={
+                  <ProtectedRoute>
+                    <Profile />
                   </ProtectedRoute>
                 } />
                 <Route path="/admin/docs" element={<Docs />} />

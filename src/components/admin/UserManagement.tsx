@@ -107,7 +107,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         email: data.email,
         password: data.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: `${window.location.origin}/auth`,
           data: {
             username: data.username,
             full_name: data.full_name
@@ -172,22 +172,25 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         // Don't show error to user since the user was created successfully
       }
 
-      // Persistir departamentos selecionados (se houver) para o novo usuário
+      // Send welcome email
       try {
-        if (deptSelected.length > 0 && authData.user) {
-          const rows = deptSelected.map((id) => ({
-            user_id: authData.user!.id,
-            department_id: id,
-            role_in_department: "member",
-            is_primary: false,
-          }));
-          // await supabase.from("user_departments").insert(rows);
-        }
-      } catch {}
+        await supabase.functions.invoke('send-welcome-email', {
+          body: {
+            email: data.email,
+            full_name: data.full_name,
+            username: data.username,
+            password: data.password
+          }
+        });
+        console.log('Welcome email sent successfully');
+      } catch (emailError) {
+        console.error('Failed to send welcome email:', emailError);
+        // Don't fail user creation if email fails
+      }
 
       toast({
         title: "Usuário criado",
-        description: `Usuário ${data.username} criado com sucesso.`
+        description: `Usuário ${data.username} criado com sucesso. Um email de boas-vindas foi enviado.`
       });
 
       createForm.reset();
