@@ -413,7 +413,7 @@ const convertDenunciaToSupabase = (denuncia: Partial<Denuncia>): Partial<Supabas
         await removeColaboradorSupabase(colaborador.id);
       }
       
-      // Then remove the company
+      // Then remove the company - use the correct function name
       await removeEmpresaSupabase(id);
       toast.success('Empresa e colaboradores removidos com sucesso!');
     } catch (error) {

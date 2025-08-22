@@ -39,11 +39,11 @@ const taskFormSchema = z.object({
   titulo: z.string().min(1, 'Título é obrigatório'),
   descricao: z.string().optional(),
   modulo_origem: z.enum(['ouvidoria', 'auditoria', 'cobrancas', 'geral', 'vendas', 'juridico', 'compliance']),
-  empresa_id: z.string().optional(),
+  empresa_id: z.string().optional().or(z.literal('')),
   responsavel_id: z.string().optional(),
   status: z.enum(['a_fazer', 'em_andamento', 'em_revisao', 'concluido']),
   prioridade: z.enum(['alta', 'media', 'baixa']),
-  data_vencimento: z.string().optional(),
+  data_vencimento: z.string().optional().or(z.literal('')),
 });
 
 interface TaskFormModalProps {
@@ -126,9 +126,9 @@ export default function TaskFormModal({
         modulo_origem: defaultValues.modulo_origem || 'geral',
         status: defaultValues.status || 'a_fazer',
         prioridade: 'media',
-        empresa_id: defaultValues.empresa_id,
+        empresa_id: defaultValues.empresa_id || undefined,
         responsavel_id: defaultValues.responsavel_id,
-        data_vencimento: defaultValues.data_vencimento,
+        data_vencimento: defaultValues.data_vencimento || undefined,
       });
       if (defaultValues.empresa_id) {
         setSelectedEmpresa({ id: defaultValues.empresa_id, nome: 'Empresa selecionada' });
