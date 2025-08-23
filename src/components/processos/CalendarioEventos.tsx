@@ -26,12 +26,34 @@ import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, addHours,
 import { ptBR } from 'date-fns/locale';
 import { useProcessosData } from '@/hooks/useProcessosData';
 import { FormEvento } from './FormEvento';
-import { useCalendarioUnificado, TIPOS_EVENTO_LABELS, CORES_POR_TIPO } from '@/hooks/useCalendarioUnificado';
+import { useCalendarioUnificado, TIPOS_EVENTO_LABELS, CORES_POR_TIPO, EventoUnificado } from '@/hooks/useCalendarioUnificado';
 import { FiltrosCalendario } from '@/components/calendario/FiltrosCalendario';
 
 interface CalendarioEventosProps {
   empresaId: string | null;
 }
+
+// Tipo helper para eventos mistos
+type EventoMisto = EventoUnificado | {
+  id: string;
+  empresa_id: string;
+  titulo: string;
+  descricao?: string;
+  data_inicio: string;
+  data_fim?: string;
+  tipo: string;
+  local?: string;
+  participantes?: string[];
+  processo_id?: string;
+  divida_id?: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  // Campos mapeados para compatibilidade
+  tipo_evento: string;
+  data_evento: string;
+  modulo_origem: string;
+};
 
 const CalendarioEventos: React.FC<CalendarioEventosProps> = ({ empresaId }) => {
   // Hooks do sistema unificado
@@ -72,11 +94,6 @@ const CalendarioEventos: React.FC<CalendarioEventosProps> = ({ empresaId }) => {
     return eventosLegado.filter(evento => evento.empresa_id === empresaId);
   }, [eventosLegado, empresaId]);
 
-  // Combinar eventos unificados com eventos legados para exibição
-  const todosEventos = useMemo(() => {
-    return [...eventosUnificados];
-  }, [eventosUnificados]);
-
   const getTipoColor = (tipo: string) => {
     const corInfo = CORES_POR_TIPO[tipo as keyof typeof CORES_POR_TIPO];
     if (corInfo) {
@@ -104,18 +121,24 @@ const CalendarioEventos: React.FC<CalendarioEventosProps> = ({ empresaId }) => {
     }
   };
 
+  // Função helper para verificar se é evento unificado
+  const isEventoUnificado = (evento: EventoMisto): evento is EventoUnificado => {
+    return 'tipo_evento' in evento && !('tipo' in evento);
+  };
+
   // Funções adaptadas para eventos unificados
-  const getEventosDoDiaUnificado = (date: Date) => {
+  const getEventosDoDiaUnificado = (date: Date): EventoMisto[] => {
     const eventosUnif = getEventosDoDia(date);
-    const eventosLeg = eventosFiltrados.filter(evento => 
-      isSameDay(parseISO(evento.data_inicio), date)
-    );
-    return [...eventosUnif, ...eventosLeg.map(e => ({
-      ...e,
-      tipo_evento: e.tipo,
-      data_evento: e.data_inicio,
-      modulo_origem: 'eventos'
-    }))];
+    const eventosLeg = eventosFiltrados
+      .filter(evento => isSameDay(parseISO(evento.data_inicio), date))
+      .map(e => ({
+        ...e,
+        tipo_evento: e.tipo,
+        data_evento: e.data_inicio,
+        modulo_origem: 'eventos'
+      }));
+    
+    return [...eventosUnif, ...eventosLeg];
   };
 
   const hasEventoNoDiaUnificado = (date: Date) => {
@@ -134,14 +157,15 @@ const CalendarioEventos: React.FC<CalendarioEventosProps> = ({ empresaId }) => {
     const eventosLeg = eventosFiltrados
       .filter(evento => !isBefore(parseISO(evento.data_inicio), hoje))
       .sort((a, b) => parseISO(a.data_inicio).getTime() - parseISO(b.data_inicio).getTime())
-      .slice(0, 5);
+      .slice(0, 5)
+      .map(e => ({
+        ...e,
+        tipo_evento: e.tipo,
+        data_evento: e.data_inicio,
+        modulo_origem: 'eventos'
+      }));
     
-    return [...eventosUnif, ...eventosLeg.map(e => ({
-      ...e,
-      tipo_evento: e.tipo,
-      data_evento: e.data_inicio,
-      modulo_origem: 'eventos'
-    }))].slice(0, 5);
+    return [...eventosUnif, ...eventosLeg].slice(0, 5);
   }, [eventosUnificados, eventosFiltrados]);
 
   const weekDays = (date: Date) => {
@@ -156,6 +180,24 @@ const CalendarioEventos: React.FC<CalendarioEventosProps> = ({ empresaId }) => {
     setShowEventForm(true);
   };
 
+  // Função helper para obter dados do evento de forma segura
+  const getEventoData = (evento: EventoMisto) => ({
+    id: evento.id,
+    titulo: evento.titulo,
+    descricao: evento.descricao,
+    tipo: isEventoUnificado(evento) ? evento.tipo_evento : evento.tipo,
+    tipoEvento: isEventoUnificado(evento) ? evento.tipo_evento : evento.tipo_evento,
+    dataEvento: isEventoUnificado(evento) ? evento.data_evento : evento.data_evento,
+    dataInicio: isEventoUnificado(evento) ? evento.data_evento : evento.data_inicio,
+    dataFim: evento.data_fim,
+    moduloOrigem: isEventoUnificado(evento) ? evento.modulo_origem : 'eventos',
+    local: isEventoUnificado(evento) ? undefined : evento.local,
+    participantes: isEventoUnificado(evento) ? undefined : evento.participantes,
+    status: isEventoUnificado(evento) ? evento.status : 'pendente',
+    prioridade: isEventoUnificado(evento) ? evento.prioridade : undefined,
+    corEtiqueta: isEventoUnificado(evento) ? evento.cor_etiqueta : '#6B7280'
+  });
+
   return (
     <div className="space-y-6">
       <Card>
@@ -164,7 +206,7 @@ const CalendarioEventos: React.FC<CalendarioEventosProps> = ({ empresaId }) => {
             <CalendarIcon className="h-5 w-5" />
             Calendário Unificado
             <Badge variant="secondary" className="ml-2">
-              {todosEventos.length} eventos
+              {eventosUnificados.length} eventos
             </Badge>
           </CardTitle>
           <div className="flex items-center gap-2">
@@ -252,59 +294,62 @@ const CalendarioEventos: React.FC<CalendarioEventosProps> = ({ empresaId }) => {
                           </p>
                         ) : (
                           <div className="space-y-2">
-                            {getEventosDoDiaUnificado(selectedDate).map((evento) => (
-                              <Card key={evento.id} className="p-3">
-                                <div className="flex items-start justify-between">
-                                  <div className="space-y-1 flex-1">
-                                    <div className="flex items-center gap-2">
-                                      <Badge className={getTipoColor(evento.tipo_evento || evento.tipo)}>
-                                        {TIPOS_EVENTO_LABELS[evento.tipo_evento as keyof typeof TIPOS_EVENTO_LABELS] || evento.tipo}
-                                      </Badge>
-                                      <span className="font-medium">{evento.titulo}</span>
-                                      {evento.modulo_origem && (
-                                        <Badge variant="outline" className="text-xs">
-                                          {evento.modulo_origem}
+                            {getEventosDoDiaUnificado(selectedDate).map((evento) => {
+                              const eventoData = getEventoData(evento);
+                              return (
+                                <Card key={evento.id} className="p-3">
+                                  <div className="flex items-start justify-between">
+                                    <div className="space-y-1 flex-1">
+                                      <div className="flex items-center gap-2">
+                                        <Badge className={getTipoColor(eventoData.tipoEvento)}>
+                                          {TIPOS_EVENTO_LABELS[eventoData.tipoEvento as keyof typeof TIPOS_EVENTO_LABELS] || eventoData.tipo}
                                         </Badge>
-                                      )}
-                                    </div>
-                                    {evento.descricao && (
-                                      <p className="text-sm text-muted-foreground">{evento.descricao}</p>
-                                    )}
-                                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                      <div className="flex items-center gap-1">
-                                        <Clock className="h-3 w-3" />
-                                        {format(parseISO(evento.data_evento || evento.data_inicio), 'HH:mm')}
-                                        {evento.data_fim && (
-                                          <span> - {format(parseISO(evento.data_fim), 'HH:mm')}</span>
+                                        <span className="font-medium">{eventoData.titulo}</span>
+                                        {eventoData.moduloOrigem && (
+                                          <Badge variant="outline" className="text-xs">
+                                            {eventoData.moduloOrigem}
+                                          </Badge>
                                         )}
                                       </div>
-                                      {evento.local && (
-                                        <div className="flex items-center gap-1">
-                                          <MapPin className="h-3 w-3" />
-                                          {evento.local}
-                                        </div>
+                                      {eventoData.descricao && (
+                                        <p className="text-sm text-muted-foreground">{eventoData.descricao}</p>
                                       )}
-                                      {evento.participantes && evento.participantes.length > 0 && (
+                                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
                                         <div className="flex items-center gap-1">
-                                          <Users className="h-3 w-3" />
-                                          {evento.participantes.length} participantes
+                                          <Clock className="h-3 w-3" />
+                                          {format(parseISO(eventoData.dataEvento), 'HH:mm')}
+                                          {eventoData.dataFim && (
+                                            <span> - {format(parseISO(eventoData.dataFim), 'HH:mm')}</span>
+                                          )}
                                         </div>
-                                      )}
+                                        {eventoData.local && (
+                                          <div className="flex items-center gap-1">
+                                            <MapPin className="h-3 w-3" />
+                                            {eventoData.local}
+                                          </div>
+                                        )}
+                                        {eventoData.participantes && eventoData.participantes.length > 0 && (
+                                          <div className="flex items-center gap-1">
+                                            <Users className="h-3 w-3" />
+                                            {eventoData.participantes.length} participantes
+                                          </div>
+                                        )}
+                                      </div>
                                     </div>
+                                    {eventoData.status === 'pendente' && isEventoUnificado(evento) && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => marcarComoConcluido(evento.id)}
+                                        className="ml-2"
+                                      >
+                                        <Check className="h-3 w-3" />
+                                      </Button>
+                                    )}
                                   </div>
-                                  {evento.status === 'pendente' && evento.tipo_evento && (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => marcarComoConcluido(evento.id)}
-                                      className="ml-2"
-                                    >
-                                      <Check className="h-3 w-3" />
-                                    </Button>
-                                  )}
-                                </div>
-                              </Card>
-                            ))}
+                                </Card>
+                              );
+                            })}
                           </div>
                         )}
                       </div>
@@ -359,18 +404,22 @@ const CalendarioEventos: React.FC<CalendarioEventosProps> = ({ empresaId }) => {
                                 {/* Renderizar eventos do horário */}
                                 {getEventosDoDiaUnificado(day)
                                   .filter(evento => {
-                                    const eventoHour = parseISO(evento.data_evento || evento.data_inicio).getHours();
+                                    const eventoData = getEventoData(evento);
+                                    const eventoHour = parseISO(eventoData.dataEvento).getHours();
                                     return eventoHour === hour;
                                   })
-                                  .map(evento => (
-                                    <div
-                                      key={evento.id}
-                                      className="text-xs p-1 m-1 rounded truncate"
-                                      style={{ backgroundColor: evento.cor_etiqueta || '#6B7280' }}
-                                    >
-                                      {evento.titulo}
-                                    </div>
-                                  ))
+                                  .map(evento => {
+                                    const eventoData = getEventoData(evento);
+                                    return (
+                                      <div
+                                        key={evento.id}
+                                        className="text-xs p-1 m-1 rounded truncate text-white"
+                                        style={{ backgroundColor: eventoData.corEtiqueta }}
+                                      >
+                                        {eventoData.titulo}
+                                      </div>
+                                    );
+                                  })
                                 }
                               </div>
                             ))}
@@ -403,17 +452,21 @@ const CalendarioEventos: React.FC<CalendarioEventosProps> = ({ empresaId }) => {
                             <div className="flex-1">
                               {getEventosDoDiaUnificado(selectedDate)
                                 .filter(evento => {
-                                  const eventoHour = parseISO(evento.data_evento || evento.data_inicio).getHours();
+                                  const eventoData = getEventoData(evento);
+                                  const eventoHour = parseISO(eventoData.dataEvento).getHours();
                                   return eventoHour === hour;
                                 })
-                                .map(evento => (
-                                  <Badge
-                                    key={evento.id}
-                                    className={`mr-2 ${getTipoColor(evento.tipo_evento || evento.tipo)}`}
-                                  >
-                                    {evento.titulo}
-                                  </Badge>
-                                ))
+                                .map(evento => {
+                                  const eventoData = getEventoData(evento);
+                                  return (
+                                    <Badge
+                                      key={evento.id}
+                                      className={`mr-2 ${getTipoColor(eventoData.tipoEvento)}`}
+                                    >
+                                      {eventoData.titulo}
+                                    </Badge>
+                                  );
+                                })
                               }
                             </div>
                           </div>
@@ -430,13 +483,13 @@ const CalendarioEventos: React.FC<CalendarioEventosProps> = ({ empresaId }) => {
                       <CardTitle>Lista de Eventos</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      {todosEventos.length === 0 ? (
+                      {eventosUnificados.length === 0 ? (
                         <p className="text-muted-foreground text-center py-8">
                           Nenhum evento encontrado
                         </p>
                       ) : (
                         <div className="space-y-3">
-                          {todosEventos
+                          {eventosUnificados
                             .sort((a, b) => parseISO(a.data_evento).getTime() - parseISO(b.data_evento).getTime())
                             .map((evento) => (
                               <Card key={evento.id} className="p-4">
@@ -505,41 +558,44 @@ const CalendarioEventos: React.FC<CalendarioEventosProps> = ({ empresaId }) => {
                       {proximosEventos.length === 0 ? (
                         <p className="text-muted-foreground text-sm">Nenhum evento próximo</p>
                       ) : (
-                        proximosEventos.map((evento) => (
-                          <Card key={evento.id} className="p-3">
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-2">
-                                <Badge className={getTipoColor(evento.tipo_evento || evento.tipo)}>
-                                  {TIPOS_EVENTO_LABELS[evento.tipo_evento as keyof typeof TIPOS_EVENTO_LABELS] || evento.tipo}
-                                </Badge>
-                                <span className="font-medium text-sm">{evento.titulo}</span>
-                                {evento.modulo_origem && (
-                                  <Badge variant="outline" className="text-xs">
-                                    {evento.modulo_origem}
+                        proximosEventos.map((evento) => {
+                          const eventoData = getEventoData(evento);
+                          return (
+                            <Card key={evento.id} className="p-3">
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <Badge className={getTipoColor(eventoData.tipoEvento)}>
+                                    {TIPOS_EVENTO_LABELS[eventoData.tipoEvento as keyof typeof TIPOS_EVENTO_LABELS] || eventoData.tipo}
                                   </Badge>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                <div className="flex items-center gap-1">
-                                  <CalendarIcon className="h-3 w-3" />
-                                  {format(parseISO(evento.data_evento || evento.data_inicio), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                                  <span className="font-medium text-sm">{eventoData.titulo}</span>
+                                  {eventoData.moduloOrigem && (
+                                    <Badge variant="outline" className="text-xs">
+                                      {eventoData.moduloOrigem}
+                                    </Badge>
+                                  )}
                                 </div>
-                                {evento.prioridade && (
-                                  <Badge 
-                                    variant="outline" 
-                                    className={`text-xs ${
-                                      evento.prioridade === 'alta' ? 'border-red-300 text-red-700' :
-                                      evento.prioridade === 'media' ? 'border-yellow-300 text-yellow-700' :
-                                      'border-green-300 text-green-700'
-                                    }`}
-                                  >
-                                    {evento.prioridade}
-                                  </Badge>
-                                )}
+                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                  <div className="flex items-center gap-1">
+                                    <CalendarIcon className="h-3 w-3" />
+                                    {format(parseISO(eventoData.dataEvento), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                                  </div>
+                                  {eventoData.prioridade && (
+                                    <Badge 
+                                      variant="outline" 
+                                      className={`text-xs ${
+                                        eventoData.prioridade === 'alta' ? 'border-red-300 text-red-700' :
+                                        eventoData.prioridade === 'media' ? 'border-yellow-300 text-yellow-700' :
+                                        'border-green-300 text-green-700'
+                                      }`}
+                                    >
+                                      {eventoData.prioridade}
+                                    </Badge>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          </Card>
-                        ))
+                            </Card>
+                          );
+                        })
                       )}
                     </div>
                   </CardContent>
@@ -555,7 +611,7 @@ const CalendarioEventos: React.FC<CalendarioEventosProps> = ({ empresaId }) => {
         <FormEvento
           empresaId={empresaId}
           dataInicial={selectedDate}
-          horaInicial={selectedTime}
+          horaInicial={selectedTime.toString()}
           onClose={() => setShowEventForm(false)}
           onSuccess={() => {
             setShowEventForm(false);
