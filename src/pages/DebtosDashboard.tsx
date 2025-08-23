@@ -5,13 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, Filter, TrendingUp, AlertTriangle, DollarSign, Users } from "lucide-react";
+import { Plus, Search, Filter, TrendingUp, AlertTriangle, DollarSign, Users, FileSpreadsheet } from "lucide-react";
 import { DebtoKPICards } from "@/components/debto/DebtoKPICards";
 import { DevedorCard } from "@/components/debto/DevedorCard";
 import { DividaCard } from "@/components/debto/DividaCard";
 import { DebtoFilters } from "@/components/debto/DebtoFilters";
 import { FormDebtor } from "@/components/debto/FormDebtor";
 import { FormDivida } from "@/components/debto/FormDivida";
+import { ImportarDados } from "@/components/debto/ImportarDados";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useDebtoData } from "@/hooks/useDebtoData";
 
@@ -23,6 +24,7 @@ export default function DebtosDashboard() {
   const [showFilters, setShowFilters] = useState(false);
   const [isDebtorDialogOpen, setIsDebtorDialogOpen] = useState(false);
   const [isDividaDialogOpen, setIsDividaDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
   const {
     devedores,
@@ -60,6 +62,26 @@ export default function DebtosDashboard() {
           <div className="flex gap-2">
             {hasRole('administrador') && (
               <>
+                <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="secondary" className="bg-gradient-to-r from-secondary to-secondary/80 hover:from-secondary/90 hover:to-secondary/70">
+                      <FileSpreadsheet className="w-4 h-4 mr-2" />
+                      Importar Dados
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+                    <ImportarDados 
+                      empresas={empresas}
+                      onSuccess={() => {
+                        setIsImportDialogOpen(false);
+                        fetchDevedores();
+                        fetchDividas();
+                      }}
+                      onClose={() => setIsImportDialogOpen(false)}
+                    />
+                  </DialogContent>
+                </Dialog>
+
                 <Dialog open={isDebtorDialogOpen} onOpenChange={setIsDebtorDialogOpen}>
                   <DialogTrigger asChild>
                     <Button className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
