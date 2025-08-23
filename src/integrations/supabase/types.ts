@@ -234,6 +234,63 @@ export type Database = {
           },
         ]
       }
+      calendario_eventos: {
+        Row: {
+          cor_etiqueta: string | null
+          created_at: string
+          created_by: string | null
+          data_evento: string
+          data_fim: string | null
+          descricao: string | null
+          empresa_id: string
+          entidade_id: string | null
+          entidade_tipo: string | null
+          id: string
+          modulo_origem: string
+          prioridade: string | null
+          status: string | null
+          tipo_evento: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          cor_etiqueta?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_evento: string
+          data_fim?: string | null
+          descricao?: string | null
+          empresa_id: string
+          entidade_id?: string | null
+          entidade_tipo?: string | null
+          id?: string
+          modulo_origem: string
+          prioridade?: string | null
+          status?: string | null
+          tipo_evento: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          cor_etiqueta?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_evento?: string
+          data_fim?: string | null
+          descricao?: string | null
+          empresa_id?: string
+          entidade_id?: string | null
+          entidade_tipo?: string | null
+          id?: string
+          modulo_origem?: string
+          prioridade?: string | null
+          status?: string | null
+          tipo_evento?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       colaboradores: {
         Row: {
           agencia: string | null

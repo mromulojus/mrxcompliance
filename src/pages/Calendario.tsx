@@ -16,7 +16,7 @@ const Calendario: React.FC = () => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Calendário de Eventos</CardTitle>
+          <CardTitle>Calendário Unificado de Eventos</CardTitle>
         </CardHeader>
         <CardContent>
           Nenhuma empresa cadastrada. Cadastre uma empresa para usar o calendário.
@@ -59,4 +59,3 @@ const Calendario: React.FC = () => {
 };
 
 export default Calendario;
-
