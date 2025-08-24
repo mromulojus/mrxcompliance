@@ -107,7 +107,7 @@ export default function Auth() {
           </span>
         }
         description="Gestão completa e inteligente de conformidade empresarial"
-        heroImageSrc="/lovable-uploads/479c7f8e-6d7d-4627-bdb9-953631033a39.png"
+        heroImageSrc="https://storage.hustapp.com/midias/true_556399451408@c.us_3EB04FFB6665F2F8669FAD"
         testimonials={testimonials}
         onSignIn={handleSignIn}
         onGoogleSignIn={handleGoogleSignIn}
