@@ -4,6 +4,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Tarefa, TaskPriority, TaskStatus } from '@/types/tarefas';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Bar, BarChart, CartesianGrid, Legend, Rectangle, XAxis, YAxis } from 'recharts';
+import { useSystemStats } from '@/hooks/useSystemStats';
+import { LoginFrequencyChart } from '@/components/indicators/LoginFrequencyChart';
+import { ModuleUsageChart } from '@/components/indicators/ModuleUsageChart';
+import { ActiveUsersRanking } from '@/components/indicators/ActiveUsersRanking';
+import { StatCard } from '@/components/hr/StatCard';
 
 type IndicadorItem = {
   chave: string; // usuario|empresa|quadro
@@ -38,6 +43,7 @@ export default function Indicadores() {
   const [profilesById, setProfilesById] = useState<Record<string, ProfileLite>>({});
   const [boardsById, setBoardsById] = useState<Record<string, BoardLite>>({});
   const [loading, setLoading] = useState(true);
+  const { stats: systemStats, loading: systemLoading } = useSystemStats();
 
   useEffect(() => {
     document.title = 'Indicadores - MRx Compliance';
@@ -169,10 +175,40 @@ export default function Indicadores() {
 
   return (
     <main>
-      <div className="mb-4">
-        <h1 className="text-2xl font-bold">Indicadores</h1>
-        <p className="text-sm text-muted-foreground">Análise de tarefas por usuário, empresa e quadro, com ranking por pontuação.</p>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">Indicadores do Sistema</h1>
+        <p className="text-sm text-muted-foreground">Análise completa de desempenho, atividade e uso do sistema.</p>
       </div>
+
+      {/* System Overview Stats */}
+      {systemStats && (
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard
+            titulo="Usuários Totais"
+            valor={systemStats.totalUsers}
+            icone="users"
+            cor="primary"
+          />
+          <StatCard
+            titulo="Usuários Ativos"
+            valor={systemStats.activeUsers}
+            icone="trending"
+            cor="success"
+          />
+          <StatCard
+            titulo="Tarefas Totais"
+            valor={systemStats.totalTasks}
+            icone="shield"
+            cor="warning"
+          />
+          <StatCard
+            titulo="Dias de Operação"
+            valor={systemStats.systemUptimeDays}
+            icone="calendar"
+            cor="danger"
+          />
+        </div>
+      )}
 
       <div className="grid gap-4 xl:grid-cols-2">
         <Card>
@@ -217,7 +253,7 @@ export default function Indicadores() {
         </Card>
       </div>
 
-      <div className="mt-6 grid gap-4">
+      <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Tempo total de resolução por usuário (Top 10)</CardTitle>
@@ -234,8 +270,19 @@ export default function Indicadores() {
           </CardContent>
         </Card>
 
-        
+        {/* Active Users Ranking */}
+        {systemStats && (
+          <ActiveUsersRanking users={systemStats.topActiveUsers} />
+        )}
       </div>
+
+      {/* System Analytics Charts */}
+      {systemStats && (
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          <LoginFrequencyChart data={systemStats.loginFrequency} />
+          <ModuleUsageChart data={systemStats.moduleUsage} />
+        </div>
+      )}
 
       {loading && (
         <div className="py-6 text-center text-sm text-muted-foreground">Carregando dados...</div>

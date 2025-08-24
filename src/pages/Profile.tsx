@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { User, Mail, Phone, Calendar, Settings, Camera } from "lucide-react";
 import { Navigate } from "react-router-dom";
+import { UserStatsSection } from "@/components/profile/UserStatsSection";
 
 export default function Profile() {
   const { user, profile } = useAuth();
@@ -368,6 +369,11 @@ export default function Profile() {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* User Statistics Section */}
+      <div className="mt-6">
+        <UserStatsSection />
       </div>
     </div>
   );
