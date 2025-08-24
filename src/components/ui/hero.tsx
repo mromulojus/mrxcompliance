@@ -28,7 +28,7 @@ function HeroContent({ title, titleHighlight, description, primaryAction, second
   return (
     <div className="flex flex-col space-y-4">
       <motion.h1
-        className="text-4xl font-bold tracking-tight sm:text-6xl lg:text-7xl xl:text-8xl"
+        className="text-3xl font-bold sm:text-5xl lg:text-6xl"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease }}
