@@ -125,6 +125,32 @@ export default function TaskFormModalWithBoard({
     }
   }, [watchedBoardId, fetchColumns, form]);
 
+  // Função para gerar checklist padrão do quadro VENDAS
+  const generateVendasChecklist = () => {
+    return [
+      '# Dados do Processo',
+      '📋 Número do Processo: Referência e credibilidade',
+      '📅 Data da Audiência: Gatilho de urgência',
+      '💰 Valor da Causa: Tamanho do prejuízo financeiro',
+      '🎯 Objeto da Ação: A "dor" específica do cliente',
+      '👨‍💼 Advogado da Empresa: Defesa já constituída',
+      '',
+      '# Dados da Empresa',
+      '🏢 Nome Fantasia e Razão Social',
+      '📄 CNPJ',
+      '📞 Telefone Principal da Empresa',
+      '🏭 Segmento de Atuação: Varejo, Construção, etc.',
+      '👥 Porte Estimado: Nº de Colaboradores',
+      '',
+      '# Dados do Contato',
+      '👤 Nome do Sócio/Decisor',
+      '💼 Cargo: Sócio-Diretor, Gerente de RH',
+      '📱 Telefone Direto / WhatsApp',
+      '📧 E-mail do Decisor',
+      ''
+    ];
+  };
+
   useEffect(() => {
     if (editData) {
       form.reset(editData);
@@ -152,6 +178,20 @@ export default function TaskFormModalWithBoard({
     const single = (editData?.responsavel_id || defaultValues?.responsavel_id);
     setSelectedResponsaveis(single && single !== 'none' ? [single] : []);
   }, [editData, defaultValues, contextData, form, open]);
+
+  // Auto-populate checklist for VENDAS board
+  useEffect(() => {
+    const currentBoardId = form.watch('board_id');
+    const selectedBoard = boards.find(b => b.id === currentBoardId);
+    
+    if (selectedBoard?.name.toLowerCase().includes('vendas') && !editData) {
+      // Only auto-populate if checklist is empty or has only empty items
+      const hasContent = initialChecklist.some(item => item.trim() !== '');
+      if (!hasContent) {
+        setInitialChecklist(generateVendasChecklist());
+      }
+    }
+  }, [form.watch('board_id'), boards, editData]);
 
   const uploadAnexos = async (files: File[], empresaId?: string): Promise<string[]> => {
     const paths: string[] = [];
@@ -554,6 +594,101 @@ export default function TaskFormModalWithBoard({
                     <p className="text-sm font-medium">{selectedUser.full_name || selectedUser.username}</p>
                     <p className="text-xs text-muted-foreground">Responsável principal</p>
                   </div>
+                </div>
+              )}
+            </div>
+
+            {/* Checklist */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <FormLabel>Checklist</FormLabel>
+                <div className="flex gap-1">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm"
+                    onClick={addChecklistItem}
+                    className="h-8 px-2"
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                  {selectedBoard?.name.toLowerCase().includes('vendas') && (
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setInitialChecklist(generateVendasChecklist())}
+                      className="h-8 px-3 text-xs"
+                    >
+                      Template Vendas
+                    </Button>
+                  )}
+                </div>
+              </div>
+              <div className="max-h-48 overflow-y-auto space-y-2 p-3 border rounded-md bg-muted/20">
+                {initialChecklist.map((item, index) => (
+                  <div key={index} className="flex items-start gap-2">
+                    {item.startsWith('#') ? (
+                      <div className="w-full">
+                        <h4 className="font-semibold text-sm text-primary border-b pb-1 mb-1">
+                          {item.replace('#', '').trim()}
+                        </h4>
+                      </div>
+                    ) : (
+                      <>
+                        <Circle className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
+                        <div className="flex-1 min-h-[32px]">
+                          <Input
+                            value={item}
+                            onChange={(e) => {
+                              const newChecklist = [...initialChecklist];
+                              newChecklist[index] = e.target.value;
+                              setInitialChecklist(newChecklist);
+                            }}
+                            placeholder="Item do checklist..."
+                            className="h-8 text-xs"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeChecklistItem(index)}
+                          className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                ))}
+                {initialChecklist.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Nenhum item no checklist. Clique em + para adicionar.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Anexos */}
+            <div className="space-y-2">
+              <FormLabel>Anexos</FormLabel>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="file"
+                  multiple
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif"
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || []);
+                    setAnexoArquivos(files);
+                  }}
+                  className="file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-muted file:text-muted-foreground hover:file:bg-muted/80"
+                />
+                <Paperclip className="h-4 w-4 text-muted-foreground" />
+              </div>
+              {anexoArquivos.length > 0 && (
+                <div className="text-xs text-muted-foreground">
+                  {anexoArquivos.length} arquivo(s) selecionado(s)
                 </div>
               )}
             </div>
