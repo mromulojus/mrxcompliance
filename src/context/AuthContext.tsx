@@ -109,6 +109,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   useEffect(() => {
+    let hasShownWelcome = false; // Flag para evitar toasts repetidos
+    
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -121,21 +123,29 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             const profileData = await fetchProfile(session.user.id);
             setProfile(profileData);
             
-            if (event === 'SIGNED_IN') {
+            // Só mostrar toast de boas-vindas em login manual, não em token refresh
+            if (event === 'SIGNED_IN' && !hasShownWelcome) {
+              hasShownWelcome = true;
               await updateLastLogin();
               await logActivity('login', { user_id: session.user.id });
-              // Timesheet funcionalidade desabilitada temporariamente
-              // try {
-              //   await supabase.from('user_timesheets').insert({ user_id: session.user.id });
-              // } catch (_) {}
-              toast({
-                title: 'Login realizado com sucesso',
-                description: `Bem-vindo(a), ${profileData?.full_name || session.user.email}!`
-              });
+              
+              // Verificar se é um login real (não um refresh de token)
+              // Se o usuário fez login nas últimas 2 horas, não mostrar toast
+              const now = new Date();
+              const lastLogin = profileData?.last_login ? new Date(profileData.last_login) : null;
+              const timeDiff = lastLogin ? (now.getTime() - lastLogin.getTime()) / (1000 * 60 * 60) : Infinity;
+              
+              if (timeDiff > 2) { // Só mostrar se última atividade foi há mais de 2 horas
+                toast({
+                  title: 'Login realizado com sucesso',
+                  description: `Bem-vindo(a), ${profileData?.full_name || session.user.email}!`
+                });
+              }
             }
           }, 0);
         } else {
           setProfile(null);
+          hasShownWelcome = false; // Reset flag quando sair
         }
         
         setLoading(false);
