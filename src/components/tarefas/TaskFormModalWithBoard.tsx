@@ -97,7 +97,7 @@ export default function TaskFormModalWithBoard({
   const [anexoArquivos, setAnexoArquivos] = useState<File[]>([]);
   const [uploadingAnexos, setUploadingAnexos] = useState(false);
   const [selectedResponsaveis, setSelectedResponsaveis] = useState<string[]>([]);
-  const [initialChecklist, setInitialChecklist] = useState<string[]>(['']);
+  const [preDefinedFields, setPreDefinedFields] = useState<{[key: string]: string}>({});
   const [empresas, setEmpresas] = useState<{ id: string; nome: string }[]>([]);
   const [loadingEmpresas, setLoadingEmpresas] = useState(false);
   
@@ -125,30 +125,24 @@ export default function TaskFormModalWithBoard({
     }
   }, [watchedBoardId, fetchColumns, form]);
 
-  // Função para gerar checklist padrão do quadro VENDAS
-  const generateVendasChecklist = () => {
-    return [
-      '# Dados do Processo',
-      '📋 Número do Processo: Referência e credibilidade',
-      '📅 Data da Audiência: Gatilho de urgência',
-      '💰 Valor da Causa: Tamanho do prejuízo financeiro',
-      '🎯 Objeto da Ação: A "dor" específica do cliente',
-      '👨‍💼 Advogado da Empresa: Defesa já constituída',
-      '',
-      '# Dados da Empresa',
-      '🏢 Nome Fantasia e Razão Social',
-      '📄 CNPJ',
-      '📞 Telefone Principal da Empresa',
-      '🏭 Segmento de Atuação: Varejo, Construção, etc.',
-      '👥 Porte Estimado: Nº de Colaboradores',
-      '',
-      '# Dados do Contato',
-      '👤 Nome do Sócio/Decisor',
-      '💼 Cargo: Sócio-Diretor, Gerente de RH',
-      '📱 Telefone Direto / WhatsApp',
-      '📧 E-mail do Decisor',
-      ''
-    ];
+  // Função para gerar campos pré-definidos do quadro VENDAS
+  const getVendasFields = () => {
+    return {
+      'numero_processo': 'Número do Processo',
+      'data_audiencia': 'Data da Audiência', 
+      'valor_causa': 'Valor da Causa',
+      'objeto_acao': 'Objeto da Ação',
+      'advogado_empresa': 'Advogado da Empresa',
+      'nome_fantasia_razao_social': 'Nome Fantasia e Razão Social',
+      'cnpj': 'CNPJ',
+      'telefone_principal_empresa': 'Telefone Principal da Empresa',
+      'segmento_atuacao': 'Segmento de Atuação',
+      'porte_estimado': 'Porte Estimado',
+      'nome_socio_decisor': 'Nome do Sócio/Decisor',
+      'cargo': 'Cargo',
+      'telefone_direto_whatsapp': 'Telefone Direto / WhatsApp',
+      'email_decisor': 'E-mail do Decisor'
+    };
   };
 
   useEffect(() => {
@@ -156,6 +150,17 @@ export default function TaskFormModalWithBoard({
       form.reset(editData);
       if (editData?.empresa_id) {
         setSelectedEmpresa({ id: editData.empresa_id, nome: 'Empresa selecionada' });
+      }
+      // Parse existing predefined fields from description if editing
+      if (editData?.descricao) {
+        const match = editData.descricao.match(/predefined_fields:({.*?})/);
+        if (match) {
+          try {
+            setPreDefinedFields(JSON.parse(match[1]));
+          } catch (e) {
+            console.error('Error parsing predefined fields:', e);
+          }
+        }
       }
     } else if (defaultValues) {
       form.reset({
@@ -179,17 +184,22 @@ export default function TaskFormModalWithBoard({
     setSelectedResponsaveis(single && single !== 'none' ? [single] : []);
   }, [editData, defaultValues, contextData, form, open]);
 
-  // Auto-populate checklist for VENDAS board
+  // Auto-populate predefined fields for VENDAS board
   useEffect(() => {
     const currentBoardId = form.watch('board_id');
     const selectedBoard = boards.find(b => b.id === currentBoardId);
     
     if (selectedBoard?.name.toLowerCase().includes('vendas') && !editData) {
-      // Only auto-populate if checklist is empty or has only empty items
-      const hasContent = initialChecklist.some(item => item.trim() !== '');
-      if (!hasContent) {
-        setInitialChecklist(generateVendasChecklist());
-      }
+      // Initialize empty predefined fields if not already set
+      const vendasFields = getVendasFields();
+      const emptyFields: {[key: string]: string} = {};
+      Object.keys(vendasFields).forEach(key => {
+        emptyFields[key] = '';
+      });
+      setPreDefinedFields(emptyFields);
+    } else if (!selectedBoard?.name.toLowerCase().includes('vendas')) {
+      // Clear predefined fields if not VENDAS board
+      setPreDefinedFields({});
     }
   }, [form.watch('board_id'), boards, editData]);
 
@@ -214,14 +224,6 @@ export default function TaskFormModalWithBoard({
     return paths;
   };
 
-  const addChecklistItem = () => {
-    setInitialChecklist(prev => [...prev, '']);
-  };
-
-  const removeChecklistItem = (index: number) => {
-    setInitialChecklist(prev => prev.filter((_, i) => i !== index));
-  };
-
   const fetchEmpresas = async () => {
     setLoadingEmpresas(true);
     try {
@@ -239,21 +241,6 @@ export default function TaskFormModalWithBoard({
     }
   };
 
-  const generateEmpresasChecklist = () => {
-    try {
-      const empresasTemplate = empresas.map(empresa => `${empresa.nome}`);
-      
-      if (initialChecklist.some(item => item.trim() !== '')) {
-        const confirmReplace = window.confirm('O checklist já possui itens. Deseja substituí-los pelo modelo de empresas?');
-        if (!confirmReplace) return;
-      }
-      
-      setInitialChecklist([...empresasTemplate, '']);
-    } catch (error) {
-      console.error('Erro ao gerar checklist de empresas:', error);
-    }
-  };
-
   useEffect(() => {
     if (open && empresas.length === 0) {
       fetchEmpresas();
@@ -265,21 +252,13 @@ export default function TaskFormModalWithBoard({
       const empresaId = selectedEmpresa?.id || data.empresa_id;
       const anexosPaths = await uploadAnexos(anexoArquivos, empresaId);
       
-      // Prepare checklist data - with better error handling
+      // Prepare predefined fields data
       let finalDescription = data.descricao || '';
-      try {
-        const validChecklistItems = initialChecklist.filter(item => item && item.trim() !== '');
-        if (validChecklistItems.length > 0) {
-          const checklistData = validChecklistItems.map((text, index) => ({
-            id: Date.now() + index,
-            text: text.trim(),
-            completed: false
-          }));
-          finalDescription += `checklist:${JSON.stringify(checklistData)}`;
+      if (Object.keys(preDefinedFields).length > 0) {
+        const hasContent = Object.values(preDefinedFields).some(value => value.trim() !== '');
+        if (hasContent) {
+          finalDescription += `\n\npredefined_fields:${JSON.stringify(preDefinedFields)}`;
         }
-      } catch (error) {
-        console.error('Erro ao processar checklist:', error);
-        // Continue without checklist if there's an error
       }
 
       // Prepare responsavel IDs - support multiple assignees
@@ -327,7 +306,7 @@ export default function TaskFormModalWithBoard({
     form.reset();
     setAnexoArquivos([]);
     setSelectedResponsaveis([]);
-    setInitialChecklist(['']);
+    setPreDefinedFields({});
   };
 
   const primarySelectedId = selectedResponsaveis[0] || form.watch('responsavel_id');
@@ -598,77 +577,218 @@ export default function TaskFormModalWithBoard({
               )}
             </div>
 
-            {/* Checklist */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <FormLabel>Checklist</FormLabel>
-                <div className="flex gap-1">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="sm"
-                    onClick={addChecklistItem}
-                    className="h-8 px-2"
-                  >
-                    <Plus className="h-3 w-3" />
-                  </Button>
-                  {selectedBoard?.name.toLowerCase().includes('vendas') && (
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => setInitialChecklist(generateVendasChecklist())}
-                      className="h-8 px-3 text-xs"
-                    >
-                      Template Vendas
-                    </Button>
-                  )}
+            {/* Campos Pré-definidos para VENDAS */}
+            {Object.keys(preDefinedFields).length > 0 && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <FormLabel>Campos de Qualificação</FormLabel>
+                  <Badge variant="secondary" className="text-xs">
+                    Template {selectedBoard?.name}
+                  </Badge>
                 </div>
-              </div>
-              <div className="max-h-48 overflow-y-auto space-y-2 p-3 border rounded-md bg-muted/20">
-                {initialChecklist.map((item, index) => (
-                  <div key={index} className="flex items-start gap-2">
-                    {item.startsWith('#') ? (
-                      <div className="w-full">
-                        <h4 className="font-semibold text-sm text-primary border-b pb-1 mb-1">
-                          {item.replace('#', '').trim()}
-                        </h4>
-                      </div>
-                    ) : (
-                      <>
-                        <Circle className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
-                        <div className="flex-1 min-h-[32px]">
+                <div className="max-h-96 overflow-y-auto space-y-4 p-4 border rounded-md bg-muted/20">
+                  {/* Dados do Processo */}
+                  <div className="space-y-3">
+                    <h4 className="font-semibold text-sm text-primary border-b pb-1">
+                      📋 Dados do Processo
+                    </h4>
+                    <div className="grid grid-cols-1 gap-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs text-muted-foreground">Número do Processo</Label>
                           <Input
-                            value={item}
-                            onChange={(e) => {
-                              const newChecklist = [...initialChecklist];
-                              newChecklist[index] = e.target.value;
-                              setInitialChecklist(newChecklist);
-                            }}
-                            placeholder="Item do checklist..."
+                            placeholder="Referência e credibilidade"
+                            value={preDefinedFields['numero_processo'] || ''}
+                            onChange={(e) => setPreDefinedFields(prev => ({
+                              ...prev,
+                              numero_processo: e.target.value
+                            }))}
                             className="h-8 text-xs"
                           />
                         </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeChecklistItem(index)}
-                          className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </>
-                    )}
+                        <div>
+                          <Label className="text-xs text-muted-foreground">Data da Audiência</Label>
+                          <Input
+                            type="date"
+                            value={preDefinedFields['data_audiencia'] || ''}
+                            onChange={(e) => setPreDefinedFields(prev => ({
+                              ...prev,
+                              data_audiencia: e.target.value
+                            }))}
+                            className="h-8 text-xs"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Valor da Causa</Label>
+                        <Input
+                          placeholder="Tamanho do prejuízo financeiro"
+                          value={preDefinedFields['valor_causa'] || ''}
+                          onChange={(e) => setPreDefinedFields(prev => ({
+                            ...prev,
+                            valor_causa: e.target.value
+                          }))}
+                          className="h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Objeto da Ação</Label>
+                        <Input
+                          placeholder="A 'dor' específica do cliente"
+                          value={preDefinedFields['objeto_acao'] || ''}
+                          onChange={(e) => setPreDefinedFields(prev => ({
+                            ...prev,
+                            objeto_acao: e.target.value
+                          }))}
+                          className="h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Advogado da Empresa</Label>
+                        <Input
+                          placeholder="Defesa já constituída"
+                          value={preDefinedFields['advogado_empresa'] || ''}
+                          onChange={(e) => setPreDefinedFields(prev => ({
+                            ...prev,
+                            advogado_empresa: e.target.value
+                          }))}
+                          className="h-8 text-xs"
+                        />
+                      </div>
+                    </div>
                   </div>
-                ))}
-                {initialChecklist.length === 0 && (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    Nenhum item no checklist. Clique em + para adicionar.
-                  </p>
-                )}
+
+                  {/* Dados da Empresa */}
+                  <div className="space-y-3">
+                    <h4 className="font-semibold text-sm text-primary border-b pb-1">
+                      🏢 Dados da Empresa
+                    </h4>
+                    <div className="grid grid-cols-1 gap-3">
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Nome Fantasia e Razão Social</Label>
+                        <Input
+                          value={preDefinedFields['nome_fantasia_razao_social'] || ''}
+                          onChange={(e) => setPreDefinedFields(prev => ({
+                            ...prev,
+                            nome_fantasia_razao_social: e.target.value
+                          }))}
+                          className="h-8 text-xs"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs text-muted-foreground">CNPJ</Label>
+                          <Input
+                            value={preDefinedFields['cnpj'] || ''}
+                            onChange={(e) => setPreDefinedFields(prev => ({
+                              ...prev,
+                              cnpj: e.target.value
+                            }))}
+                            className="h-8 text-xs"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-muted-foreground">Telefone Principal da Empresa</Label>
+                          <Input
+                            value={preDefinedFields['telefone_principal_empresa'] || ''}
+                            onChange={(e) => setPreDefinedFields(prev => ({
+                              ...prev,
+                              telefone_principal_empresa: e.target.value
+                            }))}
+                            className="h-8 text-xs"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs text-muted-foreground">Segmento de Atuação</Label>
+                          <Input
+                            placeholder="Varejo, Construção, etc."
+                            value={preDefinedFields['segmento_atuacao'] || ''}
+                            onChange={(e) => setPreDefinedFields(prev => ({
+                              ...prev,
+                              segmento_atuacao: e.target.value
+                            }))}
+                            className="h-8 text-xs"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-muted-foreground">Porte Estimado</Label>
+                          <Input
+                            placeholder="Nº de Colaboradores"
+                            value={preDefinedFields['porte_estimado'] || ''}
+                            onChange={(e) => setPreDefinedFields(prev => ({
+                              ...prev,
+                              porte_estimado: e.target.value
+                            }))}
+                            className="h-8 text-xs"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Dados do Contato */}
+                  <div className="space-y-3">
+                    <h4 className="font-semibold text-sm text-primary border-b pb-1">
+                      👤 Dados do Contato
+                    </h4>
+                    <div className="grid grid-cols-1 gap-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs text-muted-foreground">Nome do Sócio/Decisor</Label>
+                          <Input
+                            value={preDefinedFields['nome_socio_decisor'] || ''}
+                            onChange={(e) => setPreDefinedFields(prev => ({
+                              ...prev,
+                              nome_socio_decisor: e.target.value
+                            }))}
+                            className="h-8 text-xs"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-muted-foreground">Cargo</Label>
+                          <Input
+                            placeholder="Sócio-Diretor, Gerente de RH"
+                            value={preDefinedFields['cargo'] || ''}
+                            onChange={(e) => setPreDefinedFields(prev => ({
+                              ...prev,
+                              cargo: e.target.value
+                            }))}
+                            className="h-8 text-xs"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs text-muted-foreground">Telefone Direto / WhatsApp</Label>
+                          <Input
+                            value={preDefinedFields['telefone_direto_whatsapp'] || ''}
+                            onChange={(e) => setPreDefinedFields(prev => ({
+                              ...prev,
+                              telefone_direto_whatsapp: e.target.value
+                            }))}
+                            className="h-8 text-xs"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-muted-foreground">E-mail do Decisor</Label>
+                          <Input
+                            type="email"
+                            value={preDefinedFields['email_decisor'] || ''}
+                            onChange={(e) => setPreDefinedFields(prev => ({
+                              ...prev,
+                              email_decisor: e.target.value
+                            }))}
+                            className="h-8 text-xs"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Anexos */}
             <div className="space-y-2">
