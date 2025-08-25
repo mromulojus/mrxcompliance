@@ -130,7 +130,7 @@ const Calendario: React.FC = () => {
         </CardContent>
       </Card>
 
-      <CalendarioEventos empresaId={effectiveEmpresaId} />
+      <CalendarioEventos empresaId={effectiveEmpresaId} empresas={empresas} />
     </div>
   );
 };

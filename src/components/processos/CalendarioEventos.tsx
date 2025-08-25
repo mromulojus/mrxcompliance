@@ -20,7 +20,8 @@ import {
   X,
   ChevronDown,
   Eye,
-  EyeOff
+  EyeOff,
+  Smartphone
 } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, addHours, isBefore, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -28,9 +29,11 @@ import { useProcessosData } from '@/hooks/useProcessosData';
 import { FormEvento } from './FormEvento';
 import { useCalendarioUnificado, TIPOS_EVENTO_LABELS, CORES_POR_TIPO, EventoUnificado } from '@/hooks/useCalendarioUnificado';
 import { FiltrosCalendario } from '@/components/calendario/FiltrosCalendario';
+import { ICalSyncModal } from '@/components/calendario/ICalSyncModal';
 
 interface CalendarioEventosProps {
   empresaId: string | null;
+  empresas?: Array<{ id: string; nome: string }>;
 }
 
 // Tipo helper para eventos mistos
@@ -55,7 +58,7 @@ type EventoMisto = EventoUnificado | {
   modulo_origem: string;
 };
 
-const CalendarioEventos: React.FC<CalendarioEventosProps> = ({ empresaId }) => {
+const CalendarioEventos: React.FC<CalendarioEventosProps> = ({ empresaId, empresas = [] }) => {
   // Hooks do sistema unificado
   const {
     eventos: eventosUnificados,
@@ -76,6 +79,7 @@ const CalendarioEventos: React.FC<CalendarioEventosProps> = ({ empresaId }) => {
   const [selectedTime, setSelectedTime] = useState<number>(9);
   const [showEventForm, setShowEventForm] = useState(false);
   const [filtrosVisiveis, setFiltrosVisiveis] = useState(false);
+  const [showICalModal, setShowICalModal] = useState(false);
 
   // Aplicar filtros por empresa no sistema unificado
   React.useEffect(() => {
@@ -218,6 +222,15 @@ const CalendarioEventos: React.FC<CalendarioEventosProps> = ({ empresaId }) => {
             >
               {filtrosVisiveis ? <EyeOff className="h-4 w-4" /> : <Filter className="h-4 w-4" />}
               Filtros
+            </Button>
+            <Button 
+              variant="outline"
+              size="sm"
+              onClick={() => setShowICalModal(true)}
+              className="flex items-center gap-2"
+            >
+              <Smartphone className="h-4 w-4" />
+              Sincronizar
             </Button>
             <Button 
               onClick={() => setShowEventForm(true)}
@@ -619,6 +632,14 @@ const CalendarioEventos: React.FC<CalendarioEventosProps> = ({ empresaId }) => {
           }}
         />
       )}
+
+      {/* Modal de sincronização iCal */}
+      <ICalSyncModal
+        open={showICalModal}
+        onOpenChange={setShowICalModal}
+        empresaId={empresaId}
+        empresas={empresas}
+      />
     </div>
   );
 };
