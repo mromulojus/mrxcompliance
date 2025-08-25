@@ -197,20 +197,26 @@ export function useTarefasData() {
     return tarefaData;
   };
 
-  // Create tarefa
+  // Simplified task creation - uses board_id and column_id directly
   const createTarefa = useCallback(async (tarefaData: TaskFormData): Promise<void> => {
     try {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) throw new Error('Usuário não autenticado');
 
-      // Auto-assign board and column based on module
-      const enrichedData = await assignBoardAndColumn(tarefaData);
+      // Validate required board and column fields
+      if (!tarefaData.board_id) {
+        throw new Error('Board ID é obrigatório');
+      }
+
+      if (!tarefaData.column_id) {
+        throw new Error('Column ID é obrigatório');
+      }
 
       // Handle "none" value for responsavel_id and support responsavel_ids
       const processedData = {
-        ...enrichedData,
-        responsavel_id: enrichedData.responsavel_id === 'none' ? null : enrichedData.responsavel_id,
-        responsavel_ids: (enrichedData as any).responsavel_ids || (enrichedData.responsavel_id && enrichedData.responsavel_id !== 'none' ? [enrichedData.responsavel_id] : []),
+        ...tarefaData,
+        responsavel_id: tarefaData.responsavel_id === 'none' ? null : tarefaData.responsavel_id,
+        responsavel_ids: (tarefaData as any).responsavel_ids || (tarefaData.responsavel_id && tarefaData.responsavel_id !== 'none' ? [tarefaData.responsavel_id] : []),
         created_by: user.user.id,
       };
 
@@ -241,18 +247,15 @@ export function useTarefasData() {
       setTarefas(prev => [...prev, tarefaWithUser]);
       toast({
         title: 'Sucesso',
-        description: 'Tarefa criada e direcionada para o quadro departamental',
+        description: 'Tarefa criada com sucesso',
       });
-
-      // Don't return anything - function should return Promise<void>
     } catch (err) {
       console.error('Erro ao criar tarefa:', err);
       toast({
         title: 'Erro',
-        description: 'Não foi possível criar a tarefa',
+        description: 'Não foi possível criar a tarefa. Verifique os dados e tente novamente.',
         variant: 'destructive',
       });
-      throw err;
     }
   }, [toast]);
 

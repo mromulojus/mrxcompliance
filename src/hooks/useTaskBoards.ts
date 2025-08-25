@@ -351,90 +351,10 @@ export function useTaskBoards(boardId?: string) {
   };
 
   // Ensure departmental boards exist for a company
+  // Simplified board creation - removed complex departmental auto-creation
   const ensureDepartmentalBoards = async (empresaId: string) => {
-    try {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) throw new Error('Usuário não autenticado');
-
-      const departmentalBoards = [
-        { name: 'VENDAS (xGROWTH)', modulos: ['vendas' as BoardModule], color: '#10B981' },
-        { name: 'COMPLIANCE (Mrx Compliance)', modulos: ['compliance' as BoardModule], color: '#3B82F6' },
-        { name: 'JURIDICO (MR Advocacia)', modulos: ['juridico' as BoardModule], color: '#8B5CF6' },
-        { name: 'OUVIDORIA (Ouve.ai)', modulos: ['ouvidoria' as BoardModule], color: '#F59E0B' },
-        { name: 'COBRANÇA (Debto)', modulos: ['cobranca' as BoardModule], color: '#EF4444' },
-        { name: 'ADMINISTRATIVO', modulos: ['administrativo' as BoardModule], color: '#6B7280' }
-      ];
-
-      // Check which boards already exist
-      const { data: existingBoards } = await supabase
-        .from('boards')
-        .select('name')
-        .eq('empresa_id', empresaId)
-        .eq('is_active', true);
-
-      const existingNames = new Set(existingBoards?.map(b => b.name) || []);
-
-      // Create missing boards
-      for (const board of departmentalBoards) {
-        if (!existingNames.has(board.name)) {
-          const { data: newBoard, error: boardError } = await supabase
-            .from('boards')
-            .insert({
-              name: board.name,
-              empresa_id: empresaId,
-              created_by: user.user.id,
-              modulos: board.modulos,
-              background_color: board.color,
-              is_public: false,
-              is_active: true
-            })
-            .select()
-            .single();
-
-          if (boardError) {
-            console.error(`Erro ao criar quadro ${board.name}:`, boardError);
-            continue;
-          }
-
-          // Create default columns for the board
-          const defaultColumns = ['A Fazer', 'Em Andamento', 'Em Revisão', 'Concluído'];
-          for (let i = 0; i < defaultColumns.length; i++) {
-            await supabase
-              .from('board_columns')
-              .insert({
-                board_id: newBoard.id,
-                name: defaultColumns[i],
-                position: i
-              });
-          }
-
-          // Give admin permission to creator
-          await supabase
-            .from('board_permissions')
-            .insert({
-              board_id: newBoard.id,
-              user_id: user.user.id,
-              permission_level: 'admin'
-            });
-        }
-      }
-
-      // Refresh the boards list
-      await fetchBoards();
-      
-      toast({ 
-        title: 'Quadros criados', 
-        description: 'Quadros departamentais foram criados para a empresa' 
-      });
-    } catch (error) {
-      console.error('Erro ao garantir quadros departamentais:', error);
-      toast({ 
-        title: 'Erro', 
-        description: 'Não foi possível criar os quadros departamentais', 
-        variant: 'destructive' 
-      });
-      throw error;
-    }
+    console.log('ensureDepartmentalBoards called but simplified - use manual board creation instead');
+    return;
   };
 
   const addMember = async (bId: string, userId: string, role: string = 'member') => {

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { TrelloLayout } from '@/components/ui/trello-layout';
 import { TrelloKanban } from '@/components/ui/trello-kanban';
-import TaskFormModal from '@/components/tarefas/TaskFormModalNew';
+import TaskFormModalWithBoard from '@/components/tarefas/TaskFormModalWithBoard';
 import { TaskDetailsModal } from '@/components/tarefas/TaskDetailsModal';
 import { FloatingTaskButton } from '@/components/tarefas/FloatingTaskButton';
 import { useTarefasData } from '@/hooks/useTarefasData';
@@ -194,15 +194,20 @@ export default function TrelloBoardView() {
       />
 
       {/* Task Creation Modal */}
-      <TaskFormModal
+      <TaskFormModalWithBoard
         open={showTaskModal}
         onOpenChange={setShowTaskModal}
         onSubmit={handleTaskCreate}
         onUpdate={updateTarefa}
         users={users}
         editData={selectedTask}
+        contextData={{
+          board_id: boardId,
+          column_id: selectedColumnId || undefined
+        }}
         defaultValues={{
-          modulo_origem: 'geral',
+          board_id: boardId!,
+          column_id: selectedColumnId || undefined
         }}
       />
 

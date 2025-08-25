@@ -1678,6 +1678,10 @@ export type Database = {
         Args: { username_text: string }
         Returns: string
       }
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_user_role: {
         Args: { user_uuid: string }
         Returns: Database["public"]["Enums"]["user_role"]
@@ -1688,6 +1692,10 @@ export type Database = {
           user_uuid: string
         }
         Returns: boolean
+      }
+      migrate_tasks_to_boards: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       reorder_tasks_in_column: {
         Args: {
@@ -1708,6 +1716,10 @@ export type Database = {
         Returns: boolean
       }
       user_can_access_empresa_data: {
+        Args: { empresa_uuid: string }
+        Returns: boolean
+      }
+      user_can_access_empresa_simple: {
         Args: { empresa_uuid: string }
         Returns: boolean
       }
