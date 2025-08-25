@@ -116,9 +116,25 @@ export function useTarefasData() {
       }
 
       // First, ensure departmental boards exist for this company
-      await supabase.rpc('create_departmental_boards_for_empresa', {
-        p_empresa_id: tarefaData.empresa_id
-      });
+      // Only call if we haven't already ensured boards for this empresa in this session
+      const cacheKey = `boards_ensured_${tarefaData.empresa_id}`;
+      const lastEnsured = sessionStorage.getItem(cacheKey);
+      const now = Date.now();
+      
+      // Only ensure boards if we haven't done it in the last 5 minutes
+      if (!lastEnsured || (now - parseInt(lastEnsured)) > 5 * 60 * 1000) {
+        try {
+          await supabase.rpc('create_departmental_boards_for_empresa', {
+            p_empresa_id: tarefaData.empresa_id
+          });
+          sessionStorage.setItem(cacheKey, now.toString());
+        } catch (error) {
+          // Ignore unique constraint violations (board already exists)
+          if (!error?.message?.includes('unique') && !error?.message?.includes('duplicate')) {
+            throw error;
+          }
+        }
+      }
 
       // Now look for the board (it should exist now)
       const { data: existingBoard } = await supabase

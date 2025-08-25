@@ -102,9 +102,25 @@ export const DepartmentalKanban = ({
         if (!targetBoardName) return;
 
         // First ensure the departmental boards exist
-        await supabase.rpc('create_departmental_boards_for_empresa', {
-          p_empresa_id: selectedEmpresa
-        });
+        // Only call if we haven't already ensured boards for this empresa in this session
+        const cacheKey = `boards_ensured_${selectedEmpresa}`;
+        const lastEnsured = sessionStorage.getItem(cacheKey);
+        const now = Date.now();
+        
+        // Only ensure boards if we haven't done it in the last 5 minutes
+        if (!lastEnsured || (now - parseInt(lastEnsured)) > 5 * 60 * 1000) {
+          try {
+            await supabase.rpc('create_departmental_boards_for_empresa', {
+              p_empresa_id: selectedEmpresa
+            });
+            sessionStorage.setItem(cacheKey, now.toString());
+          } catch (error) {
+            // Ignore unique constraint violations (board already exists)
+            if (!error?.message?.includes('unique') && !error?.message?.includes('duplicate')) {
+              throw error;
+            }
+          }
+        }
 
         // Find the board
         const { data: boardData, error: boardError } = await supabase
