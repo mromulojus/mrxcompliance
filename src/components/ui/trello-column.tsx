@@ -144,9 +144,9 @@ export const TrelloColumn: React.FC<TrelloColumnProps> = ({
   };
 
   return (
-    <div className="flex-shrink-0 w-80 h-fit max-h-full flex flex-col bg-gray-50 rounded-lg p-3">
-      {/* Column header */}
-      <div className="flex items-center justify-between mb-3">
+    <div className="flex-shrink-0 w-72 flex flex-col bg-gray-50 rounded-lg p-2 h-full max-h-screen overflow-hidden">
+      {/* Column header - STICKY */}
+      <div className="sticky top-0 z-10 bg-gray-50 flex items-center justify-between mb-2 pb-2 border-b border-gray-200">
         {isEditingTitle ? (
           <input
             value={editTitle}
@@ -197,13 +197,13 @@ export const TrelloColumn: React.FC<TrelloColumnProps> = ({
         </div>
       </div>
 
-      {/* Tasks container */}
+      {/* Tasks container - SCROLLABLE */}
       <div
         onDrop={handleDragEnd}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         className={cn(
-          "flex-1 min-h-32 transition-all rounded",
+          "flex-1 overflow-y-auto min-h-32 transition-all rounded",
           active ? "bg-primary/10 border-2 border-dashed border-primary" : ""
         )}
       >

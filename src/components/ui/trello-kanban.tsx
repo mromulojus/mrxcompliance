@@ -163,13 +163,13 @@ export const TrelloKanban: React.FC<TrelloKanbanProps> = ({
 
   if (loading) {
     return (
-      <div className="flex gap-4 h-full p-4 overflow-x-auto">
+      <div className="flex gap-3 h-full overflow-x-auto overflow-y-hidden px-2">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="flex-shrink-0 w-80 bg-gray-50 rounded-lg p-3">
-            <div className="h-6 bg-gray-200 rounded mb-3 animate-pulse" />
-            <div className="space-y-2">
+          <div key={i} className="flex-shrink-0 w-72 bg-gray-50 rounded-lg p-2">
+            <div className="h-5 bg-gray-200 rounded mb-2 animate-pulse" />
+            <div className="space-y-1.5">
               {[1, 2, 3].map((j) => (
-                <div key={j} className="h-20 bg-white rounded animate-pulse" />
+                <div key={j} className="h-16 bg-white rounded animate-pulse" />
               ))}
             </div>
           </div>
@@ -179,7 +179,13 @@ export const TrelloKanban: React.FC<TrelloKanbanProps> = ({
   }
 
   return (
-    <div className="flex gap-4 h-full p-4 overflow-x-auto">
+    <div 
+      className="flex gap-3 h-full overflow-x-auto overflow-y-hidden px-2"
+      style={{ 
+        minHeight: 'calc(100vh - 180px)',
+        maxHeight: 'calc(100vh - 180px)'
+      }}
+    >
       {/* Existing columns */}
       {columns.map((column) => {
         const columnTasks = tasks.filter(task => task.column_id === column.id);
@@ -201,9 +207,9 @@ export const TrelloKanban: React.FC<TrelloKanbanProps> = ({
       })}
 
       {/* Add column button */}
-      <div className="flex-shrink-0 w-80">
+      <div className="flex-shrink-0 w-72">
         {isCreatingColumn ? (
-          <div className="bg-gray-50 rounded-lg p-3">
+          <div className="bg-gray-50 rounded-lg p-2">
             <input
               value={newColumnName}
               onChange={(e) => setNewColumnName(e.target.value)}
@@ -238,7 +244,7 @@ export const TrelloKanban: React.FC<TrelloKanbanProps> = ({
           <Button
             variant="ghost"
             onClick={() => setIsCreatingColumn(true)}
-            className="w-full h-fit justify-start text-gray-500 hover:text-gray-700 hover:bg-gray-100 border-2 border-dashed border-gray-300 hover:border-gray-400 p-3 rounded-lg"
+            className="w-full h-fit justify-start text-gray-500 hover:text-gray-700 hover:bg-gray-100 border-2 border-dashed border-gray-300 hover:border-gray-400 p-2 rounded-lg text-sm"
           >
             <Plus className="h-4 w-4 mr-2" />
             Adicionar coluna

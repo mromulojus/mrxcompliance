@@ -71,9 +71,9 @@ export const TrelloCard: React.FC<TrelloCardProps> = ({
       onDragStart={(e: any) => onDragStart(e, task)}
       onClick={() => onClick?.(task)}
       className={cn(
-        "group cursor-pointer rounded-md bg-white p-3 mb-2 shadow-sm border hover:shadow-md transition-all",
+        "group cursor-pointer rounded-md bg-white p-2 mb-1.5 shadow-sm border hover:shadow-md transition-all",
         "hover:border-primary/20 active:cursor-grabbing",
-        isOverdue && "border-l-4 border-l-red-500"
+        isOverdue && "border-l-2 border-l-red-500"
       )}
     >
       {/* Close button - only visible on hover */}
@@ -112,12 +112,12 @@ export const TrelloCard: React.FC<TrelloCardProps> = ({
       )}
 
       {/* Title */}
-      <h4 className="font-medium text-sm text-gray-900 mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+      <h4 className="font-medium text-xs text-gray-900 mb-1.5 line-clamp-2 group-hover:text-primary transition-colors leading-tight">
         {task.titulo}
       </h4>
 
       {/* Tags row */}
-      <div className="flex items-center gap-1 mb-2 flex-wrap">
+      <div className="flex items-center gap-1 mb-1.5 flex-wrap">
         {/* Priority badge - small colored circle */}
         <div
           className={cn(
@@ -157,9 +157,9 @@ export const TrelloCard: React.FC<TrelloCardProps> = ({
         
         {/* Responsible avatar */}
         {task.responsavel ? (
-          <Avatar className="h-6 w-6 border border-gray-200">
+          <Avatar className="h-5 w-5 border border-gray-200">
             <AvatarImage src={task.responsavel.avatar_url} />
-            <AvatarFallback className="text-xs bg-primary text-primary-foreground">
+            <AvatarFallback className="text-[10px] bg-primary text-primary-foreground">
               {task.responsavel.full_name
                 ?.split(' ')
                 .map(n => n[0])
@@ -171,10 +171,10 @@ export const TrelloCard: React.FC<TrelloCardProps> = ({
           </Avatar>
         ) : (
           <div 
-            className="h-6 w-6 rounded-full bg-gray-100 border border-dashed border-gray-300 flex items-center justify-center"
+            className="h-5 w-5 rounded-full bg-gray-100 border border-dashed border-gray-300 flex items-center justify-center"
             title="Sem responsável"
           >
-            <User className="h-3 w-3 text-gray-400" />
+            <User className="h-2.5 w-2.5 text-gray-400" />
           </div>
         )}
       </div>

@@ -200,14 +200,18 @@ export default function TaskFormModalWithBoard({
   };
 
   const generateEmpresasChecklist = () => {
-    const empresasTemplate = empresas.map(empresa => `${empresa.nome}`);
-    
-    if (initialChecklist.some(item => item.trim() !== '')) {
-      const confirmReplace = window.confirm('O checklist já possui itens. Deseja substituí-los pelo modelo de empresas?');
-      if (!confirmReplace) return;
+    try {
+      const empresasTemplate = empresas.map(empresa => `${empresa.nome}`);
+      
+      if (initialChecklist.some(item => item.trim() !== '')) {
+        const confirmReplace = window.confirm('O checklist já possui itens. Deseja substituí-los pelo modelo de empresas?');
+        if (!confirmReplace) return;
+      }
+      
+      setInitialChecklist([...empresasTemplate, '']);
+    } catch (error) {
+      console.error('Erro ao gerar checklist de empresas:', error);
     }
-    
-    setInitialChecklist([...empresasTemplate, '']);
   };
 
   useEffect(() => {
@@ -221,17 +225,21 @@ export default function TaskFormModalWithBoard({
       const empresaId = selectedEmpresa?.id || data.empresa_id;
       const anexosPaths = await uploadAnexos(anexoArquivos, empresaId);
       
-      // Prepare checklist data
-      const validChecklistItems = initialChecklist.filter(item => item.trim() !== '');
-      const checklistData = validChecklistItems.map((text, index) => ({
-        id: Date.now() + index,
-        text: text.trim(),
-        completed: false
-      }));
-
+      // Prepare checklist data - with better error handling
       let finalDescription = data.descricao || '';
-      if (checklistData.length > 0) {
-        finalDescription += `checklist:${JSON.stringify(checklistData)}`;
+      try {
+        const validChecklistItems = initialChecklist.filter(item => item && item.trim() !== '');
+        if (validChecklistItems.length > 0) {
+          const checklistData = validChecklistItems.map((text, index) => ({
+            id: Date.now() + index,
+            text: text.trim(),
+            completed: false
+          }));
+          finalDescription += `checklist:${JSON.stringify(checklistData)}`;
+        }
+      } catch (error) {
+        console.error('Erro ao processar checklist:', error);
+        // Continue without checklist if there's an error
       }
 
       // Prepare responsavel IDs - support multiple assignees

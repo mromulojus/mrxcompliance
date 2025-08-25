@@ -172,10 +172,12 @@ export function useTaskBoards(boardId?: string) {
     }
   };
 
-  const fetchColumns = async (bId: string) => {
+  const fetchColumns = useCallback(async (bId: string) => {
     if (!bId) return;
     
     try {
+      setLoading(true);
+      
       const { data, error } = await supabase
         .from('board_columns')
         .select('*')
@@ -184,16 +186,22 @@ export function useTaskBoards(boardId?: string) {
 
       if (error) {
         console.error('Erro ao buscar colunas:', error);
-        toast({ title: 'Erro', description: 'Não foi possível carregar as colunas', variant: 'destructive' });
+        // Don't show toast for fetch errors, just log them
         return;
       }
 
       setColumns(data || []);
-    } catch (error) {
+    } catch (error: any) {
+      // Silently handle network errors to avoid spam
+      if (error?.message?.includes('Failed to fetch')) {
+        console.warn('Erro de rede ao buscar colunas, tentando novamente...');
+        return;
+      }
       console.error('Erro na busca de colunas:', error);
-      toast({ title: 'Erro', description: 'Erro inesperado ao carregar colunas', variant: 'destructive' });
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
 
   const createColumn = async (bId: string, name: string) => {
     try {
@@ -374,8 +382,11 @@ export function useTaskBoards(boardId?: string) {
       fetchColumns(boardId);
       fetchBoardTasks(boardId);
       fetchMembers(boardId);
+    } else {
+      // Clear columns when no board is selected
+      setColumns([]);
     }
-  }, [boardId]);
+  }, [boardId, fetchColumns]);
 
   const board = useMemo(() => boards.find(b => b.id === boardId), [boards, boardId]);
 
