@@ -189,15 +189,38 @@ export default function TaskFormModalWithBoard({
     const currentBoardId = form.watch('board_id');
     const selectedBoard = boards.find(b => b.id === currentBoardId);
     
-    if (selectedBoard?.name.toLowerCase().includes('vendas') && !editData) {
-      // Initialize empty predefined fields if not already set
+    // Improved detection for VENDAS board
+    const isVendasBoard = selectedBoard?.name.toLowerCase().includes('vendas') || 
+                         selectedBoard?.name.toLowerCase().includes('growth') ||
+                         selectedBoard?.id === '3e5fa6e7-2975-4bad-aec7-94dff85bd112';
+    
+    if (isVendasBoard) {
+      // Initialize predefined fields for both create and edit
       const vendasFields = getVendasFields();
       const emptyFields: {[key: string]: string} = {};
       Object.keys(vendasFields).forEach(key => {
         emptyFields[key] = '';
       });
+      
+      // If editing, try to parse existing predefined fields from description
+      if (editData?.descricao) {
+        const match = editData.descricao.match(/predefined_fields:(\{.*?\})/);
+        if (match) {
+          try {
+            const savedFields = JSON.parse(match[1]);
+            Object.keys(emptyFields).forEach(key => {
+              if (savedFields[key]) {
+                emptyFields[key] = savedFields[key];
+              }
+            });
+          } catch (e) {
+            console.error('Error parsing saved predefined fields:', e);
+          }
+        }
+      }
+      
       setPreDefinedFields(emptyFields);
-    } else if (!selectedBoard?.name.toLowerCase().includes('vendas')) {
+    } else {
       // Clear predefined fields if not VENDAS board
       setPreDefinedFields({});
     }
