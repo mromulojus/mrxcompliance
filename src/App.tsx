@@ -27,7 +27,7 @@ import Empresas from "@/pages/Empresas";
 import DebtosDashboard from "@/pages/DebtosDashboard";
 import DevedorDetalhes from "./pages/DevedorDetalhes";
 import DividaDetalhes from "./pages/DividaDetalhes";
-import TarefasDashboard from "./pages/TarefasDashboardNew";
+import TarefasDashboard from "./pages/TarefasDashboardNewWithBoards";
 import TarefasBoards from "./pages/TarefasBoards";
 import TrelloBoardView from "./pages/TrelloBoardView";
 import Homepage from "@/pages/Homepage";
