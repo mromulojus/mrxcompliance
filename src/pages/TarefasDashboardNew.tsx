@@ -18,7 +18,7 @@ interface QuickStats {
 
 export default function TarefasDashboard() {
   const navigate = useNavigate();
-  const { boards, createBoard } = useTaskBoards();
+  const { boards, createBoard, ensureDepartmentalBoards } = useTaskBoards();
   const { profile } = useAuth();
   const { toast } = useToast();
   const [stats, setStats] = useState<QuickStats>({
@@ -40,6 +40,9 @@ export default function TarefasDashboard() {
       const empresaId = profile.empresa_ids[0];
 
       try {
+        // Ensure departmental boards exist
+        await ensureDepartmentalBoards(empresaId);
+
         // Look for existing "ADMINISTRATIVO" board (prioritize active ones)
         let board = boards.find(b => 
           b.empresa_id === empresaId && 
@@ -69,7 +72,7 @@ export default function TarefasDashboard() {
     };
 
     findAdministrativeBoard();
-  }, [boards, profile, toast]);
+  }, [boards, profile, toast, ensureDepartmentalBoards]);
 
   // Fetch quick stats
   useEffect(() => {

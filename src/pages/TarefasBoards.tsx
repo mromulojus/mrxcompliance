@@ -35,7 +35,18 @@ export default function TarefasBoards() {
     setCreating(true);
     try {
       const empresaId = profile?.empresa_ids?.[0];
-      const board = await createBoard(newBoardName.trim(), empresaId);
+      const template = selectedTemplate ? templates[selectedTemplate] : null;
+      
+      const board = await createBoard(
+        newBoardName.trim(), 
+        empresaId,
+        template ? [selectedTemplate!.toLowerCase()] as any : undefined,
+        template ? (selectedTemplate === 'VENDAS' ? '#10B981' : 
+                   selectedTemplate === 'COMPLIANCE' ? '#3B82F6' :
+                   selectedTemplate === 'JURIDICO' ? '#8B5CF6' :
+                   selectedTemplate === 'OUVIDORIA' ? '#F59E0B' :
+                   selectedTemplate === 'COBRANCA' ? '#EF4444' : '#6B7280') : undefined
+      );
       // If chosen template, create columns and set card defaults through hook
       const key = selectedTemplate;
       if (key) {
