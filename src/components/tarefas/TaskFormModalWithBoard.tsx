@@ -40,11 +40,11 @@ const taskFormSchema = z.object({
   descricao: z.string().optional(),
   board_id: z.string().min(1, 'Quadro é obrigatório'),
   column_id: z.string().min(1, 'Coluna é obrigatória'),
-  empresa_id: z.string().optional().or(z.literal('')),
+  empresa_id: z.string().optional().nullable().or(z.literal('')),
   responsavel_id: z.string().optional(),
   status: z.enum(['a_fazer', 'em_andamento', 'em_revisao', 'concluido']),
   prioridade: z.enum(['alta', 'media', 'baixa']),
-  data_vencimento: z.string().optional().or(z.literal('')),
+  data_vencimento: z.string().optional().nullable().or(z.literal('')),
 });
 
 type TaskFormData = z.infer<typeof taskFormSchema> & {
@@ -304,11 +304,12 @@ export default function TaskFormModalWithBoard({
       const payload: TaskFormData & { responsavel_ids?: string[]; modulo_origem?: string } = {
         ...data,
         descricao: finalDescription,
-        empresa_id: empresaId,
-        responsavel_id: responsavelIds[0] || data.responsavel_id,
+        empresa_id: empresaId || null,
+        responsavel_id: responsavelIds[0] || data.responsavel_id || null,
         responsavel_ids: responsavelIds,
         modulo_origem, // For backward compatibility
         anexos: anexosPaths.length ? anexosPaths : undefined,
+        data_vencimento: data.data_vencimento || null,
       };
 
       // Handle editing vs creating
