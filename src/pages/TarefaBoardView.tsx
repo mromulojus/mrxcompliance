@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import TaskFormModal from '@/components/tarefas/TaskFormModalNew';
+import TaskFormModalWithBoard from '@/components/tarefas/TaskFormModalWithBoard';
 import { TaskFormData } from '@/types/tarefas';
 import { useTarefasData } from '@/hooks/useTarefasDataNew';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -206,7 +206,7 @@ export default function TarefaBoardView() {
 				/>
 			</div>
 
-			<TaskFormModal
+			<TaskFormModalWithBoard
 				open={showTaskModal}
 				onOpenChange={setShowTaskModal}
 				onSubmit={async (data: TaskFormData) => {
@@ -214,7 +214,7 @@ export default function TarefaBoardView() {
 					setShowTaskModal(false);
 				}}
 				users={users}
-				defaultValues={{ modulo_origem: 'geral', status: 'a_fazer' }}
+				defaultValues={{ status: 'a_fazer' }}
 				contextData={{ board_id: boardId, column_id: selectedColumnId || undefined }}
 			/>
 		</div>

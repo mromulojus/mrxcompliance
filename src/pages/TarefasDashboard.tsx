@@ -14,7 +14,7 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { TaskFiltersComponent } from '@/components/tarefas/TaskFiltersNew';
-import TaskFormModal from '@/components/tarefas/TaskFormModalNew';
+import TaskFormModalWithBoard from '@/components/tarefas/TaskFormModalWithBoard';
 import { TaskDetailsModal } from '@/components/tarefas/TaskDetailsModal';
 import { FloatingTaskButton } from '@/components/tarefas/FloatingTaskButton';
 import { BoardSelector } from '@/components/tarefas/BoardSelector';
@@ -341,13 +341,11 @@ export default function TarefasDashboard() {
       <FloatingTaskButton
         onTaskCreate={handleTaskCreate}
         users={users}
-        contextData={{
-          modulo_origem: 'geral',
-        }}
+        contextData={{}}
       />
 
       {/* Task Creation Modal */}
-      <TaskFormModal
+      <TaskFormModalWithBoard
         open={showTaskModal}
         onOpenChange={setShowTaskModal}
         onSubmit={handleTaskCreate}
@@ -356,7 +354,6 @@ export default function TarefasDashboard() {
         editData={selectedTask}
         defaultValues={{
           status: selectedColumnStatus,
-          modulo_origem: 'geral',
         }}
       />
 

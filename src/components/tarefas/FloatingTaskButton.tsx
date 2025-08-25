@@ -8,7 +8,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import TaskFormModal from './TaskFormModalNew';
+import TaskFormModalWithBoard from '@/components/tarefas/TaskFormModalWithBoard';
 import { TaskFormData } from '@/types/tarefas';
 
 interface FloatingTaskButtonProps {
@@ -60,7 +60,7 @@ export function FloatingTaskButton({ onTaskCreate, users, contextData }: Floatin
         </Tooltip>
       </TooltipProvider>
 
-      <TaskFormModal
+      <TaskFormModalWithBoard
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
         onSubmit={handleTaskSubmit}
