@@ -18,7 +18,7 @@ import TaskFormModalWithBoard from '@/components/tarefas/TaskFormModalWithBoard'
 import { TaskDetailsModal } from '@/components/tarefas/TaskDetailsModal';
 import { FloatingTaskButton } from '@/components/tarefas/FloatingTaskButton';
 import { BoardSelector } from '@/components/tarefas/BoardSelector';
-import { useTarefasData } from '@/hooks/useTarefasData';
+import { useTarefasData } from '@/hooks/useTarefasDataNew';
 import { TaskFilters, TaskFormData, TaskStatus, TarefaWithUser } from '@/types/tarefas';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -42,8 +42,6 @@ export default function TarefasDashboard() {
     createTarefa,
     updateTarefa,
     deleteTarefa,
-    archiveTask,
-    updateTarefas,
     filterTarefas,
     refreshTarefas,
     users: usersFromHook,
@@ -139,16 +137,16 @@ export default function TarefasDashboard() {
 
   const handleTaskClose = async (task: TarefaWithUser) => {
     try {
-      await archiveTask(task.id);
+      await deleteTarefa(task.id);
       toast({
-        title: 'Tarefa arquivada',
-        description: 'A tarefa foi arquivada com sucesso'
+        title: 'Tarefa removida',
+        description: 'A tarefa foi removida com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao arquivar tarefa:', error);
+      console.error('Erro ao remover tarefa:', error);
       toast({
         title: 'Erro',
-        description: 'Não foi possível arquivar a tarefa',
+        description: 'Não foi possível remover a tarefa',
         variant: 'destructive'
       });
     }

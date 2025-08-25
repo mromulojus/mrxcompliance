@@ -326,11 +326,24 @@ export default function TaskFormModalWithBoard({
   };
 
   const handleClose = () => {
+    // Verificar se há dados preenchidos antes de fechar
+    const formValues = form.getValues();
+    const hasData = formValues.titulo || formValues.descricao || anexoArquivos.length > 0 || selectedResponsaveis.length > 0;
+    
+    if (hasData && !editData) {
+      // Confirmar se o usuário quer descartar as alterações
+      const shouldClose = window.confirm('Você tem alterações não salvas. Deseja descartar e fechar?');
+      if (!shouldClose) return;
+    }
+    
     onOpenChange(false);
-    form.reset();
-    setAnexoArquivos([]);
-    setSelectedResponsaveis([]);
-    setPreDefinedFields({});
+    // Só limpar os dados se não for edição ou se confirmou descarte
+    if (!editData || hasData) {
+      form.reset();
+      setAnexoArquivos([]);
+      setSelectedResponsaveis([]);
+      setPreDefinedFields({});
+    }
   };
 
   const primarySelectedId = selectedResponsaveis[0] || form.watch('responsavel_id');

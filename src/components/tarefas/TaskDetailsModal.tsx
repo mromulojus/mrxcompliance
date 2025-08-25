@@ -310,7 +310,15 @@ export function TaskDetailsModal({
               </div>
             </div>
             <Button 
-              onClick={() => onEdit(tarefa)}
+              onClick={() => {
+                // Passar tarefa com todos os dados necessários para edição
+                onEdit({
+                  ...tarefa,
+                  // Garantir que todos os campos necessários estão presentes
+                  responsavel_ids: tarefa.responsavel_ids || [],
+                  anexos: tarefa.anexos || []
+                });
+              }}
               size="sm"
               variant="outline"
             >
