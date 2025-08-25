@@ -27,11 +27,11 @@ export default function TarefasDashboard() {
     overdueTasks: 0,
     completedThisWeek: 0,
   });
-  const [generalBoard, setGeneralBoard] = useState<any>(null);
+  const [administrativeBoard, setAdministrativeBoard] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const findOrCreateGeneralBoard = async () => {
+    const findAdministrativeBoard = async () => {
       if (!profile?.empresa_ids?.[0]) {
         setLoading(false);
         return;
@@ -40,35 +40,27 @@ export default function TarefasDashboard() {
       const empresaId = profile.empresa_ids[0];
 
       try {
-        // Look for existing "Geral" board
+        // Look for existing "ADMINISTRATIVO" board (prioritize active ones)
         let board = boards.find(b => 
           b.empresa_id === empresaId && 
-          (b.name === 'Geral' || b.name === 'ADMINISTRATIVO' || b.name === 'General')
+          b.is_active &&
+          b.name === 'ADMINISTRATIVO'
         );
 
-        // If no general board exists, create one
+        // If no administrative board found, look for any active board
         if (!board) {
-          board = await createBoard('Geral', empresaId);
-          
-          // Create default columns
-          const defaultColumns = ['A Fazer', 'Em Andamento', 'Em Revisão', 'Concluído'];
-          for (let i = 0; i < defaultColumns.length; i++) {
-            await supabase
-              .from('board_columns')
-              .insert({
-                board_id: board.id,
-                name: defaultColumns[i],
-                position: i,
-              });
-          }
+          board = boards.find(b => 
+            b.empresa_id === empresaId && 
+            b.is_active
+          );
         }
 
-        setGeneralBoard(board);
+        setAdministrativeBoard(board);
       } catch (error) {
-        console.error('Error finding/creating general board:', error);
+        console.error('Error finding administrative board:', error);
         toast({
           title: 'Erro',
-          description: 'Não foi possível acessar o quadro geral',
+          description: 'Não foi possível acessar os quadros disponíveis',
           variant: 'destructive',
         });
       } finally {
@@ -76,8 +68,8 @@ export default function TarefasDashboard() {
       }
     };
 
-    findOrCreateGeneralBoard();
-  }, [boards, profile, createBoard, toast]);
+    findAdministrativeBoard();
+  }, [boards, profile, toast]);
 
   // Fetch quick stats
   useEffect(() => {
@@ -121,9 +113,12 @@ export default function TarefasDashboard() {
     fetchStats();
   }, [profile]);
 
-  const handleOpenGeneralBoard = () => {
-    if (generalBoard) {
-      navigate(`/tarefas/quadros/${generalBoard.id}`);
+  const handleOpenMainBoard = () => {
+    if (administrativeBoard) {
+      navigate(`/tarefas/quadros/${administrativeBoard.id}`);
+    } else {
+      // If no board found, redirect to boards list
+      navigate('/tarefas/quadros');
     }
   };
 
@@ -204,21 +199,24 @@ export default function TarefasDashboard() {
         </Card>
       </div>
 
-      {/* Main Action - General Board */}
+      {/* Main Action - Administrative Board */}
       <Card className="border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Building className="h-5 w-5" />
-                Quadro Geral
+                {administrativeBoard ? administrativeBoard.name : 'Quadros de Tarefas'}
               </CardTitle>
               <p className="text-muted-foreground mt-1">
-                Acesse o quadro principal para gerenciar suas tarefas diárias
+                {administrativeBoard 
+                  ? 'Acesse seu quadro principal para gerenciar tarefas'
+                  : 'Explore e gerencie seus quadros de tarefas organizados por módulos'
+                }
               </p>
             </div>
-            <Button onClick={handleOpenGeneralBoard} disabled={!generalBoard}>
-              Abrir Quadro
+            <Button onClick={handleOpenMainBoard}>
+              {administrativeBoard ? 'Abrir Quadro' : 'Ver Quadros'}
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           </div>
