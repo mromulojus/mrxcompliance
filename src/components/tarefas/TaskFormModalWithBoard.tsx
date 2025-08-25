@@ -581,207 +581,218 @@ export default function TaskFormModalWithBoard({
             {Object.keys(preDefinedFields).length > 0 && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <FormLabel>Campos de Qualificação</FormLabel>
+                  <FormLabel className="text-base font-semibold">Campos de Qualificação</FormLabel>
                   <Badge variant="secondary" className="text-xs">
                     Template {selectedBoard?.name}
                   </Badge>
                 </div>
-                <div className="max-h-96 overflow-y-auto space-y-4 p-4 border rounded-md bg-muted/20">
-                  {/* Dados do Processo */}
-                  <div className="space-y-3">
-                    <h4 className="font-semibold text-sm text-primary border-b pb-1">
-                      📋 Dados do Processo
-                    </h4>
-                    <div className="grid grid-cols-1 gap-3">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label className="text-xs text-muted-foreground">Número do Processo</Label>
+                <div className="max-h-80 overflow-y-auto border rounded-lg bg-card">
+                  <div className="p-4 space-y-6">
+                    {/* Dados do Processo */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 pb-2 border-b border-border/50">
+                        <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                        <h4 className="font-semibold text-sm">Dados do Processo</h4>
+                      </div>
+                      <div className="space-y-3 pl-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                            <Label className="text-xs font-medium text-muted-foreground">Número do Processo</Label>
+                            <Input
+                              placeholder="Ex: 0000634-13.2025.5.10.0811"
+                              value={preDefinedFields['numero_processo'] || ''}
+                              onChange={(e) => setPreDefinedFields(prev => ({
+                                ...prev,
+                                numero_processo: e.target.value
+                              }))}
+                              className="h-9 text-sm"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs font-medium text-muted-foreground">Data da Audiência</Label>
+                            <Input
+                              type="date"
+                              value={preDefinedFields['data_audiencia'] || ''}
+                              onChange={(e) => setPreDefinedFields(prev => ({
+                                ...prev,
+                                data_audiencia: e.target.value
+                              }))}
+                              className="h-9 text-sm"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs font-medium text-muted-foreground">Valor da Causa</Label>
                           <Input
-                            placeholder="Referência e credibilidade"
-                            value={preDefinedFields['numero_processo'] || ''}
+                            placeholder="Ex: R$ 24.569,56"
+                            value={preDefinedFields['valor_causa'] || ''}
                             onChange={(e) => setPreDefinedFields(prev => ({
                               ...prev,
-                              numero_processo: e.target.value
+                              valor_causa: e.target.value
                             }))}
-                            className="h-8 text-xs"
+                            className="h-9 text-sm"
                           />
                         </div>
-                        <div>
-                          <Label className="text-xs text-muted-foreground">Data da Audiência</Label>
+                        <div className="space-y-1">
+                          <Label className="text-xs font-medium text-muted-foreground">Objeto da Ação</Label>
                           <Input
-                            type="date"
-                            value={preDefinedFields['data_audiencia'] || ''}
+                            placeholder="Ex: Reconhecimento de Relação de Emprego"
+                            value={preDefinedFields['objeto_acao'] || ''}
                             onChange={(e) => setPreDefinedFields(prev => ({
                               ...prev,
-                              data_audiencia: e.target.value
+                              objeto_acao: e.target.value
                             }))}
-                            className="h-8 text-xs"
+                            className="h-9 text-sm"
                           />
                         </div>
-                      </div>
-                      <div>
-                        <Label className="text-xs text-muted-foreground">Valor da Causa</Label>
-                        <Input
-                          placeholder="Tamanho do prejuízo financeiro"
-                          value={preDefinedFields['valor_causa'] || ''}
-                          onChange={(e) => setPreDefinedFields(prev => ({
-                            ...prev,
-                            valor_causa: e.target.value
-                          }))}
-                          className="h-8 text-xs"
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-xs text-muted-foreground">Objeto da Ação</Label>
-                        <Input
-                          placeholder="A 'dor' específica do cliente"
-                          value={preDefinedFields['objeto_acao'] || ''}
-                          onChange={(e) => setPreDefinedFields(prev => ({
-                            ...prev,
-                            objeto_acao: e.target.value
-                          }))}
-                          className="h-8 text-xs"
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-xs text-muted-foreground">Advogado da Empresa</Label>
-                        <Input
-                          placeholder="Defesa já constituída"
-                          value={preDefinedFields['advogado_empresa'] || ''}
-                          onChange={(e) => setPreDefinedFields(prev => ({
-                            ...prev,
-                            advogado_empresa: e.target.value
-                          }))}
-                          className="h-8 text-xs"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Dados da Empresa */}
-                  <div className="space-y-3">
-                    <h4 className="font-semibold text-sm text-primary border-b pb-1">
-                      🏢 Dados da Empresa
-                    </h4>
-                    <div className="grid grid-cols-1 gap-3">
-                      <div>
-                        <Label className="text-xs text-muted-foreground">Nome Fantasia e Razão Social</Label>
-                        <Input
-                          value={preDefinedFields['nome_fantasia_razao_social'] || ''}
-                          onChange={(e) => setPreDefinedFields(prev => ({
-                            ...prev,
-                            nome_fantasia_razao_social: e.target.value
-                          }))}
-                          className="h-8 text-xs"
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label className="text-xs text-muted-foreground">CNPJ</Label>
+                        <div className="space-y-1">
+                          <Label className="text-xs font-medium text-muted-foreground">Advogado da Empresa</Label>
                           <Input
-                            value={preDefinedFields['cnpj'] || ''}
+                            placeholder="Informar se já tem advogado constituído"
+                            value={preDefinedFields['advogado_empresa'] || ''}
                             onChange={(e) => setPreDefinedFields(prev => ({
                               ...prev,
-                              cnpj: e.target.value
+                              advogado_empresa: e.target.value
                             }))}
-                            className="h-8 text-xs"
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-xs text-muted-foreground">Telefone Principal da Empresa</Label>
-                          <Input
-                            value={preDefinedFields['telefone_principal_empresa'] || ''}
-                            onChange={(e) => setPreDefinedFields(prev => ({
-                              ...prev,
-                              telefone_principal_empresa: e.target.value
-                            }))}
-                            className="h-8 text-xs"
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label className="text-xs text-muted-foreground">Segmento de Atuação</Label>
-                          <Input
-                            placeholder="Varejo, Construção, etc."
-                            value={preDefinedFields['segmento_atuacao'] || ''}
-                            onChange={(e) => setPreDefinedFields(prev => ({
-                              ...prev,
-                              segmento_atuacao: e.target.value
-                            }))}
-                            className="h-8 text-xs"
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-xs text-muted-foreground">Porte Estimado</Label>
-                          <Input
-                            placeholder="Nº de Colaboradores"
-                            value={preDefinedFields['porte_estimado'] || ''}
-                            onChange={(e) => setPreDefinedFields(prev => ({
-                              ...prev,
-                              porte_estimado: e.target.value
-                            }))}
-                            className="h-8 text-xs"
+                            className="h-9 text-sm"
                           />
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Dados do Contato */}
-                  <div className="space-y-3">
-                    <h4 className="font-semibold text-sm text-primary border-b pb-1">
-                      👤 Dados do Contato
-                    </h4>
-                    <div className="grid grid-cols-1 gap-3">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label className="text-xs text-muted-foreground">Nome do Sócio/Decisor</Label>
+                    {/* Dados da Empresa */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 pb-2 border-b border-border/50">
+                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                        <h4 className="font-semibold text-sm">Dados da Empresa</h4>
+                      </div>
+                      <div className="space-y-3 pl-4">
+                        <div className="space-y-1">
+                          <Label className="text-xs font-medium text-muted-foreground">Nome Fantasia e Razão Social</Label>
                           <Input
-                            value={preDefinedFields['nome_socio_decisor'] || ''}
+                            placeholder="Ex: D R Construções Ltda"
+                            value={preDefinedFields['nome_fantasia_razao_social'] || ''}
                             onChange={(e) => setPreDefinedFields(prev => ({
                               ...prev,
-                              nome_socio_decisor: e.target.value
+                              nome_fantasia_razao_social: e.target.value
                             }))}
-                            className="h-8 text-xs"
+                            className="h-9 text-sm"
                           />
                         </div>
-                        <div>
-                          <Label className="text-xs text-muted-foreground">Cargo</Label>
-                          <Input
-                            placeholder="Sócio-Diretor, Gerente de RH"
-                            value={preDefinedFields['cargo'] || ''}
-                            onChange={(e) => setPreDefinedFields(prev => ({
-                              ...prev,
-                              cargo: e.target.value
-                            }))}
-                            className="h-8 text-xs"
-                          />
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                            <Label className="text-xs font-medium text-muted-foreground">CNPJ</Label>
+                            <Input
+                              placeholder="Ex: 36.263.148/0001-66"
+                              value={preDefinedFields['cnpj'] || ''}
+                              onChange={(e) => setPreDefinedFields(prev => ({
+                                ...prev,
+                                cnpj: e.target.value
+                              }))}
+                              className="h-9 text-sm"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs font-medium text-muted-foreground">Telefone Principal</Label>
+                            <Input
+                              placeholder="Ex: (63) 99223-7538"
+                              value={preDefinedFields['telefone_principal_empresa'] || ''}
+                              onChange={(e) => setPreDefinedFields(prev => ({
+                                ...prev,
+                                telefone_principal_empresa: e.target.value
+                              }))}
+                              className="h-9 text-sm"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                            <Label className="text-xs font-medium text-muted-foreground">Segmento de Atuação</Label>
+                            <Input
+                              placeholder="Ex: CONSTRUÇÃO"
+                              value={preDefinedFields['segmento_atuacao'] || ''}
+                              onChange={(e) => setPreDefinedFields(prev => ({
+                                ...prev,
+                                segmento_atuacao: e.target.value
+                              }))}
+                              className="h-9 text-sm"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs font-medium text-muted-foreground">Porte Estimado</Label>
+                            <Input
+                              placeholder="Nº de colaboradores"
+                              value={preDefinedFields['porte_estimado'] || ''}
+                              onChange={(e) => setPreDefinedFields(prev => ({
+                                ...prev,
+                                porte_estimado: e.target.value
+                              }))}
+                              className="h-9 text-sm"
+                            />
+                          </div>
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label className="text-xs text-muted-foreground">Telefone Direto / WhatsApp</Label>
-                          <Input
-                            value={preDefinedFields['telefone_direto_whatsapp'] || ''}
-                            onChange={(e) => setPreDefinedFields(prev => ({
-                              ...prev,
-                              telefone_direto_whatsapp: e.target.value
-                            }))}
-                            className="h-8 text-xs"
-                          />
+                    </div>
+
+                    {/* Dados do Contato */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 pb-2 border-b border-border/50">
+                        <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                        <h4 className="font-semibold text-sm">Dados do Contato</h4>
+                      </div>
+                      <div className="space-y-3 pl-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                            <Label className="text-xs font-medium text-muted-foreground">Nome do Sócio/Decisor</Label>
+                            <Input
+                              placeholder="Ex: DENIS REGO FIGUEREDO"
+                              value={preDefinedFields['nome_socio_decisor'] || ''}
+                              onChange={(e) => setPreDefinedFields(prev => ({
+                                ...prev,
+                                nome_socio_decisor: e.target.value
+                              }))}
+                              className="h-9 text-sm"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs font-medium text-muted-foreground">Cargo</Label>
+                            <Input
+                              placeholder="Ex: SÓCIO"
+                              value={preDefinedFields['cargo'] || ''}
+                              onChange={(e) => setPreDefinedFields(prev => ({
+                                ...prev,
+                                cargo: e.target.value
+                              }))}
+                              className="h-9 text-sm"
+                            />
+                          </div>
                         </div>
-                        <div>
-                          <Label className="text-xs text-muted-foreground">E-mail do Decisor</Label>
-                          <Input
-                            type="email"
-                            value={preDefinedFields['email_decisor'] || ''}
-                            onChange={(e) => setPreDefinedFields(prev => ({
-                              ...prev,
-                              email_decisor: e.target.value
-                            }))}
-                            className="h-8 text-xs"
-                          />
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                            <Label className="text-xs font-medium text-muted-foreground">Telefone Direto / WhatsApp</Label>
+                            <Input
+                              placeholder="Ex: (63) 99223-7538"
+                              value={preDefinedFields['telefone_direto_whatsapp'] || ''}
+                              onChange={(e) => setPreDefinedFields(prev => ({
+                                ...prev,
+                                telefone_direto_whatsapp: e.target.value
+                              }))}
+                              className="h-9 text-sm"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs font-medium text-muted-foreground">E-mail do Decisor</Label>
+                            <Input
+                              type="email"
+                              placeholder="email@empresa.com"
+                              value={preDefinedFields['email_decisor'] || ''}
+                              onChange={(e) => setPreDefinedFields(prev => ({
+                                ...prev,
+                                email_decisor: e.target.value
+                              }))}
+                              className="h-9 text-sm"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
