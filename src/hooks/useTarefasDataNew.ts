@@ -268,37 +268,28 @@ export function useTarefasData() {
         .eq('id', id)
         .select()
         .single();
-      // Department assignment removed - function not available
-      // if (updates.departments && updates.departments.length > 0) {
-      //   await supabase.rpc('assign_departments_to_resource', {
-      //     resource_id: id,
-      //     resource_type: 'task',
-      //     department_ids: updates.departments || []
-      //   });
-      // }
 
       if (error) throw error;
 
-      // Buscar dados do usuário responsável se houver mudança
+      // Buscar dados do usuário responsável se mudou
       let responsavel: UserProfile | undefined;
-      if (updates.responsavel_id) {
+      if (data.responsavel_id && data.responsavel_id !== updates.responsavel_id) {
         const { data: userData } = await supabase
           .from('profiles')
           .select('user_id, full_name, username, avatar_url, is_active')
-          .eq('user_id', updates.responsavel_id)
+          .eq('user_id', data.responsavel_id)
           .single();
         responsavel = userData || undefined;
       }
 
-      setTarefas(prev => prev.map(t => {
-        if (t.id === id) {
-          return {
-            ...data,
-            responsavel: updates.responsavel_id ? responsavel : t.responsavel
-          };
-        }
-        return t;
-      }));
+      const tarefaWithUser: TarefaWithUser = {
+        ...data,
+        responsavel: responsavel || (updates as any).responsavel
+      };
+
+      setTarefas(prev => prev.map(tarefa => 
+        tarefa.id === id ? tarefaWithUser : tarefa
+      ));
 
       toast({
         title: 'Sucesso',
@@ -308,10 +299,9 @@ export function useTarefasData() {
       console.error('Erro ao atualizar tarefa:', err);
       toast({
         title: 'Erro',
-        description: 'Não foi possível atualizar a tarefa',
+        description: 'Não foi possível atualizar a tarefa. Verifique os dados e tente novamente.',
         variant: 'destructive',
       });
-      throw err;
     }
   }, [toast]);
 

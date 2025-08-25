@@ -5,7 +5,7 @@ import { TrelloKanban } from '@/components/ui/trello-kanban';
 import TaskFormModalWithBoard from '@/components/tarefas/TaskFormModalWithBoard';
 import { TaskDetailsModal } from '@/components/tarefas/TaskDetailsModal';
 import { FloatingTaskButton } from '@/components/tarefas/FloatingTaskButton';
-import { useTarefasData } from '@/hooks/useTarefasData';
+import { useTarefasData } from '@/hooks/useTarefasDataNew';
 import { useTaskBoards } from '@/hooks/useTaskBoards';
 import { TaskFormData, TarefaWithUser } from '@/types/tarefas';
 import { useToast } from '@/hooks/use-toast';
@@ -29,7 +29,7 @@ export default function TrelloBoardView() {
     loading: tasksLoading,
     createTarefa,
     updateTarefa,
-    archiveTask,
+    deleteTarefa,
     refreshTarefas,
     users,
   } = useTarefasData();
@@ -153,7 +153,7 @@ export default function TrelloBoardView() {
 
   const handleTaskClose = async (task: TarefaWithUser) => {
     try {
-      await archiveTask(task.id);
+      await deleteTarefa(task.id);
       toast({
         title: 'Tarefa arquivada',
         description: 'A tarefa foi arquivada com sucesso',
