@@ -27,9 +27,9 @@ import Empresas from "@/pages/Empresas";
 import DebtosDashboard from "@/pages/DebtosDashboard";
 import DevedorDetalhes from "./pages/DevedorDetalhes";
 import DividaDetalhes from "./pages/DividaDetalhes";
-import TarefasDashboard from "./pages/TarefasDashboard";
+import TarefasDashboard from "./pages/TarefasDashboardNew";
 import TarefasBoards from "./pages/TarefasBoards";
-import TarefaBoardView from "./pages/TarefaBoardView";
+import TrelloBoardView from "./pages/TrelloBoardView";
 import Homepage from "@/pages/Homepage";
 import TaskDiagnosticPage from "./pages/TaskDiagnosticPage";
 
@@ -78,7 +78,7 @@ const App = () => (
                 } />
                 <Route path="/tarefas/quadros/:boardId" element={
                   <ProtectedRoute allowedRoles={["superuser", "administrador"]}>
-                    <TarefaBoardView />
+                    <TrelloBoardView />
                   </ProtectedRoute>
                 } />
                 <Route path="/diagnostic" element={

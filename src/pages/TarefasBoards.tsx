@@ -124,9 +124,14 @@ export default function TarefasBoards() {
                 </div>
               ) : (
                 <div className="flex items-center justify-between">
-                  <CardTitle className="cursor-pointer" onClick={() => navigate(`/tarefas/quadros/${board.id}`)}>{board.name}</CardTitle>
+                  <CardTitle 
+                    className="cursor-pointer hover:text-primary transition-colors" 
+                    onClick={() => navigate(`/tarefas/quadros/${board.id}`)}
+                  >
+                    {board.name}
+                  </CardTitle>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/tarefas/quadros/${board.id}`); }}>Editar</Button>
+                    <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/tarefas/quadros/${board.id}`); }}>Ver Quadro</Button>
                     <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); startEditing(board.id, board.name); }}>Renomear</Button>
                     <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); void deleteBoard(board.id); }}>Excluir</Button>
                   </div>
