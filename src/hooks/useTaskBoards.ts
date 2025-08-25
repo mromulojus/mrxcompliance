@@ -3,6 +3,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { Database } from '@/integrations/supabase/types';
 
+export type BoardModule = 'vendas' | 'compliance' | 'juridico' | 'ouvidoria' | 'cobranca' | 'administrativo' | 'geral';
+
+export interface BoardPermission {
+  id: string;
+  board_id: string;
+  user_id: string;
+  permission_level: 'view' | 'edit' | 'admin';
+  profiles?: any;
+}
+
 export interface TaskBoard {
   id: string;
   name: string;
@@ -12,6 +22,10 @@ export interface TaskBoard {
   created_at: string;
   updated_at: string;
   card_default?: any | null;
+  modulos?: BoardModule[];
+  background_color?: string;
+  background_image?: string;
+  is_public?: boolean;
 }
 
 export interface TaskColumn {
@@ -31,6 +45,7 @@ export function useTaskBoards(boardId?: string) {
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [members, setMembers] = useState<{ user_id: string; role: string }[]>([]);
+  const [permissions, setPermissions] = useState<BoardPermission[]>([]);
   const [boardsSource] = useState<'boards'>('boards');
   const { toast } = useToast();
 
@@ -91,7 +106,15 @@ export function useTaskBoards(boardId?: string) {
     }
   };
 
-  const updateBoard = async (boardId: string, name: string, cardDefault?: any) => {
+  const updateBoard = async (
+    boardId: string, 
+    name?: string, 
+    cardDefault?: any,
+    modulos?: BoardModule[],
+    backgroundColor?: string,
+    backgroundImage?: string,
+    isPublic?: boolean
+  ) => {
     try {
       const updateData: any = { name };
       if (cardDefault !== undefined) {
@@ -375,6 +398,7 @@ export function useTaskBoards(boardId?: string) {
     columns,
     tasks,
     members,
+    permissions,
     loading,
     boardsSource,
     fetchBoards,
@@ -392,5 +416,8 @@ export function useTaskBoards(boardId?: string) {
     removeMember,
     moveColumn,
     ensureDepartmentalBoards,
+    fetchBoardPermissions: () => Promise.resolve([]),
+    addBoardPermission: () => Promise.resolve(),
+    removeBoardPermission: () => Promise.resolve(),
   };
 }

@@ -193,34 +193,81 @@ export type Database = {
           },
         ]
       }
+      board_permissions: {
+        Row: {
+          board_id: string
+          created_at: string | null
+          id: string
+          permission_level: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          board_id: string
+          created_at?: string | null
+          id?: string
+          permission_level: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          board_id?: string
+          created_at?: string | null
+          id?: string
+          permission_level?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_permissions_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       boards: {
         Row: {
+          background_color: string | null
+          background_image: string | null
           card_default: Json | null
           created_at: string
           created_by: string | null
           empresa_id: string | null
           id: string
           is_active: boolean
+          is_public: boolean | null
+          modulos: Database["public"]["Enums"]["board_module"][] | null
           name: string
           updated_at: string
         }
         Insert: {
+          background_color?: string | null
+          background_image?: string | null
           card_default?: Json | null
           created_at?: string
           created_by?: string | null
           empresa_id?: string | null
           id?: string
           is_active?: boolean
+          is_public?: boolean | null
+          modulos?: Database["public"]["Enums"]["board_module"][] | null
           name: string
           updated_at?: string
         }
         Update: {
+          background_color?: string | null
+          background_image?: string | null
           card_default?: Json | null
           created_at?: string
           created_by?: string | null
           empresa_id?: string | null
           id?: string
           is_active?: boolean
+          is_public?: boolean | null
+          modulos?: Database["public"]["Enums"]["board_module"][] | null
           name?: string
           updated_at?: string
         }
@@ -1666,6 +1713,14 @@ export type Database = {
       }
     }
     Enums: {
+      board_module:
+        | "vendas"
+        | "compliance"
+        | "juridico"
+        | "ouvidoria"
+        | "cobranca"
+        | "administrativo"
+        | "geral"
       colaborador_status: "ATIVO" | "INATIVO" | "DEMITIDO" | "PROCESSO_SELETIVO"
       conhecimento_fato:
         | "OUVI_FALAR"
@@ -1873,6 +1928,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      board_module: [
+        "vendas",
+        "compliance",
+        "juridico",
+        "ouvidoria",
+        "cobranca",
+        "administrativo",
+        "geral",
+      ],
       colaborador_status: ["ATIVO", "INATIVO", "DEMITIDO", "PROCESSO_SELETIVO"],
       conhecimento_fato: [
         "OUVI_FALAR",

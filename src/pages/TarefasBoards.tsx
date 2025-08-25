@@ -54,9 +54,9 @@ export default function TarefasBoards() {
     }
   };
 
-  const startEditing = (id: string, name: string) => {
-    setEditingId(id);
-    setEditingName(name);
+  const startEditing = (board: any) => {
+    setEditingId(board.id);
+    setEditingName(board.name);
   };
 
   const saveEditing = async () => {
@@ -132,7 +132,7 @@ export default function TarefasBoards() {
                   </CardTitle>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/tarefas/quadros/${board.id}`); }}>Ver Quadro</Button>
-                    <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); startEditing(board.id, board.name); }}>Renomear</Button>
+                    <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); startEditing(board); }}>Renomear</Button>
                     <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); void deleteBoard(board.id); }}>Excluir</Button>
                   </div>
                 </div>
@@ -145,6 +145,7 @@ export default function TarefasBoards() {
           </Card>
         ))}
       </div>
+
     </div>
   );
 }
