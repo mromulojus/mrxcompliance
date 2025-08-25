@@ -118,13 +118,14 @@ export default function Indicadores() {
       return arr;
     };
 
-    // Por usuário (usa responsavel_id)
-    const gUser = by((t) => t.responsavel_id || 'sem_responsavel');
+    // Por usuário (usa responsavel_id OU created_by) - exclui Matheus Romulo
+    const gUser = by((t) => t.responsavel_id || t.created_by || 'sem_responsavel');
     const porUsuario = buildIndicadores(gUser, (k) => {
       if (k === 'sem_responsavel') return 'Sem responsável';
       const p = profilesById[k];
-      return p?.full_name || p?.username || '—';
-    });
+      const nome = p?.full_name || p?.username || '—';
+      return nome;
+    }).filter(item => item.chave !== 'Matheus Romulo');
 
     // Por empresa
     const gEmpresa = by((t) => t.empresa_id || 'sem_empresa');
@@ -134,10 +135,13 @@ export default function Indicadores() {
     const gQuadro = by((t) => t.board_id || 'sem_quadro');
     const porQuadro = buildIndicadores(gQuadro, (k) => (k === 'sem_quadro' ? 'Sem quadro' : (boardsById[k]?.name || k)));
 
-    // Ranking geral de tarefas por usuário (pontuação acumulada por concluidas)
+    // Ranking geral de tarefas por usuário (pontuação acumulada por concluidas) - exclui Matheus Romulo
     const rankingMap = new Map<string, { nome: string; pontos: number; resolvidas: number }>();
     gUser.forEach((list, k) => {
       const nome = k === 'sem_responsavel' ? 'Sem responsável' : (profilesById[k]?.full_name || profilesById[k]?.username || '—');
+      // Filtrar Matheus Romulo
+      if (nome === 'Matheus Romulo') return;
+      
       const concluidas = list.filter((t) => isConcluida(t.status));
       const pontos = concluidas.reduce((acc, t) => acc + (PRIORITY_SCORES[t.prioridade] || 0), 0);
       rankingMap.set(k, { nome, pontos, resolvidas: concluidas.length });
@@ -146,10 +150,13 @@ export default function Indicadores() {
       .sort((a, b) => b.pontos - a.pontos)
       .map((r, idx) => ({ usuario: r.nome, pontuacao: Number(r.pontos.toFixed(2)), tarefasResolvidas: r.resolvidas, ranking: idx + 1 }));
 
-    // Tempo total de resolução por usuário (proxy de "tempo de uso")
+    // Tempo total de resolução por usuário (proxy de "tempo de uso") - exclui Matheus Romulo
     const tempoUso: { usuario: string; horas: number }[] = [];
     gUser.forEach((list, k) => {
       const nome = k === 'sem_responsavel' ? 'Sem responsável' : (profilesById[k]?.full_name || profilesById[k]?.username || '—');
+      // Filtrar Matheus Romulo
+      if (nome === 'Matheus Romulo') return;
+      
       const concluidas = list.filter((t) => isConcluida(t.status));
       const totalHoras = concluidas.reduce((acc, t) => acc + diffHoras(t.created_at, t.data_conclusao || t.updated_at || t.created_at), 0);
       tempoUso.push({ usuario: nome, horas: Number(totalHoras.toFixed(2)) });

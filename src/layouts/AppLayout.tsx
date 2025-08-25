@@ -2,7 +2,7 @@ import React from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Logo } from "@/components/ui/logo";
-import { FloatingTaskButton } from "@/components/tarefas/FloatingTaskButton";
+import { FloatingActionButton } from "@/components/tarefas/FloatingActionButton";
 import { OptionsMenu } from "@/components/OptionsMenu";
 import { useTarefasData } from "@/hooks/useTarefasDataNew";
 import { FirstAccessModal } from "@/components/auth/FirstAccessModal";
@@ -76,7 +76,7 @@ const AppLayout: React.FC = () => {
         <div className="p-2 md:p-4">
           <Outlet />
         </div>
-        <FloatingTaskButton onTaskCreate={createTarefa} users={users} />
+        <FloatingActionButton onTaskCreate={createTarefa} users={users} />
       </main>
 
       {/* First Access Modal */}

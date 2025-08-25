@@ -44,7 +44,7 @@ export const useSystemStats = () => {
         // Get all tasks
         const { data: tasks } = await supabase
           .from('tarefas')
-          .select('responsavel_id, status, modulo_origem, created_at, data_conclusao');
+          .select('responsavel_id, created_by, status, modulo_origem, created_at, data_conclusao');
 
         const totalTasks = tasks?.length || 0;
         const totalCompletedTasks = tasks?.filter(t => t.status === 'concluido').length || 0;
@@ -67,8 +67,16 @@ export const useSystemStats = () => {
         });
 
         tasks?.forEach(task => {
-          if (task.responsavel_id && task.status === 'concluido') {
-            const current = userTaskCounts.get(task.responsavel_id) || { completed: 0, totalTime: 0 };
+          // Usar responsavel_id OU created_by para incluir tarefas criadas
+          const userId = task.responsavel_id || task.created_by;
+          if (userId && task.status === 'concluido') {
+            const profile = userProfiles.get(userId);
+            const userName = profile?.full_name || profile?.username || '';
+            
+            // Filtrar Matheus Romulo
+            if (userName === 'Matheus Romulo') return;
+            
+            const current = userTaskCounts.get(userId) || { completed: 0, totalTime: 0 };
             current.completed += 1;
             
             // Calculate time spent (rough estimate)
@@ -77,7 +85,7 @@ export const useSystemStats = () => {
               current.totalTime += timeSpent;
             }
             
-            userTaskCounts.set(task.responsavel_id, current);
+            userTaskCounts.set(userId, current);
           }
         });
 

@@ -63,17 +63,34 @@ export const useUserStats = () => {
 
         const totalSystemUsers = allUsers?.length || 0;
 
-        // Get all users' task completion counts for ranking
+        // Get all users' task completion counts for ranking (incluindo tarefas criadas)
         const { data: allTasks } = await supabase
           .from('tarefas')
-          .select('responsavel_id, status');
+          .select('responsavel_id, created_by, status');
+
+        const { data: allProfiles } = await supabase
+          .from('profiles')
+          .select('user_id, full_name, username');
+
+        const profileMap = new Map();
+        allProfiles?.forEach(profile => {
+          profileMap.set(profile.user_id, profile);
+        });
 
         const userTaskCounts = new Map();
         allTasks?.forEach(task => {
-          if (task.responsavel_id && task.status === 'concluido') {
+          // Usar responsavel_id OU created_by
+          const userId = task.responsavel_id || task.created_by;
+          if (userId && task.status === 'concluido') {
+            const profile = profileMap.get(userId);
+            const userName = profile?.full_name || profile?.username || '';
+            
+            // Filtrar Matheus Romulo
+            if (userName === 'Matheus Romulo') return;
+            
             userTaskCounts.set(
-              task.responsavel_id, 
-              (userTaskCounts.get(task.responsavel_id) || 0) + 1
+              userId, 
+              (userTaskCounts.get(userId) || 0) + 1
             );
           }
         });
