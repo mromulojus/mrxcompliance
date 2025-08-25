@@ -76,10 +76,11 @@ export function TaskDetailsModal({
 
   const parseDescricaoMeta = (descricao?: string) => {
     const safe = descricao || '';
-    const keys = ['checklist:', 'comments:'] as const;
+    const keys = ['checklist:', 'comments:', 'predefined_fields:'] as const;
     let base = safe;
     let checklistJson = '[]';
     let commentsJson = '[]';
+    let predefinedFieldsJson = '{}';
 
     const positions = keys
       .map(key => ({ key, index: safe.indexOf(key) }))
@@ -94,18 +95,21 @@ export function TaskDetailsModal({
         const value = safe.slice(current.index + current.key.length, next ? next.index : safe.length);
         if (current.key === 'checklist:') checklistJson = value.trim();
         if (current.key === 'comments:') commentsJson = value.trim();
+        if (current.key === 'predefined_fields:') predefinedFieldsJson = value.trim();
       }
     }
 
     let parsedChecklist: ChecklistItem[] = [];
     let parsedComments: Comment[] = [];
+    let parsedPredefinedFields: {[key: string]: string} = {};
     try { parsedChecklist = JSON.parse(checklistJson || '[]'); } catch {}
     try {
       const temp: SerializedComment[] = JSON.parse(commentsJson || '[]');
       parsedComments = (temp || []).map(c => ({ ...c, createdAt: new Date(c.createdAt) }));
     } catch {}
+    try { parsedPredefinedFields = JSON.parse(predefinedFieldsJson || '{}'); } catch {}
 
-    return { baseDescription: base, parsedChecklist, parsedComments };
+    return { baseDescription: base, parsedChecklist, parsedComments, parsedPredefinedFields };
   };
 
   const buildDescricaoWithMeta = (baseDescription: string, checklistToSave: ChecklistItem[], commentsToSave: Comment[]) => {
@@ -115,10 +119,17 @@ export function TaskDetailsModal({
       author: c.author,
       createdAt: c.createdAt.toISOString(),
     }));
-    return `${baseDescription}checklist:${JSON.stringify(checklistToSave)}comments:${JSON.stringify(serialized)}`;
+    
+    // Preserve existing predefined_fields when updating
+    const { parsedPredefinedFields } = parseDescricaoMeta(tarefa?.descricao);
+    const predefinedFieldsString = Object.keys(parsedPredefinedFields).length > 0 
+      ? `predefined_fields:${JSON.stringify(parsedPredefinedFields)}` 
+      : '';
+    
+    return `${baseDescription}checklist:${JSON.stringify(checklistToSave)}comments:${JSON.stringify(serialized)}${predefinedFieldsString}`;
   };
 
-  // Load checklist and comments when tarefa changes
+  // Load checklist, comments, and predefined fields when tarefa changes
   useEffect(() => {
     if (tarefa) {
       const { parsedChecklist, parsedComments } = parseDescricaoMeta(tarefa.descricao);
@@ -126,6 +137,69 @@ export function TaskDetailsModal({
       setComments(parsedComments);
     }
   }, [tarefa]);
+
+  // Helper function to get friendly field labels
+  const getFieldLabel = (key: string): string => {
+    const labels: {[key: string]: string} = {
+      'numero_processo': 'Número do Processo',
+      'data_audiencia': 'Data da Audiência',
+      'valor_causa': 'Valor da Causa',
+      'objeto_acao': 'Objeto da Ação',
+      'advogado_empresa': 'Advogado da Empresa',
+      'nome_fantasia_razao_social': 'Nome Fantasia e Razão Social',
+      'cnpj': 'CNPJ',
+      'telefone_principal_empresa': 'Telefone Principal da Empresa',
+      'segmento_atuacao': 'Segmento de Atuação',
+      'porte_estimado': 'Porte Estimado',
+      'nome_socio_decisor': 'Nome do Sócio/Decisor',
+      'cargo': 'Cargo',
+      'telefone_direto_whatsapp': 'Telefone Direto / WhatsApp',
+      'email_decisor': 'E-mail do Decisor'
+    };
+    return labels[key] || key;
+  };
+
+  // Render predefined fields in organized sections
+  const renderPredefinedFields = (fields: {[key: string]: string}) => {
+    const processFields = ['numero_processo', 'data_audiencia', 'valor_causa', 'objeto_acao', 'advogado_empresa'];
+    const companyFields = ['nome_fantasia_razao_social', 'cnpj', 'telefone_principal_empresa', 'segmento_atuacao', 'porte_estimado'];
+    const contactFields = ['nome_socio_decisor', 'cargo', 'telefone_direto_whatsapp', 'email_decisor'];
+
+    const renderSection = (title: string, sectionFields: string[], bgColor: string) => {
+      const hasContent = sectionFields.some(field => fields[field] && fields[field].trim() !== '');
+      if (!hasContent) return null;
+
+      return (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 pb-2 border-b border-border/50">
+            <div className={`w-2 h-2 rounded-full ${bgColor}`}></div>
+            <h4 className="font-semibold text-sm">{title}</h4>
+          </div>
+          <div className="space-y-2 pl-4">
+            {sectionFields.map(field => {
+              const value = fields[field];
+              if (!value || value.trim() === '') return null;
+              
+              return (
+                <div key={field} className="grid grid-cols-3 gap-2">
+                  <span className="text-xs font-medium text-muted-foreground">{getFieldLabel(field)}:</span>
+                  <span className="text-sm col-span-2">{value}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    };
+
+    return (
+      <div className="space-y-4">
+        {renderSection('Dados do Processo', processFields, 'bg-blue-500')}
+        {renderSection('Dados da Empresa', companyFields, 'bg-green-500')}
+        {renderSection('Dados do Contato', contactFields, 'bg-purple-500')}
+      </div>
+    );
+  };
 
   if (!tarefa) return null;
 
@@ -305,16 +379,39 @@ export function TaskDetailsModal({
                   </div>
                 </div>
 
-                {tarefa.descricao && !tarefa.descricao.includes('checklist:') && (
+                {tarefa.descricao && (
                   <div>
                     <span className="text-sm font-medium">Descrição:</span>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {tarefa.descricao.split('checklist:')[0]}
+                      {parseDescricaoMeta(tarefa.descricao).baseDescription}
                     </p>
                   </div>
                 )}
               </CardContent>
             </Card>
+
+            {/* Campos de Qualificação (Predefined Fields) */}
+            {(() => {
+              const { parsedPredefinedFields } = parseDescricaoMeta(tarefa.descricao);
+              const hasFields = Object.keys(parsedPredefinedFields).length > 0 && 
+                               Object.values(parsedPredefinedFields).some(v => v && v.trim() !== '');
+              
+              if (!hasFields) return null;
+
+              return (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <span>Campos de Qualificação</span>
+                      <Badge variant="secondary" className="text-xs">Template VENDAS</Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {renderPredefinedFields(parsedPredefinedFields)}
+                  </CardContent>
+                </Card>
+              );
+            })()}
 
             {/* Anexos */}
             <Card>
