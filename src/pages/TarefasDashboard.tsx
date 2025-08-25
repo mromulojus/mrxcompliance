@@ -22,6 +22,7 @@ import { useTarefasData } from '@/hooks/useTarefasDataNew';
 import { TaskFilters, TaskFormData, TaskStatus, TarefaWithUser } from '@/types/tarefas';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { clearBoardsCache } from '@/utils/clearBoardsCache';
 
 export default function TarefasDashboard() {
   const navigate = useNavigate();
@@ -35,6 +36,12 @@ export default function TarefasDashboard() {
   const [selectedTask, setSelectedTask] = useState<TarefaWithUser | null>(null);
   const [selectedColumnStatus, setSelectedColumnStatus] = useState<TaskStatus>('a_fazer');
   const [selectedBoardId, setSelectedBoardId] = useState<string | undefined>(undefined);
+
+  // Force refresh boards cache on component mount
+  useEffect(() => {
+    console.log('Limpando cache de boards...');
+    clearBoardsCache();
+  }, []);
 
   const {
     tarefas,
@@ -62,6 +69,9 @@ export default function TarefasDashboard() {
       }
     };
     getCurrentUser();
+    
+    // Limpar cache de boards na inicialização
+    clearBoardsCache();
   }, []);
 
   // Get users from hook

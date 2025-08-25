@@ -52,11 +52,37 @@ export function useTaskBoards(boardId?: string) {
   const fetchBoards = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) {
+        console.warn('Usuário não autenticado');
+        setBoards([]);
+        return;
+      }
+
+      // Get user's profile to access empresa_ids
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('empresa_ids, role')
+        .eq('user_id', user.user.id)
+        .single();
+
+      if (!profile?.empresa_ids?.length && profile?.role !== 'superuser' && profile?.role !== 'administrador') {
+        console.warn('Usuário sem empresas associadas');
+        setBoards([]);
+        return;
+      }
+
+      let query = supabase
         .from('boards')
         .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
+        .eq('is_active', true);
+
+      // Filter by user's empresas unless superuser/admin
+      if (profile?.role !== 'superuser' && profile?.role !== 'administrador') {
+        query = query.in('empresa_id', profile.empresa_ids);
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) {
         console.error('Erro ao buscar boards:', error);
@@ -64,6 +90,7 @@ export function useTaskBoards(boardId?: string) {
         return;
       }
       
+      console.log('Boards carregados:', data?.map(b => ({ name: b.name, empresa_id: b.empresa_id })));
       setBoards(data || []);
     } catch (error) {
       console.error('Erro na busca de boards:', error);
