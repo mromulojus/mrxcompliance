@@ -408,8 +408,18 @@ export default function TaskFormModalWithBoard({
           </DialogTitle>
         </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <Form {...form}>
+            <form 
+              onSubmit={(e) => {
+                console.log('Form onSubmit triggered', { 
+                  isValid: form.formState.isValid,
+                  errors: form.formState.errors,
+                  values: form.getValues()
+                });
+                form.handleSubmit(handleSubmit)(e);
+              }} 
+              className="space-y-6"
+            >
             {/* Title */}
             <FormField
               control={form.control}
@@ -911,13 +921,29 @@ export default function TaskFormModalWithBoard({
 
             {/* Actions */}
             <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={handleClose}>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={(e) => {
+                  console.log('Cancel button clicked');
+                  handleClose();
+                }} 
+              >
                 Cancelar
               </Button>
               <Button 
                 type="submit" 
                 disabled={uploadingAnexos}
                 className="bg-primary hover:bg-primary/90"
+                onClick={(e) => {
+                  console.log('Submit button clicked', { 
+                    editData: editData?.id, 
+                    uploadingAnexos,
+                    formValid: form.formState.isValid,
+                    errors: form.formState.errors,
+                    values: form.getValues()
+                  });
+                }}
               >
                 {uploadingAnexos ? 'Carregando...' : editData ? 'Atualizar Tarefa' : 'Criar Tarefa'}
               </Button>
