@@ -218,7 +218,14 @@ export default function TrelloBoardView() {
         tarefa={selectedTask}
         onEdit={handleTaskEdit}
         onUpdate={async (id, updates) => {
-          await updateTarefa(id, updates);
+          console.log('TrelloBoardView - TaskDetailsModal onUpdate called:', { id, updates });
+          try {
+            await updateTarefa(id, updates);
+            console.log('TrelloBoardView - Update completed successfully');
+          } catch (error) {
+            console.error('TrelloBoardView - Update failed:', error);
+            throw error;
+          }
         }}
       />
     </TrelloLayout>

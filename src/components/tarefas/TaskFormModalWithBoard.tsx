@@ -34,6 +34,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useTaskBoards } from '@/hooks/useTaskBoards';
 import { EmpresaSelectModal } from '@/components/empresas/EmpresaSelectModal';
+import { useToast } from '@/hooks/use-toast';
 
 const taskFormSchema = z.object({
   titulo: z.string().min(1, 'Título é obrigatório'),
@@ -92,6 +93,7 @@ export default function TaskFormModalWithBoard({
   contextData
 }: TaskFormModalProps) {
   const { boards, columns, fetchColumns } = useTaskBoards();
+  const { toast } = useToast();
   const [empresaModalOpen, setEmpresaModalOpen] = useState(false);
   const [selectedEmpresa, setSelectedEmpresa] = useState<{ id: string; nome: string } | null>(null);
   const [anexoArquivos, setAnexoArquivos] = useState<File[]>([]);
@@ -308,16 +310,48 @@ export default function TaskFormModalWithBoard({
         else if (boardName.includes('cobrança') || boardName.includes('debto')) modulo_origem = 'cobrancas';
       }
 
+      // Sanitize data to avoid null values and validate required fields
       const payload: TaskFormData & { responsavel_ids?: string[]; modulo_origem?: string } = {
         ...data,
-        descricao: finalDescription,
-        empresa_id: empresaId || null,
+        titulo: data.titulo?.trim() || '',
+        descricao: finalDescription || '',
+        empresa_id: empresaId,
         responsavel_id: responsavelIds[0] || data.responsavel_id || null,
         responsavel_ids: responsavelIds,
-        modulo_origem, // For backward compatibility
+        modulo_origem,
         anexos: anexosPaths.length ? anexosPaths : undefined,
         data_vencimento: data.data_vencimento || null,
+        board_id: data.board_id || contextData?.board_id,
+        column_id: data.column_id || contextData?.column_id,
+        prioridade: data.prioridade || 'media',
+        status: data.status || 'a_fazer',
       };
+
+      // Validate required fields
+      if (!payload.titulo.trim()) {
+        toast({
+          title: 'Erro',
+          description: 'Título é obrigatório',
+          variant: 'destructive',
+        });
+        return;
+      }
+      if (!payload.board_id) {
+        toast({
+          title: 'Erro',
+          description: 'Board ID é obrigatório',
+          variant: 'destructive',
+        });
+        return;
+      }
+      if (!payload.column_id) {
+        toast({
+          title: 'Erro',
+          description: 'Column ID é obrigatório',
+          variant: 'destructive',
+        });
+        return;
+      }
 
       console.log('TaskFormModalWithBoard - prepared payload:', payload);
       

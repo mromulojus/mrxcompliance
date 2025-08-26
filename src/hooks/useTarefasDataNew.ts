@@ -277,15 +277,37 @@ export function useTarefasData() {
 
   // Update tarefa
   const updateTarefa = useCallback(async (id: string, updates: Partial<TarefaWithUser>): Promise<void> => {
+    console.log('useTarefasDataNew - updateTarefa called:', { id, updates });
+    
     try {
-      const { data, error } = await supabase
+      // Validate that we have the task ID
+      if (!id) {
+        throw new Error('Task ID is required for update');
+      }
+
+      // Clean up the updates object - remove undefined values
+      const cleanUpdates = Object.entries(updates).reduce((acc, [key, value]) => {
+        if (value !== undefined) {
+          acc[key] = value;
+        }
+        return acc;
+      }, {} as any);
+
+      console.log('useTarefasDataNew - cleaned updates:', cleanUpdates);
+
+      const { error, data } = await supabase
         .from('tarefas')
-        .update(updates as any)
+        .update(cleanUpdates)
         .eq('id', id)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('useTarefasDataNew - Supabase error:', error);
+        throw error;
+      }
+
+      console.log('useTarefasDataNew - Update successful:', data);
 
       // Buscar dados do usuário responsável se mudou
       let responsavel: UserProfile | undefined;
@@ -311,13 +333,17 @@ export function useTarefasData() {
         title: 'Sucesso',
         description: 'Tarefa atualizada com sucesso',
       });
-    } catch (err) {
-      console.error('Erro ao atualizar tarefa:', err);
+    } catch (err: any) {
+      console.error('useTarefasDataNew - Erro ao atualizar tarefa:', err);
+      
+      const errorMessage = err?.message || 'Erro desconhecido ao atualizar tarefa';
+      
       toast({
-        title: 'Erro',
-        description: 'Não foi possível atualizar a tarefa. Verifique os dados e tente novamente.',
+        title: 'Erro ao atualizar tarefa',
+        description: errorMessage,
         variant: 'destructive',
       });
+      throw err;
     }
   }, [toast]);
 
