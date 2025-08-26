@@ -146,6 +146,13 @@ export default function TrelloBoardView() {
   };
 
   const handleTaskEdit = (task: TarefaWithUser) => {
+    console.log('TrelloBoardView - handleTaskEdit called with task:', {
+      id: task.id,
+      titulo: task.titulo,
+      board_id: task.board_id,
+      column_id: task.column_id,
+      empresa_id: task.empresa_id
+    });
     setSelectedTask(task);
     setShowTaskDetails(false);
     setShowTaskModal(true);
@@ -196,9 +203,27 @@ export default function TrelloBoardView() {
       {/* Task Creation Modal */}
       <TaskFormModalWithBoard
         open={showTaskModal}
-        onOpenChange={setShowTaskModal}
+        onOpenChange={(open) => {
+          console.log('TrelloBoardView - TaskFormModal onOpenChange:', open);
+          setShowTaskModal(open);
+          if (!open) {
+            console.log('TrelloBoardView - Clearing selected task');
+            setSelectedTask(null);
+          }
+        }}
         onSubmit={handleTaskCreate}
-        onUpdate={updateTarefa}
+        onUpdate={async (id, updates) => {
+          console.log('TrelloBoardView - TaskFormModal onUpdate called:', { id, updates });
+          try {
+            await updateTarefa(id, updates);
+            console.log('TrelloBoardView - Update completed successfully');
+            setShowTaskModal(false);
+            setSelectedTask(null);
+          } catch (error) {
+            console.error('TrelloBoardView - Update failed:', error);
+            throw error;
+          }
+        }}
         users={users}
         editData={selectedTask}
         contextData={{
