@@ -271,6 +271,13 @@ export default function TaskFormModalWithBoard({
   }, [open, empresas.length]);
 
   const handleSubmit = async (data: TaskFormData) => {
+    console.log('TaskFormModalWithBoard - handleSubmit called', { 
+      data, 
+      editData: editData?.id, 
+      hasOnUpdate: !!onUpdate,
+      hasOnSubmit: !!onSubmit 
+    });
+    
     try {
       const empresaId = selectedEmpresa?.id || data.empresa_id;
       const anexosPaths = await uploadAnexos(anexoArquivos, empresaId);
@@ -312,16 +319,23 @@ export default function TaskFormModalWithBoard({
         data_vencimento: data.data_vencimento || null,
       };
 
+      console.log('TaskFormModalWithBoard - prepared payload:', payload);
+      
       // Handle editing vs creating
       if (editData?.id && onUpdate) {
+        console.log('TaskFormModalWithBoard - calling onUpdate with:', editData.id, payload);
         await onUpdate(editData.id, payload);
+        console.log('TaskFormModalWithBoard - onUpdate completed successfully');
       } else {
+        console.log('TaskFormModalWithBoard - calling onSubmit with:', payload);
         await onSubmit(payload);
+        console.log('TaskFormModalWithBoard - onSubmit completed successfully');
       }
       
       handleClose();
     } catch (error) {
       console.error('Erro ao processar tarefa:', error);
+      throw error; // Re-throw to prevent handleClose from being called on error
     }
   };
 
