@@ -120,13 +120,15 @@ export default function TrelloBoardView() {
   };
 
   const handleTaskUpdate = async (taskId: string, newColumnId: string, newOrder: number) => {
+    console.log('TrelloBoardView - handleTaskUpdate called:', { taskId, newColumnId, newOrder });
     try {
       await updateTarefa(taskId, {
         column_id: newColumnId,
         ordem_na_coluna: newOrder,
       });
+      console.log('TrelloBoardView - handleTaskUpdate completed successfully');
     } catch (error) {
-      console.error('Error updating task:', error);
+      console.error('TrelloBoardView - handleTaskUpdate failed:', error);
       toast({
         title: 'Erro',
         description: 'Não foi possível mover a tarefa',
@@ -217,11 +219,21 @@ export default function TrelloBoardView() {
           console.log('TrelloBoardView - TaskFormModal onUpdate called:', { id, updates });
           try {
             await updateTarefa(id, updates);
-            console.log('TrelloBoardView - Update completed successfully');
+            console.log('TrelloBoardView - TaskFormModal onUpdate completed successfully');
             setShowTaskModal(false);
             setSelectedTask(null);
+            await refreshTarefas(); // Refresh to ensure UI is updated
+            toast({
+              title: 'Sucesso',
+              description: 'Tarefa atualizada com sucesso',
+            });
           } catch (error) {
-            console.error('TrelloBoardView - Update failed:', error);
+            console.error('TrelloBoardView - TaskFormModal onUpdate failed:', error);
+            toast({
+              title: 'Erro',
+              description: 'Não foi possível atualizar a tarefa',
+              variant: 'destructive',
+            });
             throw error;
           }
         }}
@@ -247,9 +259,19 @@ export default function TrelloBoardView() {
           console.log('TrelloBoardView - TaskDetailsModal onUpdate called:', { id, updates });
           try {
             await updateTarefa(id, updates);
-            console.log('TrelloBoardView - Update completed successfully');
+            console.log('TrelloBoardView - TaskDetailsModal onUpdate completed successfully');
+            await refreshTarefas(); // Refresh to ensure UI is updated
+            toast({
+              title: 'Sucesso',
+              description: 'Tarefa atualizada com sucesso',
+            });
           } catch (error) {
-            console.error('TrelloBoardView - Update failed:', error);
+            console.error('TrelloBoardView - TaskDetailsModal onUpdate failed:', error);
+            toast({
+              title: 'Erro',
+              description: 'Não foi possível atualizar a tarefa',
+              variant: 'destructive',
+            });
             throw error;
           }
         }}
