@@ -148,7 +148,9 @@ export default function TaskFormModalWithBoard({
   };
 
   useEffect(() => {
-    if (editData) {
+    // Fix editData handling - check if it's actually a valid object
+    if (editData && typeof editData === 'object' && editData.id && !editData._type) {
+      console.log('TaskFormModalWithBoard - Setting up editData:', editData);
       form.reset(editData);
       if (editData?.empresa_id) {
         setSelectedEmpresa({ id: editData.empresa_id, nome: 'Empresa selecionada' });
@@ -281,7 +283,22 @@ export default function TaskFormModalWithBoard({
     });
     
     try {
-      const empresaId = selectedEmpresa?.id || data.empresa_id;
+      // Fix empresa_id handling - get from selectedEmpresa, board, or data
+      let empresaId = selectedEmpresa?.id || data.empresa_id;
+      
+      // If no empresa_id, try to get from the selected board
+      if (!empresaId || empresaId === '') {
+        const selectedBoard = boards.find(b => b.id === data.board_id);
+        if (selectedBoard?.empresa_id) {
+          empresaId = selectedBoard.empresa_id;
+        }
+      }
+      
+      // Convert empty string to null to avoid UUID validation errors
+      if (empresaId === '') {
+        empresaId = null;
+      }
+      
       const anexosPaths = await uploadAnexos(anexoArquivos, empresaId);
       
       // Prepare predefined fields data
@@ -355,8 +372,9 @@ export default function TaskFormModalWithBoard({
 
       console.log('TaskFormModalWithBoard - prepared payload:', payload);
       
-      // Handle editing vs creating
-      if (editData?.id && onUpdate) {
+      // Handle editing vs creating - fix editData validation
+      const isEditing = editData && typeof editData === 'object' && editData.id && !editData._type;
+      if (isEditing && onUpdate) {
         console.log('TaskFormModalWithBoard - calling onUpdate with:', editData.id, payload);
         await onUpdate(editData.id, payload);
         console.log('TaskFormModalWithBoard - onUpdate completed successfully');

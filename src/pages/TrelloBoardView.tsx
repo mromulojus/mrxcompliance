@@ -204,11 +204,12 @@ export default function TrelloBoardView() {
       <TaskFormModalWithBoard
         open={showTaskModal}
         onOpenChange={(open) => {
-          console.log('TrelloBoardView - TaskFormModal onOpenChange:', open);
+          console.log('TrelloBoardView - TaskFormModal onOpenChange:', open, 'selectedTask:', selectedTask?.id);
           setShowTaskModal(open);
           if (!open) {
             console.log('TrelloBoardView - Clearing selected task');
             setSelectedTask(null);
+            setSelectedColumnId('');
           }
         }}
         onSubmit={handleTaskCreate}
