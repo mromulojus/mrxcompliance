@@ -348,7 +348,11 @@ export default function TaskFormModalWithBoard({
       }
 
       // Sanitize data to avoid null values and validate required fields
-      const payload: TaskFormData & { responsavel_ids?: string[]; modulo_origem?: string } = {
+      const payload: TaskFormData & { 
+        responsavel_ids?: string[]; 
+        modulo_origem?: string;
+        created_by?: string;
+      } = {
         ...data,
         titulo: data.titulo?.trim() || '',
         descricao: finalDescription || '',
@@ -396,17 +400,77 @@ export default function TaskFormModalWithBoard({
       const isEditing = editData && typeof editData === 'object' && editData.id && !editData._type;
       if (isEditing && onUpdate) {
         console.log('TaskFormModalWithBoard - calling onUpdate with:', editData.id, payload);
+        
+        // Additional validation for updates
+        if (!editData.id) {
+          throw new Error('ID da tarefa não encontrado para atualização');
+        }
+
+        // Verify user authentication
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          throw new Error('Usuário não autenticado');
+        }
+
+        // Check if user has permission to update this task
+        if (editData.created_by !== user.id && !payload.responsavel_ids?.includes(user.id) && payload.responsavel_id !== user.id) {
+          // For tasks without empresa_id, only creator can update
+          if (!empresaId && editData.created_by !== user.id) {
+            throw new Error('Você não tem permissão para atualizar esta tarefa');
+          }
+        }
+
         await onUpdate(editData.id, payload);
         console.log('TaskFormModalWithBoard - onUpdate completed successfully');
+        
+        toast({
+          title: 'Sucesso',
+          description: 'Tarefa atualizada com sucesso',
+        });
       } else {
         console.log('TaskFormModalWithBoard - calling onSubmit with:', payload);
+        
+        // Verify user authentication for creation
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          throw new Error('Usuário não autenticado');
+        }
+        
+        // Ensure created_by is set for new tasks
+        payload.created_by = user.id;
+        
         await onSubmit(payload);
         console.log('TaskFormModalWithBoard - onSubmit completed successfully');
+        
+        toast({
+          title: 'Sucesso',
+          description: 'Tarefa criada com sucesso',
+        });
       }
       
       handleClose();
-    } catch (error) {
-      console.error('Erro ao processar tarefa:', error);
+    } catch (error: any) {
+      console.error('TaskFormModalWithBoard - Submit error:', error);
+      
+      // Provide more specific error messages
+      let errorMessage = 'Erro ao processar tarefa';
+      
+      if (error?.message?.includes('not authenticated') || error?.message?.includes('não autenticado')) {
+        errorMessage = 'Você precisa estar logado para realizar esta ação';
+      } else if (error?.message?.includes('violates row-level security')) {
+        errorMessage = 'Você não tem permissão para realizar esta ação';
+      } else if (error?.message?.includes('permissão')) {
+        errorMessage = error.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      toast({
+        title: 'Erro',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+      
       throw error; // Re-throw to prevent handleClose from being called on error
     }
   };
