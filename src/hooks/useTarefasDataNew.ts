@@ -285,6 +285,14 @@ export function useTarefasData() {
         throw new Error('Task ID is required for update');
       }
 
+      // CRITICAL: Verify user authentication
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated - cannot update task');
+      }
+
+      console.log('useTarefasDataNew - User authenticated:', user.id);
+
       // Clean up the updates object - remove undefined values
       const cleanUpdates = Object.entries(updates).reduce((acc, [key, value]) => {
         if (value !== undefined) {
@@ -292,6 +300,9 @@ export function useTarefasData() {
         }
         return acc;
       }, {} as any);
+
+      // Ensure updated_at is set
+      cleanUpdates.updated_at = new Date().toISOString();
 
       console.log('useTarefasDataNew - cleaned updates:', cleanUpdates);
 

@@ -283,6 +283,23 @@ export default function TaskFormModalWithBoard({
     });
     
     try {
+      // CRITICAL: Verify user authentication first
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: 'Erro de Autenticação',
+          description: 'Você precisa estar logado para realizar esta ação. Redirecionando...',
+          variant: 'destructive',
+        });
+        // Redirect to login after a short delay
+        setTimeout(() => {
+          window.location.href = '/auth';
+        }, 2000);
+        return;
+      }
+
+      console.log('TaskFormModalWithBoard - User authenticated:', user.id);
+
       // Fix empresa_id handling - get from selectedEmpresa, board, or data
       let empresaId = selectedEmpresa?.id || data.empresa_id;
       
@@ -291,6 +308,7 @@ export default function TaskFormModalWithBoard({
         const selectedBoard = boards.find(b => b.id === data.board_id);
         if (selectedBoard?.empresa_id) {
           empresaId = selectedBoard.empresa_id;
+          console.log('TaskFormModalWithBoard - Using board empresa_id:', empresaId);
         }
       }
       
@@ -298,6 +316,8 @@ export default function TaskFormModalWithBoard({
       if (empresaId === '') {
         empresaId = null;
       }
+
+      console.log('TaskFormModalWithBoard - Final empresa_id:', empresaId);
       
       const anexosPaths = await uploadAnexos(anexoArquivos, empresaId);
       
