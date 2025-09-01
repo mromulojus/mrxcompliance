@@ -3,11 +3,11 @@
 -- Este arquivo serve como documentação das políticas implementadas
 
 -- NOTA: As seguintes configurações devem ser aplicadas manualmente no dashboard:
--- 
+--
 -- Auth Settings > Password Policy:
 -- - Minimum length: 12 characters
 -- - Minimum uppercase: 1
--- - Minimum lowercase: 1 
+-- - Minimum lowercase: 1
 -- - Minimum number: 1
 -- - Minimum special: 1
 -- - HIBP enabled: true
