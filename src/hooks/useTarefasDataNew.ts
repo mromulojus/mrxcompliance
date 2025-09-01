@@ -1,8 +1,8 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Tarefa, TarefaWithUser, TaskFormData, TaskFilters, TaskKPIs, UserProfile, TaskStatus } from '@/types/tarefas';
-import type { DepartmentAssignment } from '@/types/departments';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import type { DepartmentAssignment } from '@/types/departments';
+import { TarefaWithUser, TaskFilters, TaskFormData, TaskKPIs, TaskStatus, UserProfile } from '@/types/tarefas';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 export function useTarefasData() {
   const [tarefas, setTarefas] = useState<TarefaWithUser[]>([]);
@@ -38,7 +38,10 @@ export function useTarefasData() {
       // Tentativa principal: ordenar por ordem_na_coluna e created_at
       const firstTry = await supabase
         .from('tarefas')
-        .select('*')
+        .select(`
+          *,
+          empresas(id, nome)
+        `)
         .order('ordem_na_coluna', { ascending: true })
         .order('created_at', { ascending: false });
 
@@ -47,7 +50,10 @@ export function useTarefasData() {
         // Fallback: ordenar apenas por created_at
         const secondTry = await supabase
           .from('tarefas')
-          .select('*')
+          .select(`
+            *,
+            empresas(id, nome)
+          `)
           .order('created_at', { ascending: false });
 
         if (secondTry.error) {
@@ -55,7 +61,10 @@ export function useTarefasData() {
           // Último fallback: sem ordenação para ao menos obter dados
           const thirdTry = await supabase
             .from('tarefas')
-            .select('*');
+            .select(`
+              *,
+              empresas(id, nome)
+            `);
 
           if (thirdTry.error) throw thirdTry.error;
           tarefasRaw = thirdTry.data || [];
@@ -155,7 +164,7 @@ export function useTarefasData() {
     try {
       const moduleMapping = getModuleToBoardMapping();
       const targetBoardName = moduleMapping[tarefaData.modulo_origem];
-      
+
       if (!targetBoardName) {
         return tarefaData;
       }
@@ -165,7 +174,7 @@ export function useTarefasData() {
       const cacheKey = `boards_ensured_${tarefaData.empresa_id}`;
       const lastEnsured = sessionStorage.getItem(cacheKey);
       const now = Date.now();
-      
+
       // Only ensure boards if we haven't done it in the last 5 minutes
       if (!lastEnsured || (now - parseInt(lastEnsured)) > 5 * 60 * 1000) {
         try {
@@ -278,7 +287,7 @@ export function useTarefasData() {
   // Update tarefa
   const updateTarefa = useCallback(async (id: string, updates: Partial<TarefaWithUser>): Promise<void> => {
     console.log('useTarefasDataNew - updateTarefa called:', { id, updates });
-    
+
     try {
       // Validate that we have the task ID
       if (!id) {
@@ -336,7 +345,7 @@ export function useTarefasData() {
         responsavel: responsavel || (updates as any).responsavel
       };
 
-      setTarefas(prev => prev.map(tarefa => 
+      setTarefas(prev => prev.map(tarefa =>
         tarefa.id === id ? tarefaWithUser : tarefa
       ));
 
@@ -346,9 +355,9 @@ export function useTarefasData() {
       });
     } catch (err: any) {
       console.error('useTarefasDataNew - Erro ao atualizar tarefa:', err);
-      
+
       const errorMessage = err?.message || 'Erro desconhecido ao atualizar tarefa';
-      
+
       toast({
         title: 'Erro ao atualizar tarefa',
         description: errorMessage,
@@ -413,7 +422,7 @@ export function useTarefasData() {
     return tarefas.filter(tarefa => {
       if (filters.busca) {
         const searchTerm = filters.busca.toLowerCase();
-        const matchesSearch = 
+        const matchesSearch =
           tarefa.titulo.toLowerCase().includes(searchTerm) ||
           tarefa.descricao?.toLowerCase().includes(searchTerm) ||
           tarefa.responsavel?.full_name?.toLowerCase().includes(searchTerm) ||
