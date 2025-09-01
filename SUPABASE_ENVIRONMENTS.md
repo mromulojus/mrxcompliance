@@ -42,10 +42,10 @@ O client exibe logs no console indicando qual ambiente foi detectado:
 
 ## Vantagens
 
-✅ **Zero configuração** - Funciona automaticamente em qualquer ambiente  
-✅ **Flexível** - Permite override via variáveis de ambiente  
-✅ **Transparente** - Logs mostram qual configuração está sendo usada  
-✅ **Seguro** - Fallback para produção evita erros  
+✅ **Zero configuração** - Funciona automaticamente em qualquer ambiente
+✅ **Flexível** - Permite override via variáveis de ambiente
+✅ **Transparente** - Logs mostram qual configuração está sendo usada
+✅ **Seguro** - Fallback para produção evita erros
 
 ## Para Adicionar Novo Ambiente
 

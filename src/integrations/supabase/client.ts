@@ -7,14 +7,14 @@ const getEnvironmentConfig = () => {
   // 1. Primeiro, tenta usar variáveis de ambiente explícitas
   const envUrl = (import.meta as any)?.env?.VITE_SUPABASE_URL as string | undefined;
   const envAnonKey = (import.meta as any)?.env?.VITE_SUPABASE_ANON_KEY as string | undefined;
-  
+
   if (envUrl && envAnonKey) {
     return { url: envUrl, anonKey: envAnonKey };
   }
 
   // 2. Detecta ambiente baseado na URL atual
   const currentHost = typeof window !== 'undefined' ? window.location.hostname : '';
-  
+
   // Configurações por ambiente
   const environments = {
     // Produção
