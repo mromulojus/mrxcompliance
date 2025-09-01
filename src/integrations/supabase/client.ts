@@ -2,15 +2,49 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-// Prefer environment variables; fall back to embedded values for local/dev only
-const envUrl = (import.meta as any)?.env?.VITE_SUPABASE_URL as string | undefined;
-const envAnonKey = (import.meta as any)?.env?.VITE_SUPABASE_ANON_KEY as string | undefined;
+// Configurações dinâmicas baseadas no ambiente
+const getEnvironmentConfig = () => {
+  // 1. Primeiro, tenta usar variáveis de ambiente explícitas
+  const envUrl = (import.meta as any)?.env?.VITE_SUPABASE_URL as string | undefined;
+  const envAnonKey = (import.meta as any)?.env?.VITE_SUPABASE_ANON_KEY as string | undefined;
+  
+  if (envUrl && envAnonKey) {
+    return { url: envUrl, anonKey: envAnonKey };
+  }
 
-const FALLBACK_SUPABASE_URL = "https://pxpscjyeqmqqxzbttbep.supabase.co";
-const FALLBACK_SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB4cHNjanllcW1xcXh6YnR0YmVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ2NzMzMzksImV4cCI6MjA3MDI0OTMzOX0.pXHV4HvzqVpiLLoJIgtZ6hL9kxuJIPzIZXNHMfu4Wzc";
+  // 2. Detecta ambiente baseado na URL atual
+  const currentHost = typeof window !== 'undefined' ? window.location.hostname : '';
+  
+  // Configurações por ambiente
+  const environments = {
+    // Produção
+    production: {
+      hosts: ['mrxbr.app', 'www.mrxbr.app'],
+      url: "https://pxpscjyeqmqqxzbttbep.supabase.co",
+      anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB4cHNjanllcW1xcXh6YnR0YmVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ2NzMzMzksImV4cCI6MjA3MDI0OTMzOX0.pXHV4HvzqVpiLLoJIgtZ6hL9kxuJIPzIZXNHMfu4Wzc"
+    },
+    // Desenvolvimento/Local
+    development: {
+      hosts: ['localhost', '127.0.0.1', '0.0.0.0'],
+      url: "https://pxpscjyeqmqqxzbttbep.supabase.co", // Usa mesmo projeto para desenvolvimento
+      anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB4cHNjanllcW1xcXh6YnR0YmVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ2NzMzMzksImV4cCI6MjA3MDI0OTMzOX0.pXHV4HvzqVpiLLoJIgtZ6hL9kxuJIPzIZXNHMfu4Wzc"
+    }
+  };
 
-const SUPABASE_URL = envUrl || FALLBACK_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = envAnonKey || FALLBACK_SUPABASE_PUBLISHABLE_KEY;
+  // Detecta ambiente atual
+  for (const [envName, config] of Object.entries(environments)) {
+    if (config.hosts.some(host => currentHost.includes(host))) {
+      console.log(`🔧 Supabase: Detectado ambiente ${envName} (${currentHost})`);
+      return { url: config.url, anonKey: config.anonKey };
+    }
+  }
+
+  // Fallback para produção se não conseguir detectar
+  console.log(`⚠️ Supabase: Ambiente não detectado (${currentHost}), usando configuração de produção`);
+  return environments.production;
+};
+
+const { url: SUPABASE_URL, anonKey: SUPABASE_PUBLISHABLE_KEY } = getEnvironmentConfig();
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
