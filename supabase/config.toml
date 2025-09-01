@@ -13,25 +13,14 @@ port = 54322
 shadow_port = 54320
 major_version = 15
 
-[studio]
-enabled = true
-port = 54323
-api_url = "http://localhost"
-
-[inbucket]
-enabled = true
-port = 54324
-smtp_port = 54325
-pop3_port = 54326
-
 [storage]
 enabled = true
 file_size_limit = "50MiB"
 
 [auth]
 enabled = true
-site_url = "http://localhost:3000"
-additional_redirect_urls = ["https://localhost:3000"]
+site_url = "https://mrxbr.app"
+additional_redirect_urls = ["https://mrxbr.app", "http://localhost:3000"]
 jwt_expiry = 3600
 enable_signup = true
 
@@ -41,6 +30,18 @@ double_confirm_changes = true
 
 [auth.sms]
 enable_signup = false
+
+[auth.password]
+hibp_enabled = true
+hibp_api_key = { env = "HIBP_API_KEY" }
+min_length = 12
+min_uppercase = 1
+min_lowercase = 1
+min_number = 1
+min_special = 1
+
+[auth.otp]
+expiry_duration = "300s"  # 5 minutos conforme política interna
 
 [analytics]
 enabled = false
