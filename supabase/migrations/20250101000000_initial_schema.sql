@@ -167,6 +167,30 @@ CREATE TABLE public.dividas (
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
+-- Board tables (must be created before tarefas due to foreign key dependencies)
+CREATE TABLE public.boards (
+  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  empresa_id UUID NOT NULL REFERENCES public.empresas(id),
+  name TEXT NOT NULL,
+  description TEXT,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  background_color TEXT DEFAULT '#ffffff',
+  background_image TEXT,
+  is_public BOOLEAN DEFAULT false,
+  modulos JSONB DEFAULT '["tarefas"]'::jsonb,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+  created_by UUID REFERENCES auth.users(id)
+);
+
+CREATE TABLE public.board_columns (
+  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  board_id UUID NOT NULL REFERENCES public.boards(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  position INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
 CREATE TABLE public.tarefas (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   empresa_id UUID REFERENCES public.empresas(id),
@@ -190,29 +214,6 @@ CREATE TABLE public.tarefas (
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
   created_by UUID REFERENCES auth.users(id)
-);
-
-CREATE TABLE public.boards (
-  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
-  empresa_id UUID NOT NULL REFERENCES public.empresas(id),
-  name TEXT NOT NULL,
-  description TEXT,
-  is_active BOOLEAN NOT NULL DEFAULT true,
-  background_color TEXT DEFAULT '#ffffff',
-  background_image TEXT,
-  is_public BOOLEAN DEFAULT false,
-  modulos JSONB DEFAULT '["tarefas"]'::jsonb,
-  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-  created_by UUID REFERENCES auth.users(id)
-);
-
-CREATE TABLE public.board_columns (
-  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
-  board_id UUID NOT NULL REFERENCES public.boards(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  position INTEGER NOT NULL DEFAULT 0,
-  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
 -- Storage buckets
