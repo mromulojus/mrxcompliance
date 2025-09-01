@@ -1,37 +1,36 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Calendar, 
-  Clock, 
-  User, 
-  Edit3, 
-  MessageSquare, 
-  CheckCircle2,
-  Circle,
-  Plus,
-  X,
-  Send,
-  History,
-  Building2,
-  Paperclip,
-  FileText,
-  Download
-} from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { EmpresaSelectModal } from '@/components/empresas/EmpresaSelectModal';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { formatDateBR } from '@/lib/dateUtils';
 import { TarefaWithUser, TaskPriority, TaskStatus } from '@/types/tarefas';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { EmpresaSelectModal } from '@/components/empresas/EmpresaSelectModal';
-import { supabase } from '@/integrations/supabase/client';
+import {
+  Building2,
+  Calendar,
+  CheckCircle2,
+  Circle,
+  Download,
+  Edit3,
+  FileText,
+  History,
+  MessageSquare,
+  Paperclip,
+  Plus,
+  Send,
+  User,
+  X
+} from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 interface TaskDetailsModalProps {
   open: boolean;
@@ -54,12 +53,12 @@ interface Comment {
   createdAt: Date;
 }
 
-export function TaskDetailsModal({ 
-  open, 
-  onOpenChange, 
-  tarefa, 
+export function TaskDetailsModal({
+  open,
+  onOpenChange,
+  tarefa,
   onEdit,
-  onUpdate 
+  onUpdate
 }: TaskDetailsModalProps) {
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -69,6 +68,7 @@ export function TaskDetailsModal({
   const { toast } = useToast();
   const [empresaModalOpen, setEmpresaModalOpen] = useState(false);
   const [uploadingAnexos, setUploadingAnexos] = useState(false);
+  const [localAnexos, setLocalAnexos] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Helpers to serialize metadata (temporary until dedicated tables)
@@ -119,13 +119,13 @@ export function TaskDetailsModal({
       author: c.author,
       createdAt: c.createdAt.toISOString(),
     }));
-    
+
     // Preserve existing predefined_fields when updating
     const { parsedPredefinedFields } = parseDescricaoMeta(tarefa?.descricao);
-    const predefinedFieldsString = Object.keys(parsedPredefinedFields).length > 0 
-      ? `predefined_fields:${JSON.stringify(parsedPredefinedFields)}` 
+    const predefinedFieldsString = Object.keys(parsedPredefinedFields).length > 0
+      ? `predefined_fields:${JSON.stringify(parsedPredefinedFields)}`
       : '';
-    
+
     return `${baseDescription}checklist:${JSON.stringify(checklistToSave)}comments:${JSON.stringify(serialized)}${predefinedFieldsString}`;
   };
 
@@ -135,6 +135,8 @@ export function TaskDetailsModal({
       const { parsedChecklist, parsedComments } = parseDescricaoMeta(tarefa.descricao);
       setChecklist(parsedChecklist);
       setComments(parsedComments);
+      // Sincronizar anexos locais com a tarefa
+      setLocalAnexos(tarefa.anexos || []);
     }
   }, [tarefa]);
 
@@ -179,7 +181,7 @@ export function TaskDetailsModal({
             {sectionFields.map(field => {
               const value = fields[field];
               if (!value || value.trim() === '') return null;
-              
+
               return (
                 <div key={field} className="grid grid-cols-3 gap-2">
                   <span className="text-xs font-medium text-muted-foreground">{getFieldLabel(field)}:</span>
@@ -309,7 +311,7 @@ export function TaskDetailsModal({
                 </Button>
               </div>
             </div>
-            <Button 
+            <Button
               onClick={() => {
                 // Passar tarefa com todos os dados necessários para edição
                 onEdit({
@@ -370,13 +372,13 @@ export function TaskDetailsModal({
                       <span className="text-sm text-muted-foreground">Não atribuído</span>
                     )}
                   </div>
-                  
+
                   {tarefa.data_vencimento && (
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm font-medium">Vencimento:</span>
                       <span className="text-sm">
-                        {format(new Date(tarefa.data_vencimento), 'dd/MM/yyyy', { locale: ptBR })}
+                        {formatDateBR(tarefa.data_vencimento)}
                       </span>
                     </div>
                   )}
@@ -401,9 +403,9 @@ export function TaskDetailsModal({
             {/* Campos de Qualificação (Predefined Fields) */}
             {(() => {
               const { parsedPredefinedFields } = parseDescricaoMeta(tarefa.descricao);
-              const hasFields = Object.keys(parsedPredefinedFields).length > 0 && 
+              const hasFields = Object.keys(parsedPredefinedFields).length > 0 &&
                                Object.values(parsedPredefinedFields).some(v => v && v.trim() !== '');
-              
+
               if (!hasFields) return null;
 
               return (
@@ -442,7 +444,10 @@ export function TaskDetailsModal({
                           if (error) throw error;
                           novos.push(up.path);
                         }
-                        await onUpdate(tarefa.id, { anexos: [ ...(tarefa.anexos || []), ...novos ] });
+                        const novosAnexos = [...localAnexos, ...novos];
+                        await onUpdate(tarefa.id, { anexos: novosAnexos });
+                        // Atualizar estado local imediatamente
+                        setLocalAnexos(novosAnexos);
                         toast({ title: 'Anexos enviados', description: `${files.length} arquivo(s) anexado(s).` });
                       } catch (e: any) {
                         console.error('Erro ao anexar arquivos da tarefa:', e);
@@ -460,9 +465,9 @@ export function TaskDetailsModal({
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                {(tarefa.anexos && tarefa.anexos.length > 0) ? (
-                  <div className="space-y-2">
-                    {tarefa.anexos.map((path, idx) => (
+                {(localAnexos && localAnexos.length > 0) ? (
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {localAnexos.map((path, idx) => (
                       <div key={`${path}-${idx}`} className="flex items-center gap-2 p-2 bg-muted rounded">
                         <FileText className="h-4 w-4 text-muted-foreground" />
                         <span className="text-sm flex-1 truncate">{path.split('/').slice(-1)[0]}</span>
@@ -501,7 +506,7 @@ export function TaskDetailsModal({
                     </span>
                     {checklist.length > 0 && (
                       <div className="w-16 bg-secondary rounded-full h-2">
-                        <div 
+                        <div
                           className="bg-primary h-2 rounded-full transition-all duration-300"
                           style={{ width: `${progress}%` }}
                         />
@@ -523,10 +528,10 @@ export function TaskDetailsModal({
                         <Circle className="h-5 w-5 text-muted-foreground hover:text-primary" />
                       )}
                     </button>
-                    <span 
+                    <span
                       className={`flex-1 text-sm ${
-                        item.completed 
-                          ? 'line-through text-muted-foreground' 
+                        item.completed
+                          ? 'line-through text-muted-foreground'
                           : 'text-foreground'
                       }`}
                     >
@@ -557,9 +562,9 @@ export function TaskDetailsModal({
                     <Button size="sm" onClick={addChecklistItem}>
                       <Send className="h-4 w-4" />
                     </Button>
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
+                    <Button
+                      size="sm"
+                      variant="ghost"
                       onClick={() => {
                         setIsAddingChecklistItem(false);
                         setNewChecklistItem('');
@@ -600,8 +605,8 @@ export function TaskDetailsModal({
                     className="min-h-[80px]"
                   />
                   <div className="flex justify-end">
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       onClick={addComment}
                       disabled={!newComment.trim()}
                     >

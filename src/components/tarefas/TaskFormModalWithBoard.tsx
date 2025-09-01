@@ -1,40 +1,40 @@
-import React, { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { EmpresaSelectModal } from '@/components/empresas/EmpresaSelectModal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
-import { Paperclip, Circle, Plus, X, Building2, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { supabase } from '@/integrations/supabase/client';
-import { useTaskBoards } from '@/hooks/useTaskBoards';
-import { EmpresaSelectModal } from '@/components/empresas/EmpresaSelectModal';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { useTaskBoards } from '@/hooks/useTaskBoards';
+import { supabase } from '@/integrations/supabase/client';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { ChevronRight, Paperclip } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
 
 const taskFormSchema = z.object({
   titulo: z.string().min(1, 'Título é obrigatório'),
@@ -97,12 +97,37 @@ export default function TaskFormModalWithBoard({
   const [empresaModalOpen, setEmpresaModalOpen] = useState(false);
   const [selectedEmpresa, setSelectedEmpresa] = useState<{ id: string; nome: string } | null>(null);
   const [anexoArquivos, setAnexoArquivos] = useState<File[]>([]);
+  const [anexosExistentes, setAnexosExistentes] = useState<string[]>([]);
   const [uploadingAnexos, setUploadingAnexos] = useState(false);
   const [selectedResponsaveis, setSelectedResponsaveis] = useState<string[]>([]);
   const [preDefinedFields, setPreDefinedFields] = useState<{[key: string]: string}>({});
   const [empresas, setEmpresas] = useState<{ id: string; nome: string }[]>([]);
   const [loadingEmpresas, setLoadingEmpresas] = useState(false);
-  
+
+  // Function to load empresa data by ID
+  const loadEmpresaData = async (empresaId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('empresas')
+        .select('id, nome')
+        .eq('id', empresaId)
+        .single();
+
+      if (error) {
+        console.error('Error loading empresa:', error);
+        setSelectedEmpresa({ id: empresaId, nome: 'Empresa selecionada' });
+        return;
+      }
+
+      if (data) {
+        setSelectedEmpresa({ id: data.id, nome: data.nome });
+      }
+    } catch (error) {
+      console.error('Error in loadEmpresaData:', error);
+      setSelectedEmpresa({ id: empresaId, nome: 'Empresa selecionada' });
+    }
+  };
+
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
@@ -131,7 +156,7 @@ export default function TaskFormModalWithBoard({
   const getVendasFields = () => {
     return {
       'numero_processo': 'Número do Processo',
-      'data_audiencia': 'Data da Audiência', 
+      'data_audiencia': 'Data da Audiência',
       'valor_causa': 'Valor da Causa',
       'objeto_acao': 'Objeto da Ação',
       'advogado_empresa': 'Advogado da Empresa',
@@ -152,9 +177,27 @@ export default function TaskFormModalWithBoard({
     if (editData && typeof editData === 'object' && editData.id && !editData._type) {
       console.log('TaskFormModalWithBoard - Setting up editData:', editData);
       form.reset(editData);
+
+      // Load empresa data if available
       if (editData?.empresa_id) {
-        setSelectedEmpresa({ id: editData.empresa_id, nome: 'Empresa selecionada' });
+        // Check if empresa data is already included (from JOIN)
+        if (editData.empresas && editData.empresas.nome) {
+          setSelectedEmpresa({
+            id: editData.empresa_id,
+            nome: editData.empresas.nome
+          });
+        } else {
+          // Fallback to loading empresa separately
+          loadEmpresaData(editData.empresa_id);
+        }
       }
+
+      // Load existing anexos if available
+      if (editData?.anexos && Array.isArray(editData.anexos)) {
+        setAnexosExistentes(editData.anexos);
+        console.log('TaskFormModalWithBoard - Found existing anexos:', editData.anexos);
+      }
+
       // Parse existing predefined fields from description if editing
       if (editData?.descricao) {
         const match = editData.descricao.match(/predefined_fields:({.*?})/);
@@ -183,7 +226,7 @@ export default function TaskFormModalWithBoard({
         setSelectedEmpresa({ id: empresaId!, nome: 'Empresa selecionada' });
       }
     }
-    
+
     const single = (editData?.responsavel_id || defaultValues?.responsavel_id);
     setSelectedResponsaveis(single && single !== 'none' ? [single] : []);
   }, [editData, defaultValues, contextData, form, open]);
@@ -192,12 +235,12 @@ export default function TaskFormModalWithBoard({
   useEffect(() => {
     const currentBoardId = form.watch('board_id');
     const selectedBoard = boards.find(b => b.id === currentBoardId);
-    
+
     // Improved detection for VENDAS board
-    const isVendasBoard = selectedBoard?.name.toLowerCase().includes('vendas') || 
+    const isVendasBoard = selectedBoard?.name.toLowerCase().includes('vendas') ||
                          selectedBoard?.name.toLowerCase().includes('growth') ||
                          selectedBoard?.id === '3e5fa6e7-2975-4bad-aec7-94dff85bd112';
-    
+
     if (isVendasBoard) {
       // Initialize predefined fields for both create and edit
       const vendasFields = getVendasFields();
@@ -205,7 +248,7 @@ export default function TaskFormModalWithBoard({
       Object.keys(vendasFields).forEach(key => {
         emptyFields[key] = '';
       });
-      
+
       // If editing, try to parse existing predefined fields from description
       if (editData?.descricao) {
         const match = editData.descricao.match(/predefined_fields:(\{.*?\})/);
@@ -222,7 +265,7 @@ export default function TaskFormModalWithBoard({
           }
         }
       }
-      
+
       setPreDefinedFields(emptyFields);
     } else {
       // Clear predefined fields if not VENDAS board
@@ -258,7 +301,7 @@ export default function TaskFormModalWithBoard({
         .from('empresas')
         .select('id, nome')
         .order('nome');
-      
+
       if (error) throw error;
       setEmpresas(data || []);
     } catch (error) {
@@ -275,13 +318,13 @@ export default function TaskFormModalWithBoard({
   }, [open, empresas.length]);
 
   const handleSubmit = async (data: TaskFormData) => {
-    console.log('TaskFormModalWithBoard - handleSubmit called', { 
-      data, 
-      editData: editData?.id, 
+    console.log('TaskFormModalWithBoard - handleSubmit called', {
+      data,
+      editData: editData?.id,
       hasOnUpdate: !!onUpdate,
-      hasOnSubmit: !!onSubmit 
+      hasOnSubmit: !!onSubmit
     });
-    
+
     try {
       // CRITICAL: Verify user authentication first
       const { data: { user } } = await supabase.auth.getUser();
@@ -302,7 +345,7 @@ export default function TaskFormModalWithBoard({
 
       // Fix empresa_id handling - get from selectedEmpresa, board, or data
       let empresaId = selectedEmpresa?.id || data.empresa_id;
-      
+
       // If no empresa_id, try to get from the selected board
       if (!empresaId || empresaId === '') {
         const selectedBoard = boards.find(b => b.id === data.board_id);
@@ -311,16 +354,19 @@ export default function TaskFormModalWithBoard({
           console.log('TaskFormModalWithBoard - Using board empresa_id:', empresaId);
         }
       }
-      
+
       // Convert empty string to null to avoid UUID validation errors
       if (empresaId === '') {
         empresaId = null;
       }
 
       console.log('TaskFormModalWithBoard - Final empresa_id:', empresaId);
-      
+
       const anexosPaths = await uploadAnexos(anexoArquivos, empresaId);
-      
+
+      // Combine existing anexos with new ones
+      const allAnexos = [...anexosExistentes, ...anexosPaths];
+
       // Prepare predefined fields data
       let finalDescription = data.descricao || '';
       if (Object.keys(preDefinedFields).length > 0) {
@@ -331,7 +377,7 @@ export default function TaskFormModalWithBoard({
       }
 
       // Prepare responsavel IDs - support multiple assignees
-      const responsavelIds = selectedResponsaveis.length > 0 
+      const responsavelIds = selectedResponsaveis.length > 0
         ? selectedResponsaveis
         : (data.responsavel_id ? [data.responsavel_id] : []);
 
@@ -348,8 +394,8 @@ export default function TaskFormModalWithBoard({
       }
 
       // Sanitize data to avoid null values and validate required fields
-      const payload: TaskFormData & { 
-        responsavel_ids?: string[]; 
+      const payload: TaskFormData & {
+        responsavel_ids?: string[];
         modulo_origem?: string;
         created_by?: string;
       } = {
@@ -360,7 +406,7 @@ export default function TaskFormModalWithBoard({
         responsavel_id: responsavelIds[0] || data.responsavel_id || null,
         responsavel_ids: responsavelIds,
         modulo_origem,
-        anexos: anexosPaths.length ? anexosPaths : undefined,
+        anexos: allAnexos.length ? allAnexos : undefined,
         data_vencimento: data.data_vencimento || null,
         board_id: data.board_id || contextData?.board_id,
         column_id: data.column_id || contextData?.column_id,
@@ -395,12 +441,12 @@ export default function TaskFormModalWithBoard({
       }
 
       console.log('TaskFormModalWithBoard - prepared payload:', payload);
-      
+
       // Handle editing vs creating - fix editData validation
       const isEditing = editData && typeof editData === 'object' && editData.id && !editData._type;
       if (isEditing && onUpdate) {
         console.log('TaskFormModalWithBoard - calling onUpdate with:', editData.id, payload);
-        
+
         // Additional validation for updates
         if (!editData.id) {
           throw new Error('ID da tarefa não encontrado para atualização');
@@ -422,39 +468,39 @@ export default function TaskFormModalWithBoard({
 
         await onUpdate(editData.id, payload);
         console.log('TaskFormModalWithBoard - onUpdate completed successfully');
-        
+
         toast({
           title: 'Sucesso',
           description: 'Tarefa atualizada com sucesso',
         });
       } else {
         console.log('TaskFormModalWithBoard - calling onSubmit with:', payload);
-        
+
         // Verify user authentication for creation
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
           throw new Error('Usuário não autenticado');
         }
-        
+
         // Ensure created_by is set for new tasks
         payload.created_by = user.id;
-        
+
         await onSubmit(payload);
         console.log('TaskFormModalWithBoard - onSubmit completed successfully');
-        
+
         toast({
           title: 'Sucesso',
           description: 'Tarefa criada com sucesso',
         });
       }
-      
+
       handleClose();
     } catch (error: any) {
       console.error('TaskFormModalWithBoard - Submit error:', error);
-      
+
       // Provide more specific error messages
       let errorMessage = 'Erro ao processar tarefa';
-      
+
       if (error?.message?.includes('not authenticated') || error?.message?.includes('não autenticado')) {
         errorMessage = 'Você precisa estar logado para realizar esta ação';
       } else if (error?.message?.includes('violates row-level security')) {
@@ -464,13 +510,13 @@ export default function TaskFormModalWithBoard({
       } else if (error?.message) {
         errorMessage = error.message;
       }
-      
+
       toast({
         title: 'Erro',
         description: errorMessage,
         variant: 'destructive',
       });
-      
+
       throw error; // Re-throw to prevent handleClose from being called on error
     }
   };
@@ -479,18 +525,19 @@ export default function TaskFormModalWithBoard({
     // Verificar se há dados preenchidos antes de fechar
     const formValues = form.getValues();
     const hasData = formValues.titulo || formValues.descricao || anexoArquivos.length > 0 || selectedResponsaveis.length > 0;
-    
+
     if (hasData && !editData) {
       // Confirmar se o usuário quer descartar as alterações
       const shouldClose = window.confirm('Você tem alterações não salvas. Deseja descartar e fechar?');
       if (!shouldClose) return;
     }
-    
+
     onOpenChange(false);
     // Só limpar os dados se não for edição ou se confirmou descarte
     if (!editData || hasData) {
       form.reset();
       setAnexoArquivos([]);
+      setAnexosExistentes([]);
       setSelectedResponsaveis([]);
       setPreDefinedFields({});
     }
@@ -511,15 +558,15 @@ export default function TaskFormModalWithBoard({
         </DialogHeader>
 
           <Form {...form}>
-            <form 
+            <form
               onSubmit={(e) => {
-                console.log('Form onSubmit triggered', { 
+                console.log('Form onSubmit triggered', {
                   isValid: form.formState.isValid,
                   errors: form.formState.errors,
                   values: form.getValues()
                 });
                 form.handleSubmit(handleSubmit)(e);
-              }} 
+              }}
               className="space-y-6"
             >
             {/* Title */}
@@ -530,9 +577,9 @@ export default function TaskFormModalWithBoard({
                 <FormItem>
                   <FormLabel>Título *</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="Ex: Revisar relatório mensal, Implementar nova funcionalidade..." 
-                      {...field} 
+                    <Input
+                      placeholder="Ex: Revisar relatório mensal, Implementar nova funcionalidade..."
+                      {...field}
                       className="text-sm"
                     />
                   </FormControl>
@@ -559,8 +606,8 @@ export default function TaskFormModalWithBoard({
                         {boards.map((board) => (
                           <SelectItem key={board.id} value={board.id}>
                             <div className="flex items-center gap-2">
-                              <div 
-                                className="w-3 h-3 rounded-full" 
+                              <div
+                                className="w-3 h-3 rounded-full"
                                 style={{ backgroundColor: board.background_color }}
                               />
                               {board.name}
@@ -580,8 +627,8 @@ export default function TaskFormModalWithBoard({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Coluna *</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
+                    <Select
+                      onValueChange={field.onChange}
                       value={field.value}
                       disabled={!watchedBoardId}
                     >
@@ -607,8 +654,8 @@ export default function TaskFormModalWithBoard({
             {/* Breadcrumb Preview */}
             {selectedBoard && selectedColumn && (
               <div className="flex items-center gap-2 p-3 bg-muted/30 rounded-lg">
-                <div 
-                  className="w-4 h-4 rounded-full" 
+                <div
+                  className="w-4 h-4 rounded-full"
                   style={{ backgroundColor: selectedBoard.background_color }}
                 />
                 <span className="font-medium text-sm">{selectedBoard.name}</span>
@@ -1023,23 +1070,23 @@ export default function TaskFormModalWithBoard({
 
             {/* Actions */}
             <div className="flex justify-end gap-2 pt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={(e) => {
                   console.log('Cancel button clicked');
                   handleClose();
-                }} 
+                }}
               >
                 Cancelar
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={uploadingAnexos}
                 className="bg-primary hover:bg-primary/90"
                 onClick={(e) => {
-                  console.log('Submit button clicked', { 
-                    editData: editData?.id, 
+                  console.log('Submit button clicked', {
+                    editData: editData?.id,
                     uploadingAnexos,
                     formValid: form.formState.isValid,
                     errors: form.formState.errors,

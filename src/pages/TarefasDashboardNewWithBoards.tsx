@@ -1,27 +1,26 @@
-import React, { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { TaskDetailsModal } from '@/components/tarefas/TaskDetailsModal';
+import TaskFormModalWithBoard from '@/components/tarefas/TaskFormModalWithBoard';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTarefasData } from '@/hooks/useTarefasDataNew';
 import { useTaskBoards } from '@/hooks/useTaskBoards';
-import TaskFormModalWithBoard from '@/components/tarefas/TaskFormModalWithBoard';
-import { TaskDetailsModal } from '@/components/tarefas/TaskDetailsModal';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  LayoutDashboard, 
-  Plus, 
-  Eye, 
-  Users, 
-  Calendar,
-  ChevronRight,
-  Kanban
-} from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+    Calendar,
+    ChevronRight,
+    Eye,
+    Kanban,
+    LayoutDashboard,
+    Plus
+} from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 const priorityColors = {
   alta: 'bg-red-500',
-  media: 'bg-yellow-500', 
+  media: 'bg-yellow-500',
   baixa: 'bg-green-500'
 };
 
@@ -33,20 +32,21 @@ const statusLabels = {
 };
 
 export default function TarefasDashboardNewWithBoards() {
-  const { 
-    tarefas, 
-    users, 
-    loading, 
-    createTarefa, 
+  const {
+    tarefas,
+    users,
+    loading,
+    createTarefa,
     updateTarefa,
-    calculateKPIs 
+    calculateKPIs
   } = useTarefasData();
-  
+
   const { boards } = useTaskBoards();
-  
+
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [editingTask, setEditingTask] = useState<any>(null);
 
   // Calculate KPIs
   const kpis = useMemo(() => calculateKPIs(tarefas), [tarefas, calculateKPIs]);
@@ -61,7 +61,7 @@ export default function TarefasDashboardNewWithBoards() {
   // Group tasks by board
   const tasksByBoard = useMemo(() => {
     const groups: Record<string, any[]> = {};
-    
+
     tarefas.forEach(task => {
       if (task.board_id) {
         if (!groups[task.board_id]) {
@@ -70,22 +70,39 @@ export default function TarefasDashboardNewWithBoards() {
         groups[task.board_id].push(task);
       }
     });
-    
+
     return groups;
   }, [tarefas]);
-
-  const handleTaskCreate = async (taskData: any) => {
-    try {
-      await createTarefa(taskData);
-      setShowCreateModal(false);
-    } catch (error) {
-      console.error('Erro ao criar tarefa:', error);
-    }
-  };
 
   const handleTaskView = (task: any) => {
     setSelectedTask(task);
     setShowDetailsModal(true);
+  };
+
+  const handleTaskEdit = (task: any) => {
+    console.log('Editando tarefa:', task);
+    setEditingTask(task);
+    setShowDetailsModal(false);
+    setShowCreateModal(true);
+  };
+
+  const handleTaskUpdate = async (taskData: any) => {
+    try {
+      if (editingTask?.id) {
+        await updateTarefa(editingTask.id, taskData);
+        setEditingTask(null);
+      } else {
+        await createTarefa(taskData);
+      }
+      setShowCreateModal(false);
+    } catch (error) {
+      console.error('Erro ao salvar tarefa:', error);
+    }
+  };
+
+  const handleModalClose = () => {
+    setShowCreateModal(false);
+    setEditingTask(null);
   };
 
   if (loading) {
@@ -111,7 +128,7 @@ export default function TarefasDashboardNewWithBoards() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button 
+            <Button
               onClick={() => setShowCreateModal(true)}
               className="bg-primary hover:bg-primary/90"
             >
@@ -211,8 +228,8 @@ export default function TarefasDashboardNewWithBoards() {
                   return (
                     <div key={board.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
                       <div className="flex items-center gap-3">
-                        <div 
-                          className="w-4 h-4 rounded-full" 
+                        <div
+                          className="w-4 h-4 rounded-full"
                           style={{ backgroundColor: board.background_color }}
                         />
                         <div>
@@ -278,9 +295,9 @@ export default function TarefasDashboardNewWithBoards() {
                           </Avatar>
                         )}
                       </div>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleTaskView(task)}
                       >
                         <Eye className="h-4 w-4" />
@@ -297,9 +314,15 @@ export default function TarefasDashboardNewWithBoards() {
       {/* Task Creation Modal */}
       <TaskFormModalWithBoard
         open={showCreateModal}
-        onOpenChange={setShowCreateModal}
-        onSubmit={handleTaskCreate}
+        onOpenChange={handleModalClose}
+        onSubmit={handleTaskUpdate}
+        onUpdate={async (id, updates) => {
+          await updateTarefa(id, updates);
+          setEditingTask(null);
+          setShowCreateModal(false);
+        }}
         users={users}
+        editData={editingTask}
       />
 
       {/* Task Details Modal */}
@@ -307,10 +330,7 @@ export default function TarefasDashboardNewWithBoards() {
         open={showDetailsModal}
         onOpenChange={setShowDetailsModal}
         tarefa={selectedTask}
-        onEdit={() => {
-          setShowDetailsModal(false);
-          setShowCreateModal(true);
-        }}
+        onEdit={handleTaskEdit}
         onUpdate={async (id, updates) => {
           await updateTarefa(id, updates);
         }}
