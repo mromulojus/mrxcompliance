@@ -1,4 +1,4 @@
-# Arquivo de configuração do Supabase
+# Configuração do Supabase para produção
 project_id = "pxpscjyeqmqqxzbttbep"
 
 [api]
@@ -31,18 +31,5 @@ double_confirm_changes = true
 [auth.sms]
 enable_signup = false
 
-[auth.password]
-hibp_enabled = true
-hibp_api_key = { env = "HIBP_API_KEY" }
-min_length = 12
-min_uppercase = 1
-min_lowercase = 1
-min_number = 1
-min_special = 1
-
-[auth.otp]
-expiry_duration = "300s"  # 5 minutos conforme política interna
-
 [analytics]
 enabled = false
-# Deploy trigger para aplicar correções frontend - dom 31 ago 2025 22:22:31 -03
