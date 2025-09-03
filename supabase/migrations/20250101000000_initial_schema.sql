@@ -13,7 +13,7 @@ CREATE TYPE public.conhecimento_fato AS ENUM ('OUVI_FALAR', 'DOCUMENTO', 'COLEGA
 CREATE TYPE public.tipo_documento AS ENUM ('RG', 'CPF', 'CTPS', 'COMPROVANTE_ENDERECO', 'DIPLOMA', 'CERTIDAO', 'LAUDO', 'CONTRATO', 'OUTROS');
 CREATE TYPE processo_status AS ENUM (
           'ativo',
-          'suspenso', 
+          'suspenso',
           'arquivado',
           'transitado_julgado',
           'baixado'
@@ -43,7 +43,7 @@ CREATE TYPE task_priority AS ENUM ('alta', 'media', 'baixa');
 CREATE TYPE task_module AS ENUM ('ouvidoria', 'auditoria', 'cobrancas', 'geral');
 CREATE TYPE public.board_module AS ENUM (
   'vendas',
-  'compliance', 
+  'compliance',
   'juridico',
   'ouvidoria',
   'cobranca',
