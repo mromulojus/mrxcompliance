@@ -1659,6 +1659,7 @@ export type Database = {
       tarefas: {
         Row: {
           anexos: string[] | null
+          archived_at: string | null
           board_id: string | null
           colaborador_id: string | null
           column_id: string | null
@@ -1671,6 +1672,7 @@ export type Database = {
           divida_id: string | null
           empresa_id: string | null
           id: string
+          is_archived: boolean | null
           modulo_origem: Database["public"]["Enums"]["task_module"]
           ordem_na_coluna: number | null
           prioridade: Database["public"]["Enums"]["task_priority"]
@@ -1683,6 +1685,7 @@ export type Database = {
         }
         Insert: {
           anexos?: string[] | null
+          archived_at?: string | null
           board_id?: string | null
           colaborador_id?: string | null
           column_id?: string | null
@@ -1695,6 +1698,7 @@ export type Database = {
           divida_id?: string | null
           empresa_id?: string | null
           id?: string
+          is_archived?: boolean | null
           modulo_origem?: Database["public"]["Enums"]["task_module"]
           ordem_na_coluna?: number | null
           prioridade?: Database["public"]["Enums"]["task_priority"]
@@ -1707,6 +1711,7 @@ export type Database = {
         }
         Update: {
           anexos?: string[] | null
+          archived_at?: string | null
           board_id?: string | null
           colaborador_id?: string | null
           column_id?: string | null
@@ -1719,6 +1724,7 @@ export type Database = {
           divida_id?: string | null
           empresa_id?: string | null
           id?: string
+          is_archived?: boolean | null
           modulo_origem?: Database["public"]["Enums"]["task_module"]
           ordem_na_coluna?: number | null
           prioridade?: Database["public"]["Enums"]["task_priority"]
@@ -1960,9 +1966,21 @@ export type Database = {
           user_id: string
         }[]
       }
+      create_departmental_boards_for_empresa: {
+        Args: { empresa_uuid: string }
+        Returns: undefined
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      reorder_tasks: {
+        Args: {
+          new_order: number
+          new_status: Database["public"]["Enums"]["task_status"]
+          task_id: string
+        }
+        Returns: undefined
       }
       user_can_access_empresa: {
         Args: { empresa_uuid: string }
@@ -2029,7 +2047,14 @@ export type Database = {
         | "CLIENTE"
         | "OUTRO"
       sexo: "MASCULINO" | "FEMININO"
-      task_module: "ouvidoria" | "auditoria" | "cobrancas" | "geral"
+      task_module:
+        | "ouvidoria"
+        | "auditoria"
+        | "cobrancas"
+        | "geral"
+        | "vendas"
+        | "juridico"
+        | "compliance"
       task_priority: "alta" | "media" | "baixa"
       task_status: "a_fazer" | "em_andamento" | "em_revisao" | "concluido"
       tipo_conta: "CORRENTE" | "POUPANCA"
@@ -2245,7 +2270,15 @@ export const Constants = {
         "OUTRO",
       ],
       sexo: ["MASCULINO", "FEMININO"],
-      task_module: ["ouvidoria", "auditoria", "cobrancas", "geral"],
+      task_module: [
+        "ouvidoria",
+        "auditoria",
+        "cobrancas",
+        "geral",
+        "vendas",
+        "juridico",
+        "compliance",
+      ],
       task_priority: ["alta", "media", "baixa"],
       task_status: ["a_fazer", "em_andamento", "em_revisao", "concluido"],
       tipo_conta: ["CORRENTE", "POUPANCA"],
