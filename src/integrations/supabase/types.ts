@@ -232,42 +232,42 @@ export type Database = {
         Row: {
           background_color: string | null
           background_image: string | null
+          card_default: Json | null
           created_at: string
           created_by: string | null
-          description: string | null
-          empresa_id: string
+          empresa_id: string | null
           id: string
           is_active: boolean
           is_public: boolean | null
-          modulos: Json | null
+          modulos: Database["public"]["Enums"]["board_module"][] | null
           name: string
           updated_at: string
         }
         Insert: {
           background_color?: string | null
           background_image?: string | null
+          card_default?: Json | null
           created_at?: string
           created_by?: string | null
-          description?: string | null
-          empresa_id: string
+          empresa_id?: string | null
           id?: string
           is_active?: boolean
           is_public?: boolean | null
-          modulos?: Json | null
+          modulos?: Database["public"]["Enums"]["board_module"][] | null
           name: string
           updated_at?: string
         }
         Update: {
           background_color?: string | null
           background_image?: string | null
+          card_default?: Json | null
           created_at?: string
           created_by?: string | null
-          description?: string | null
-          empresa_id?: string
+          empresa_id?: string | null
           id?: string
           is_active?: boolean
           is_public?: boolean | null
-          modulos?: Json | null
+          modulos?: Database["public"]["Enums"]["board_module"][] | null
           name?: string
           updated_at?: string
         }
@@ -510,6 +510,7 @@ export type Database = {
       }
       comentarios_denuncia: {
         Row: {
+          anexos: string[] | null
           autor: string
           created_at: string
           denuncia_id: string
@@ -517,6 +518,7 @@ export type Database = {
           mensagem: string
         }
         Insert: {
+          anexos?: string[] | null
           autor: string
           created_at?: string
           denuncia_id: string
@@ -524,6 +526,7 @@ export type Database = {
           mensagem: string
         }
         Update: {
+          anexos?: string[] | null
           autor?: string
           created_at?: string
           denuncia_id?: string
@@ -573,7 +576,7 @@ export type Database = {
           id?: string
           identificado?: boolean
           nome?: string | null
-          protocolo: string
+          protocolo?: string
           relacao: Database["public"]["Enums"]["relacao_empresa"]
           setor?: string | null
           status?: Database["public"]["Enums"]["denuncia_status"]
@@ -611,95 +614,6 @@ export type Database = {
           },
         ]
       }
-      department_assignments: {
-        Row: {
-          company_id: string
-          created_at: string
-          department_id: string
-          is_primary: boolean
-          resource_id: string
-          resource_type: string
-          updated_at: string
-        }
-        Insert: {
-          company_id: string
-          created_at?: string
-          department_id: string
-          is_primary?: boolean
-          resource_id: string
-          resource_type: string
-          updated_at?: string
-        }
-        Update: {
-          company_id?: string
-          created_at?: string
-          department_id?: string
-          is_primary?: boolean
-          resource_id?: string
-          resource_type?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "department_assignments_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "empresas"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "department_assignments_department_id_fkey"
-            columns: ["department_id"]
-            isOneToOne: false
-            referencedRelation: "departments"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      departments: {
-        Row: {
-          business_unit: string | null
-          color: string | null
-          company_id: string
-          created_at: string
-          id: string
-          is_active: boolean
-          name: string
-          slug: string
-          updated_at: string
-        }
-        Insert: {
-          business_unit?: string | null
-          color?: string | null
-          company_id: string
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          name: string
-          slug: string
-          updated_at?: string
-        }
-        Update: {
-          business_unit?: string | null
-          color?: string | null
-          company_id?: string
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          name?: string
-          slug?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "departments_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "empresas"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       devedores: {
         Row: {
           canal_preferencial: string | null
@@ -715,6 +629,7 @@ export type Database = {
           empresa_id: string
           endereco_completo: string | null
           estado: string | null
+          etiquetas: Json | null
           id: string
           local_trabalho: string | null
           nome: string
@@ -740,6 +655,7 @@ export type Database = {
           empresa_id: string
           endereco_completo?: string | null
           estado?: string | null
+          etiquetas?: Json | null
           id?: string
           local_trabalho?: string | null
           nome: string
@@ -765,6 +681,7 @@ export type Database = {
           empresa_id?: string
           endereco_completo?: string | null
           estado?: string | null
+          etiquetas?: Json | null
           id?: string
           local_trabalho?: string | null
           nome?: string
@@ -796,6 +713,7 @@ export type Database = {
           devedor_id: string
           empresa_id: string
           estagio: string
+          etiquetas: Json | null
           id: string
           numero_contrato: string | null
           numero_nf: string | null
@@ -818,6 +736,7 @@ export type Database = {
           devedor_id: string
           empresa_id: string
           estagio?: string
+          etiquetas?: Json | null
           id?: string
           numero_contrato?: string | null
           numero_nf?: string | null
@@ -840,6 +759,7 @@ export type Database = {
           devedor_id?: string
           empresa_id?: string
           estagio?: string
+          etiquetas?: Json | null
           id?: string
           numero_contrato?: string | null
           numero_nf?: string | null
@@ -1253,48 +1173,17 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_historico_colaborador_created_by"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "historico_colaborador_colaborador_id_fkey"
             columns: ["colaborador_id"]
             isOneToOne: false
             referencedRelation: "colaboradores"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      historico_empresa: {
-        Row: {
-          created_at: string
-          created_by: string
-          descricao: string
-          empresa_id: string
-          id: string
-          meta: Json | null
-          tipo: string
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string
-          descricao: string
-          empresa_id: string
-          id?: string
-          meta?: Json | null
-          tipo: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string
-          descricao?: string
-          empresa_id?: string
-          id?: string
-          meta?: Json | null
-          tipo?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "historico_empresa_empresa_id_fkey"
-            columns: ["empresa_id"]
-            isOneToOne: false
-            referencedRelation: "empresas"
             referencedColumns: ["id"]
           },
         ]
@@ -1572,7 +1461,7 @@ export type Database = {
           first_login_completed: boolean | null
           full_name: string | null
           id: string
-          is_active: boolean
+          is_active: boolean | null
           last_login: string | null
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
@@ -1590,7 +1479,7 @@ export type Database = {
           first_login_completed?: boolean | null
           full_name?: string | null
           id?: string
-          is_active?: boolean
+          is_active?: boolean | null
           last_login?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
@@ -1608,7 +1497,7 @@ export type Database = {
           first_login_completed?: boolean | null
           full_name?: string | null
           id?: string
-          is_active?: boolean
+          is_active?: boolean | null
           last_login?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
@@ -1617,42 +1506,6 @@ export type Database = {
           updated_at?: string
           user_id?: string
           username?: string
-        }
-        Relationships: []
-      }
-      system_modules: {
-        Row: {
-          color: string | null
-          created_at: string
-          description: string | null
-          icon: string | null
-          id: string
-          is_active: boolean
-          name: string
-          slug: string
-          updated_at: string
-        }
-        Insert: {
-          color?: string | null
-          created_at?: string
-          description?: string | null
-          icon?: string | null
-          id?: string
-          is_active?: boolean
-          name: string
-          slug: string
-          updated_at?: string
-        }
-        Update: {
-          color?: string | null
-          created_at?: string
-          description?: string | null
-          icon?: string | null
-          id?: string
-          is_active?: boolean
-          name?: string
-          slug?: string
-          updated_at?: string
         }
         Relationships: []
       }
@@ -1787,178 +1640,15 @@ export type Database = {
           },
         ]
       }
-      task_board_members: {
-        Row: {
-          added_at: string
-          board_id: string
-          role: string
-          user_id: string
-        }
-        Insert: {
-          added_at?: string
-          board_id: string
-          role?: string
-          user_id: string
-        }
-        Update: {
-          added_at?: string
-          board_id?: string
-          role?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "task_board_members_board_id_fkey"
-            columns: ["board_id"]
-            isOneToOne: false
-            referencedRelation: "task_boards"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      task_boards: {
-        Row: {
-          created_at: string
-          created_by: string
-          empresa_id: string | null
-          id: string
-          is_archived: boolean
-          name: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          created_by: string
-          empresa_id?: string | null
-          id?: string
-          is_archived?: boolean
-          name: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string
-          empresa_id?: string | null
-          id?: string
-          is_archived?: boolean
-          name?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "task_boards_empresa_id_fkey"
-            columns: ["empresa_id"]
-            isOneToOne: false
-            referencedRelation: "empresas"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      task_columns: {
-        Row: {
-          board_id: string
-          color: string | null
-          created_at: string
-          id: string
-          name: string
-          order_index: number
-        }
-        Insert: {
-          board_id: string
-          color?: string | null
-          created_at?: string
-          id?: string
-          name: string
-          order_index?: number
-        }
-        Update: {
-          board_id?: string
-          color?: string | null
-          created_at?: string
-          id?: string
-          name?: string
-          order_index?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "task_columns_board_id_fkey"
-            columns: ["board_id"]
-            isOneToOne: false
-            referencedRelation: "task_boards"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_departments: {
-        Row: {
-          created_at: string
-          department_id: string
-          end_at: string | null
-          is_primary: boolean
-          role_in_department: string
-          start_at: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          department_id: string
-          end_at?: string | null
-          is_primary?: boolean
-          role_in_department?: string
-          start_at?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          department_id?: string
-          end_at?: string | null
-          is_primary?: boolean
-          role_in_department?: string
-          start_at?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_departments_department_id_fkey"
-            columns: ["department_id"]
-            isOneToOne: false
-            referencedRelation: "departments"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_timesheets: {
-        Row: {
-          created_at: string
-          ended_at: string | null
-          id: string
-          started_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          ended_at?: string | null
-          id?: string
-          started_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          ended_at?: string | null
-          id?: string
-          started_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      atualizar_valores_dividas: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       authenticate_by_username: {
         Args: { password_input: string; username_input: string }
         Returns: {
@@ -1966,23 +1656,70 @@ export type Database = {
           user_id: string
         }[]
       }
+      calcular_valor_atualizado: {
+        Args: {
+          correcao_perc?: number
+          data_vencimento: string
+          juros_perc?: number
+          multa_perc?: number
+          valor_original: number
+        }
+        Returns: number
+      }
       create_departmental_boards_for_empresa: {
-        Args: { empresa_uuid: string }
+        Args: { p_empresa_id: string }
         Returns: undefined
+      }
+      generate_protocol: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_valid_email: {
+        Args: { username_text: string }
+        Returns: string
       }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
-      reorder_tasks: {
+      get_user_role: {
+        Args: { user_uuid: string }
+        Returns: Database["public"]["Enums"]["user_role"]
+      }
+      has_role: {
         Args: {
-          new_order: number
-          new_status: Database["public"]["Enums"]["task_status"]
-          task_id: string
+          required_role: Database["public"]["Enums"]["user_role"]
+          user_uuid: string
+        }
+        Returns: boolean
+      }
+      migrate_tasks_to_boards: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      reorder_tasks_in_column: {
+        Args: {
+          p_new_order: number
+          p_new_status: Database["public"]["Enums"]["task_status"]
+          p_task_id: string
         }
         Returns: undefined
       }
+      update_last_login: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       user_can_access_empresa: {
+        Args:
+          | { empresa_uuid: string }
+          | { p_empresa_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      user_can_access_empresa_data: {
+        Args: { empresa_uuid: string }
+        Returns: boolean
+      }
+      user_can_access_empresa_simple: {
         Args: { empresa_uuid: string }
         Returns: boolean
       }
@@ -1996,7 +1733,7 @@ export type Database = {
         | "cobranca"
         | "administrativo"
         | "geral"
-      colaborador_status: "ATIVO" | "INATIVO" | "DEMITIDO"
+      colaborador_status: "ATIVO" | "INATIVO" | "DEMITIDO" | "PROCESSO_SELETIVO"
       conhecimento_fato:
         | "OUVI_FALAR"
         | "DOCUMENTO"
@@ -2212,7 +1949,7 @@ export const Constants = {
         "administrativo",
         "geral",
       ],
-      colaborador_status: ["ATIVO", "INATIVO", "DEMITIDO"],
+      colaborador_status: ["ATIVO", "INATIVO", "DEMITIDO", "PROCESSO_SELETIVO"],
       conhecimento_fato: [
         "OUVI_FALAR",
         "DOCUMENTO",
